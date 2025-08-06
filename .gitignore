@@ -1,0 +1,44 @@
+# === General ===
+node_modules/
+dist/
+.env
+.env.*
+
+# === fob.client ===
+fob.client/node_modules/
+fob.client/dist/
+fob.client/.vite/
+fob.client/.next/
+fob.client/.output/
+fob.client/.nuxt/
+fob.client/.angular/
+fob.client/.cache/
+fob.client/build/
+
+# === FoB.Server ===
+FoB.Server/bin/
+FoB.Server/obj/
+FoB.Server/*.user
+FoB.Server/*.suo
+FoB.Server/*.userosscache
+FoB.Server/*.sln.docstates
+
+# === Visual Studio general ===
+.vs/
+*.user
+*.suo
+*.csproj.user
+*.dbmdl
+*.psess
+*.vsp
+*.pdb
+
+# === Logs ===
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# === OS ===
+.DS_Store
+Thumbs.db
