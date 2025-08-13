@@ -8,7 +8,11 @@ interface DrawerMenuProps {
   drawerWidth: number;
 }
 
-export default function DrawerMenu({ mobileOpen, handleDrawerToggle, drawerWidth }: DrawerMenuProps) {
+export default function DrawerMenu({
+  mobileOpen,
+  handleDrawerToggle,
+  drawerWidth,
+}: DrawerMenuProps) {
   const drawer = (
     <div>
       <Toolbar />

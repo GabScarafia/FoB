@@ -19,7 +19,11 @@ export default function App() {
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
         <ButtonAppBar handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
-        <DrawerMenu mobileOpen={mobileOpen} handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
+        <DrawerMenu
+          mobileOpen={mobileOpen}
+          handleDrawerToggle={handleDrawerToggle}
+          drawerWidth={drawerWidth}
+        />
 
         {/* Contenido principal */}
         <Box
