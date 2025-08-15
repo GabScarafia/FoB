@@ -20,9 +20,19 @@ export default function DrawerMenu({
         <ListItemButton component={Link} to="/" onClick={handleDrawerToggle}>
           <ListItemText primary="Inicio" />
         </ListItemButton>
+
         <ListItemButton component={Link} to="/weather" onClick={handleDrawerToggle}>
           <ListItemText primary="Sexo" />
         </ListItemButton>
+
+        <ListItemButton component={Link} to="/registrarse" onClick={handleDrawerToggle}>
+          <ListItemText primary="Registrarse" />
+        </ListItemButton>
+
+        <ListItemButton component={Link} to="/iniciar-sesion" onClick={handleDrawerToggle}>
+          <ListItemText primary="Iniciar Sesion" />
+        </ListItemButton>
+        
       </List>
     </div>
   );

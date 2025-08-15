@@ -1,0 +1,21 @@
+/* src/components/ui/Boton.css */
+.boton {
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.boton-principal {
+    background-color: #dc3545;
+    color: white;
+}
+
+    .boton-principal:hover {
+        background-color: #c82333;
+    }

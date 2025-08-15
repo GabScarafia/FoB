@@ -1,0 +1,67 @@
+/* src/components/ui/CampoEntrada.css */
+.grupo-entrada {
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.grupo-entrada label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+    color: white;
+    text-align: left;
+}
+
+/* Color del asterisco requerido */
+.asterisco-requerido {
+    color: #f00;
+    margin-left: 5px;
+}
+
+.contenedor-input-icono {
+    position: relative;
+    width: 100%;
+}
+
+.grupo-entrada input {
+    width: 100%;
+    padding: 12px 15px;
+    padding-right: 45px;
+    border: 1px solid #ffffff;
+    border-radius: 5px;
+    font-size: 1em;
+    background-color: rgba(255, 255, 255, 0.007);
+    color: #ddd;
+    box-sizing: border-box;
+}
+
+.grupo-entrada input:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px #ffffff;
+}
+
+.alternar-contrasena {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+}
+
+.alternar-contrasena svg {
+    width: 20px;
+    height: 20px;
+    stroke: #ffffff;
+}
+
+/* Media Query para escritorio */
+@media (min-width: 768px) {
+  .grupo-entrada label {
+    color: #ffffff;
+  }
+}

@@ -1,0 +1,160 @@
+/* src/styles/IniciarSesion.css */
+
+/* Contenedor principal de la página de inicio de sesión */
+.contenedor-inicio-sesion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    width: 100%;
+    background-color: #1a2a6c;
+    font-family: Arial, sans-serif;
+    color: white;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Fondo degradado */
+.contenedor-inicio-sesion::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+    z-index: 0;
+}
+
+.header-autenticacion-curvo {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+    box-sizing: border-box;
+}
+/* Capa azul superior que contendrá el logo y el texto de "Registrarse" */
+.header-autenticacion-curvo::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 120%;
+    height: 130px;
+    background-color: white;
+    border-bottom-left-radius: 50% 100px;
+    border-bottom-right-radius: 50% 100px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    z-index: 1;
+}
+
+.seccion-logo {
+    position: relative;
+    margin-bottom: 25px;
+    z-index: 3;
+}
+
+.logo {
+    max-width: 200px;
+    height: auto;
+}
+
+/* Sección del formulario */
+.formulario-inicio-sesion-caja {
+    position: relative;
+    padding: 30px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    z-index: 4;
+    margin-top: -30px;
+    color: #ffffff;
+}
+
+.formulario-inicio-sesion-caja h2 {
+    margin-bottom: 25px;
+    font-size: 1.8em;
+    color: #ffffff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+/* Estilo para los botones */
+.boton-principal {
+    background-color: #dc3545;
+    color: white;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 1.5rem;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 15px;
+}
+
+.boton-principal:hover {
+    background-color: #c82333;
+}
+
+.boton-ir-a-registro {
+    background: none;
+    border: 1px solid #ffffff;
+    color: #ffffff;
+    width: 100%;
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 15px;
+}
+
+.boton-ir-a-registro:hover {
+    background-color: #dc3545;
+    color: white;
+}
+
+/* --- Media Query para pantallas de tabletas y escritorios (a partir de 768px de ancho) --- */
+@media (min-width: 768px) {
+    .contenedor-inicio-sesion {
+        justify-content: center;
+        align-items: center;
+        background: none;
+        position: relative;
+    }
+
+    /* Fondo degradado para la parte principal de la pantalla de escritorio */
+    .contenedor-inicio-sesion::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+        z-index: 0;
+    }
+
+
+    .formulario-inicio-sesion-caja {
+        max-width: 450px;
+        padding: 40px;
+        border-radius: 10px;
+        margin-top: 0;
+        background-color: #1a2a6c;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+}

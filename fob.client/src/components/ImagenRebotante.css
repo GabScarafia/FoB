@@ -1,0 +1,5 @@
+/* src/components/ImagenRebotante.css */
+.imagen-rebotante {
+    position: fixed;
+    z-index: 9999;
+}
