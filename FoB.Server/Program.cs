@@ -1,4 +1,5 @@
-using Fob.Application;
+using FoB.Application;
+using FoB.Infrastructure;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -14,6 +15,7 @@ try
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddApplicationLayer(builder.Configuration);
+    builder.Services.AddDBLayer(builder.Configuration);
 
 
     builder.Services.AddAuthentication(options =>
