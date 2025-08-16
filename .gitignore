@@ -23,6 +23,14 @@ FoB.Server/*.suo
 FoB.Server/*.userosscache
 FoB.Server/*.sln.docstates
 
+# === FoB.Infrastructure ===
+FoB.Infrastructure/bin/
+FoB.Infrastructure/obj/
+FoB.Infrastructure/*.user
+FoB.Infrastructure/*.suo
+FoB.Infrastructure/*.userosscache
+FoB.Infrastructure/*.sln.docstates
+
 # === FoB.Application ===
 FoB.Application/bin/
 FoB.Application/obj/
