@@ -8,7 +8,11 @@ interface DrawerMenuProps {
   drawerWidth: number;
 }
 
-export default function DrawerMenu({ mobileOpen, handleDrawerToggle, drawerWidth }: DrawerMenuProps) {
+export default function DrawerMenu({
+  mobileOpen,
+  handleDrawerToggle,
+  drawerWidth,
+}: DrawerMenuProps) {
   const drawer = (
     <div>
       <Toolbar />
@@ -16,9 +20,19 @@ export default function DrawerMenu({ mobileOpen, handleDrawerToggle, drawerWidth
         <ListItemButton component={Link} to="/" onClick={handleDrawerToggle}>
           <ListItemText primary="Inicio" />
         </ListItemButton>
+
         <ListItemButton component={Link} to="/weather" onClick={handleDrawerToggle}>
           <ListItemText primary="Sexo" />
         </ListItemButton>
+
+        <ListItemButton component={Link} to="/registrarse" onClick={handleDrawerToggle}>
+          <ListItemText primary="Registrarse" />
+        </ListItemButton>
+
+        <ListItemButton component={Link} to="/iniciar-sesion" onClick={handleDrawerToggle}>
+          <ListItemText primary="Iniciar Sesion" />
+        </ListItemButton>
+        
       </List>
     </div>
   );

@@ -19,10 +19,8 @@ export default function Weather() {
       <p>
         <em>
           Loading... Please refresh once the ASP.NET backend has started. See{" "}
-          <a href="https://aka.ms/jspsintegrationreact">
-            https://aka.ms/jspsintegrationreact
-          </a>{" "}
-          for more details.
+          <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for
+          more details.
         </em>
       </p>
     ) : (
@@ -51,7 +49,7 @@ export default function Weather() {
   return (
     <div>
       <h1 id="tableLabel">Weather forecast</h1>
-      <p>This component demonstrates fetching data from the server.</p>
+      <img src="https://www.clarin.com/img/2016/01/08/BJynA4gVg_1200x0.jpg" alt="El Bananero" />
       {contents}
     </div>
   );

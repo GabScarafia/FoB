@@ -1,0 +1,33 @@
+/* src/components/ui/CasillaVerificacion.css */
+
+.grupo-casilla-verificacion {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.grupo-casilla-verificacion input[type="checkbox"] {
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+}
+
+.grupo-casilla-verificacion label {
+    font-size: 0.9em;
+    color: #dadada;
+    white-space: normal;
+    line-height: 1.5;
+}
+
+.texto-negrita-clicable {
+    font-weight: bold;
+    color: #ffffff;
+    text-decoration: underline;
+    cursor: pointer;
+    margin: 0;
+    padding: 0;
+    display: inline;
+}
+
+.texto-negrita-clicable:hover {
+    color: #dc3545;
+}
