@@ -1,4 +1,8 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using FoB.Application.Interfaces;
+using FoB.Infrastructure.Context;
+using FoB.Infrastructure.Service;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FoB.Infrastructure;
@@ -8,8 +12,19 @@ namespace FoB.Infrastructure;
 /// </summary>
 public static class ServiceExtensions
 {
-    public static void AddDBLayer(this IServiceCollection services, IConfiguration _config)
+    public static void AddDBLayer(this IServiceCollection services, IConfiguration configuration)
     {
+        services.AddDbContext<fobContext>(options =>
+                                    options.UseMySql(
+                                        configuration.GetConnectionString("fobConnection"),
+                                        ServerVersion.AutoDetect(configuration.GetConnectionString("fobConnection")),
+                                        mySqlOptions =>
+                                        {
+                                            mySqlOptions.MigrationsAssembly(typeof(fobContext).Assembly.FullName);
+                                            mySqlOptions.CommandTimeout(60);
+                                        })
+                                    .EnableDetailedErrors());
 
+        services.AddTransient<IAuthenticationService, AuthenticationService>();
     }
 }

@@ -1,0 +1,1 @@
+﻿namespace FoB.Application.Entities;
