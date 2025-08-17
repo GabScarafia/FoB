@@ -2,30 +2,34 @@
 import React, { useState } from "react";
 import { CssBaseline, Box } from "@mui/material";
 import AppRoutes from "./components/AppRoutes";
+import { AuthProvider } from "./context/AuthContext"
 import ButtonAppBar from "./components/ButtonAppBar";
 import DrawerMenu from "./components/DrawerMenu";
 import { useLocation } from "react-router-dom";
 import ImagenRebotante from './components/ImagenRebotante';
 import logoImage from './assets/images/ronaldinho.jpg';
+import { useAuth } from "./context/AuthContext"; // Importamos el hook
 
 const drawerWidth = 240;
 
-export default function App() {
+// Creamos un nuevo componente que contendrá la lógica principal
+const MainApp = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const { email } = useAuth(); // Usamos el hook para acceder al estado global
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  // Determina si la ruta actual es una de las páginas de autenticación
   const isAuthPage = location.pathname === '/iniciar-sesion' || location.pathname === '/registrarse';
+  const isLoggedIn = !!email;
 
   return (
     <Box sx={{ display: "flex", width: '100%', minHeight: '100vh' }}>
       <CssBaseline />
       <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> 
-      {/* Renderiza el AppBar y el Drawer SÓLO si NO es una página de autenticación */}
+      {/* Renderizamos el AppBar y el Drawer si el usuario está logueado y no está en una página de auth */}
       {!isAuthPage && (
         <>
           <ButtonAppBar handleDrawerToggle={handleDrawerToggle} drawerWidth={drawerWidth} />
@@ -49,8 +53,19 @@ export default function App() {
           minHeight: '100vh'
         }}
       >
-        <AppRoutes /> {/* Aca se renderizan las paginas */}
+        <AppRoutes />
       </Box>
     </Box>
+  );
+};
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <Box sx={{ display: "flex", width: '100%', minHeight: '100vh', flexDirection: 'column' }}>
+        <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} />
+        <MainApp /> {/* 👈 Renderiza el nuevo componente dentro del Provider */}
+      </Box>
+    </AuthProvider>
   );
 }

@@ -1,12 +1,12 @@
 // src/pages/Registrarse.tsx
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import CampoEntrada from '../components/ui/CampoEntrada';
-import Boton from '../components/ui/Boton';
-import CasillaVerificacion from '../components/ui/CasillaVerificacion';
+import CampoEntrada from 'components/ui/CampoEntrada';
+import Boton from 'components/ui/Boton';
+import CasillaVerificacion from 'components/ui/CasillaVerificacion';
 import '../styles/Registrarse.css';
 import logoImage from '../assets/images/logo.png';
-import TerminosYCondicionesModal from '../components/TerminosYCondicionesModal';
+import TerminosYCondicionesModal from 'components/TerminosYCondicionesModal';
 
 const Registrarse: React.FC = () => {
   const [nombreUsuario, setNombreUsuario] = useState<string>('');

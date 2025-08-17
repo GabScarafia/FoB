@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { AppBar, Toolbar, IconButton, Typography } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import CloseIcon from "@mui/icons-material/Close"; // Import the CloseIcon
+import CloseIcon from "@mui/icons-material/Close";
+import { useAuth } from "../context/AuthContext";
 
 interface ButtonAppBarProps {
   handleDrawerToggle: () => void;
@@ -9,27 +10,7 @@ interface ButtonAppBarProps {
 }
 
 export default function ButtonAppBar({ handleDrawerToggle, drawerWidth }: ButtonAppBarProps) {
-  const [email, setEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const authDataString = localStorage.getItem("authData");
-    if (authDataString) {
-      try {
-        const authData = JSON.parse(authDataString);
-        setEmail(authData.email || null);
-      } catch (error) {
-        console.error("Error parsing authData:", error);
-        setEmail(null);
-      }
-    } else {
-      setEmail(null);
-    }
-  }, []);
-
-  const handleClearAuthData = () => {
-    localStorage.removeItem("authData");
-    setEmail(null);
-  };
+  const { email, clearAuthData } = useAuth(); // Obtiene la función del contexto
 
   return (
     <AppBar
@@ -56,7 +37,7 @@ export default function ButtonAppBar({ handleDrawerToggle, drawerWidth }: Button
           <IconButton
             color="inherit"
             edge="end"
-            onClick={handleClearAuthData}
+            onClick={clearAuthData} // Llama a la función del contexto
             aria-label="clear auth data"
           >
             <CloseIcon />

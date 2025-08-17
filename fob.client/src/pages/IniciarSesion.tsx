@@ -6,8 +6,10 @@ import CampoEntrada from '../components/ui/CampoEntrada';
 import Boton from '../components/ui/Boton';
 import '../styles/IniciarSesion.css';
 import logoImage from '../assets/images/logo.png';
+import { useAuth } from '../context/AuthContext';
 
 const IniciarSesion: React.FC = () => {
+  const { login } = useAuth();
   const [correoInicioSesion, setCorreoInicioSesion] = useState<string>('');
   const [contrasenaInicioSesion, setContrasenaInicioSesion] = useState<string>('');
   const [cargando, setCargando] = useState<boolean>(false);
@@ -39,7 +41,9 @@ const IniciarSesion: React.FC = () => {
       console.log("Respuesta API:", data);
 
       // Guardar en appStorage (puede ser localStorage o sessionStorage)
-      localStorage.setItem("authData", JSON.stringify(data));
+      localStorage.setItem("authData", JSON.stringify(data));   
+      const authData = { email: data.email };
+      login(authData);
 
       navigate('/');
 
