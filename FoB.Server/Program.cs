@@ -41,8 +41,21 @@ try
            };
        });
     builder.Services.Configure<JWTSettings>(builder.Configuration.GetSection("JWTSettings"));
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend",
+            policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod();
+            });
+    });
 
     var app = builder.Build();
+
+    // Usar CORS
+    app.UseCors("AllowFrontend");
 
     app.UseDefaultFiles();
     app.UseStaticFiles();

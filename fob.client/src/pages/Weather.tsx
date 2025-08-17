@@ -1,64 +1,26 @@
 import { useEffect, useState } from "react";
 
-interface Forecast {
-  date: string;
-  temperatureC: number;
-  temperatureF: number;
-  summary: string;
-}
-
 export default function Weather() {
-  const [forecasts, setForecasts] = useState<Forecast[]>();
+  const [authDataExists, setAuthDataExists] = useState<boolean>(false);
 
   useEffect(() => {
-    populateWeatherData();
+    // Check for authData in localStorage
+    const authDataString = localStorage.getItem("authData");
+    setAuthDataExists(!!authDataString);
   }, []);
 
-  const contents =
-    forecasts === undefined ? (
-      <p>
-        <em>
-          Loading... Please refresh once the ASP.NET backend has started. See{" "}
-          <a href="https://aka.ms/jspsintegrationreact">https://aka.ms/jspsintegrationreact</a> for
-          more details.
-        </em>
-      </p>
-    ) : (
-      <table className="table table-striped" aria-labelledby="tableLabel">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Temp. (C)</th>
-            <th>Temp. (F)</th>
-            <th>Summary</th>
-          </tr>
-        </thead>
-        <tbody>
-          {forecasts.map((forecast) => (
-            <tr key={forecast.date}>
-              <td>{forecast.date}</td>
-              <td>{forecast.temperatureC}</td>
-              <td>{forecast.temperatureF}</td>
-              <td>{forecast.summary}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    );
+  // Define image URLs
+  const defaultImageUrl = "https://www.clarin.com/img/2016/01/08/BJynA4gVg_1200x0.jpg";
+  const authImageUrl = "https://cdn.memegenerator.es/imagenes/memes/full/4/35/4355566.jpg";
 
   return (
     <div>
-      <h1 id="tableLabel">Weather forecast</h1>
-      <img src="https://www.clarin.com/img/2016/01/08/BJynA4gVg_1200x0.jpg" alt="El Bananero" />
-      {contents}
+      <h1 id="tableLabel">Weather</h1>
+      {authDataExists ? (
+        <img src={authImageUrl} alt="Auth Image" />
+      ) : (
+        <img src={defaultImageUrl} alt="No Auth Image" />
+      )}
     </div>
   );
-
-  async function populateWeatherData() {
-    const response = await fetch("weatherforecast");
-    if (response.ok) {
-      const data: Forecast[] = await response.json();
-      setForecasts(data);
-    }
-  }
 }
