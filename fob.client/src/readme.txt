@@ -16,3 +16,6 @@ src/
  ├─ utils/            # Funciones utilitarias
  ├─ App.tsx
  ├─ main.tsx
+
+
+ npm install @mui/icons-material @mui/material @emotion/styled @emotion/react

@@ -42,17 +42,18 @@ const IniciarSesion: React.FC = () => {
 
       // Guardar en appStorage (puede ser localStorage o sessionStorage)
       localStorage.setItem("authData", JSON.stringify(data));   
-      const authData = { email: data.email };
-      login(authData);
+      login(data);
 
       navigate('/');
 
       // Redirigir a otra página si querés, por ejemplo /dashboard
       // navigate("/dashboard");
 
-    } catch (err: any) {
+    } 
+    catch (err: any) {
       setError(err.message || "Ocurrió un error inesperado.");
-    } finally {
+    } 
+    finally {
       setCargando(false);
     }
   };
