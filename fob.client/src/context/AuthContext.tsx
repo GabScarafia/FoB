@@ -1,12 +1,18 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
-import type { ReactNode }  from "react";
-interface AuthContextType {
-  email: string | null;  
-  login: (authData: { email: string }) => void;
-  clearAuthData: () => void;
+import type { ReactNode } from "react";
+
+interface AuthData {
+  id: number;
+  token: string;
+  expDate: string;
+  nombre: string;
+  email: string;
+  roles: string[];
 }
+
 interface AuthContextType {
-  email: string | null;
+  authData: AuthData | null; // 👈 Cambia el estado para guardar todo el objeto
+  login: (authData: AuthData) => void;
   clearAuthData: () => void;
 }
 
@@ -17,39 +23,35 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [email, setEmail] = useState<string | null>(null);
+  const [authData, setAuthData] = useState<AuthData | null>(null); // 👈 Usa setAuthData
 
   useEffect(() => {
-    // Esta función solo se encarga de leer localStorage al inicio.
     const authDataString = localStorage.getItem("authData");
     if (authDataString) {
       try {
-        const authData = JSON.parse(authDataString);
-        setEmail(authData.email || null);
+        const storedAuthData: AuthData = JSON.parse(authDataString);
+        setAuthData(storedAuthData); // 👈 Actualiza el estado con el objeto completo
+        console.log(authData)
       } catch (error) {
         console.error("Error parsing authData:", error);
-        setEmail(null);
+        setAuthData(null);
       }
     } else {
-      setEmail(null);
+      setAuthData(null);
     }
-    
-    // Aquí puedes dejar la suscripción al evento 'storage' para sincronizar con otras pestañas
-    // si lo deseas, pero el problema de F5 se resuelve con el siguiente paso.
   }, []);
 
-    const login = (authData: { email: string }) => {
-    localStorage.setItem("authData", JSON.stringify(authData));
-    setEmail(authData.email); // Actualiza el estado de React inmediatamente
+  const login = (newAuthData: AuthData) => {
+    localStorage.setItem("authData", JSON.stringify(newAuthData));
+    setAuthData(newAuthData); // 👈 Actualiza el estado de React con el objeto completo
   };
 
-  // La función que actualiza el estado y el localStorage
   const clearAuthData = () => {
     localStorage.removeItem("authData");
-    setEmail(null); // <-- ¡Este es el paso crucial!
+    setAuthData(null);
   };
 
-const value = { email, login, clearAuthData };
+  const value = { authData, login, clearAuthData };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

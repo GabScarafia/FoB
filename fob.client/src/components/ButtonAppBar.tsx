@@ -10,7 +10,7 @@ interface ButtonAppBarProps {
 }
 
 export default function ButtonAppBar({ handleDrawerToggle, drawerWidth }: ButtonAppBarProps) {
-  const { email, clearAuthData } = useAuth(); // Obtiene la función del contexto
+  const { authData, clearAuthData } = useAuth(); // Obtiene la función del contexto
 
   return (
     <AppBar
@@ -31,9 +31,9 @@ export default function ButtonAppBar({ handleDrawerToggle, drawerWidth }: Button
           <MenuIcon />
         </IconButton>
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          {email ? email : "FondoBlanco"}
+          {authData?.email ? authData.email : "FondoBlanco"}
         </Typography>
-        {email && (
+        {authData?.email  && (
           <IconButton
             color="inherit"
             edge="end"
