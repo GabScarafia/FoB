@@ -31,7 +31,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       try {
         const storedAuthData: AuthData = JSON.parse(authDataString);
         setAuthData(storedAuthData); // 👈 Actualiza el estado con el objeto completo
-        console.log(authData)
       } catch (error) {
         console.error("Error parsing authData:", error);
         setAuthData(null);
