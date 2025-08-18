@@ -23,6 +23,10 @@ public partial class Usuario
 
     public string Nombre { get; set; }
 
+    public string Apellido { get; set; }
+
+    public string NombreUsuario { get; set; }
+
     public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
 
     public virtual ICollection<MensajePrivado> MensajePrivadoDestinatarios { get; set; } = new List<MensajePrivado>();

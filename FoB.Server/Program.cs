@@ -1,6 +1,9 @@
 using FoB.Application;
+using FoB.Application.Interfaces;
 using FoB.Infrastructure;
+using FoB.Infrastructure.Repositories;
 using FoB.Infrastructure.Settings;
+using FoB.Infrastructure.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
@@ -18,6 +21,8 @@ try
     builder.Services.AddDBLayer(builder.Configuration);
     builder.Services.AddApplicationLayer(builder.Configuration);
 
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
+    builder.Services.AddScoped<IRegisterService, RegisterService>();
 
     builder.Services.AddAuthentication(options =>
     {
