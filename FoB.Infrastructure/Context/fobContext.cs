@@ -14,39 +14,37 @@ public partial class fobContext : DbContext
     {
     }
 
-    public virtual DbSet<Categorium> Categoria { get; set; }
+    public virtual DbSet<Categoria> Categoria { get; set; }
 
-    public virtual DbSet<Comentario> Comentarios { get; set; }
+    public virtual DbSet<Comentario> Comentario { get; set; }
 
-    public virtual DbSet<Desafio> Desafios { get; set; }
+    public virtual DbSet<Desafio> Desafio { get; set; }
 
-    public virtual DbSet<Ingrediente> Ingredientes { get; set; }
+    public virtual DbSet<Ingrediente> Ingrediente { get; set; }
 
-    public virtual DbSet<IngredienteRecetum> IngredienteReceta { get; set; }
+    public virtual DbSet<IngredienteReceta> IngredienteReceta { get; set; }
 
-    public virtual DbSet<MensajeEstado> MensajeEstados { get; set; }
+    public virtual DbSet<MensajeEstado> MensajeEstado { get; set; }
 
-    public virtual DbSet<MensajePrivado> MensajePrivados { get; set; }
+    public virtual DbSet<MensajePrivado> MensajePrivado { get; set; }
 
-    public virtual DbSet<Notificacion> Notificacions { get; set; }
+    public virtual DbSet<Notificacion> Notificacion { get; set; }
 
-    public virtual DbSet<ParticipacionDesafio> ParticipacionDesafios { get; set; }
+    public virtual DbSet<ParticipacionDesafio> ParticipacionDesafio { get; set; }
 
-    public virtual DbSet<Paso> Pasos { get; set; }
+    public virtual DbSet<Paso> Paso { get; set; }
 
-    public virtual DbSet<RecetaFavoritum> RecetaFavorita { get; set; }
+    public virtual DbSet<Receta> Receta { get; set; }
 
-    public virtual DbSet<RecetaImagen> RecetaImagens { get; set; }
+    public virtual DbSet<RecetaImagen> RecetaImagen { get; set; }
 
-    public virtual DbSet<Recetum> Receta { get; set; }
+    public virtual DbSet<Rol> Rol { get; set; }
 
-    public virtual DbSet<Rol> Rols { get; set; }
+    public virtual DbSet<SeguimientoUsuario> SeguimientoUsuario { get; set; }
 
-    public virtual DbSet<SeguimientoUsuario> SeguimientoUsuarios { get; set; }
+    public virtual DbSet<Usuario> Usuario { get; set; }
 
-    public virtual DbSet<Usuario> Usuarios { get; set; }
-
-    public virtual DbSet<Voto> Votos { get; set; }
+    public virtual DbSet<Voto> Voto { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -54,7 +52,7 @@ public partial class fobContext : DbContext
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
 
-        modelBuilder.Entity<Categorium>(entity =>
+        modelBuilder.Entity<Categoria>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -95,7 +93,7 @@ public partial class fobContext : DbContext
                 .HasColumnName("texto");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
-            entity.HasOne(d => d.Receta).WithMany(p => p.Comentarios)
+            entity.HasOne(d => d.Receta).WithMany(p => p.Comentario)
                 .HasForeignKey(d => d.RecetaId)
                 .HasConstraintName("comentario_ibfk_1");
 
@@ -104,7 +102,7 @@ public partial class fobContext : DbContext
                 .OnDelete(DeleteBehavior.Cascade)
                 .HasConstraintName("comentario_ibfk_3");
 
-            entity.HasOne(d => d.Usuario).WithMany(p => p.Comentarios)
+            entity.HasOne(d => d.Usuario).WithMany(p => p.Comentario)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("comentario_ibfk_2");
         });
@@ -146,7 +144,7 @@ public partial class fobContext : DbContext
             entity.Property(e => e.Nombre).HasColumnName("nombre");
         });
 
-        modelBuilder.Entity<IngredienteRecetum>(entity =>
+        modelBuilder.Entity<IngredienteReceta>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -190,7 +188,7 @@ public partial class fobContext : DbContext
                 .HasColumnName("fecha");
             entity.Property(e => e.MensajePrivadoId).HasColumnName("mensaje_privado_id");
 
-            entity.HasOne(d => d.MensajePrivado).WithMany(p => p.MensajeEstados)
+            entity.HasOne(d => d.MensajePrivado).WithMany(p => p.MensajeEstado)
                 .HasForeignKey(d => d.MensajePrivadoId)
                 .HasConstraintName("mensaje_estado_ibfk_1");
         });
@@ -227,11 +225,11 @@ public partial class fobContext : DbContext
             entity.Property(e => e.RemitenteId).HasColumnName("remitente_id");
             entity.Property(e => e.RespuestaAMensajeId).HasColumnName("respuesta_a_mensaje_id");
 
-            entity.HasOne(d => d.Destinatario).WithMany(p => p.MensajePrivadoDestinatarios)
+            entity.HasOne(d => d.Destinatario).WithMany(p => p.MensajePrivadoDestinatario)
                 .HasForeignKey(d => d.DestinatarioId)
                 .HasConstraintName("mensaje_privado_ibfk_2");
 
-            entity.HasOne(d => d.Remitente).WithMany(p => p.MensajePrivadoRemitentes)
+            entity.HasOne(d => d.Remitente).WithMany(p => p.MensajePrivadoRemitente)
                 .HasForeignKey(d => d.RemitenteId)
                 .HasConstraintName("mensaje_privado_ibfk_1");
 
@@ -265,7 +263,7 @@ public partial class fobContext : DbContext
                 .HasColumnName("url_enlace");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
-            entity.HasOne(d => d.Usuario).WithMany(p => p.Notificacions)
+            entity.HasOne(d => d.Usuario).WithMany(p => p.Notificacion)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("notificacion_ibfk_1");
         });
@@ -290,16 +288,16 @@ public partial class fobContext : DbContext
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
-            entity.HasOne(d => d.Desafio).WithMany(p => p.ParticipacionDesafios)
+            entity.HasOne(d => d.Desafio).WithMany(p => p.ParticipacionDesafio)
                 .HasForeignKey(d => d.DesafioId)
                 .HasConstraintName("participacion_desafio_ibfk_1");
 
-            entity.HasOne(d => d.Receta).WithMany(p => p.ParticipacionDesafios)
+            entity.HasOne(d => d.Receta).WithMany(p => p.ParticipacionDesafio)
                 .HasForeignKey(d => d.RecetaId)
                 .OnDelete(DeleteBehavior.SetNull)
                 .HasConstraintName("participacion_desafio_ibfk_3");
 
-            entity.HasOne(d => d.Usuario).WithMany(p => p.ParticipacionDesafios)
+            entity.HasOne(d => d.Usuario).WithMany(p => p.ParticipacionDesafio)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("participacion_desafio_ibfk_2");
         });
@@ -319,65 +317,12 @@ public partial class fobContext : DbContext
             entity.Property(e => e.Numero).HasColumnName("numero");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
 
-            entity.HasOne(d => d.Receta).WithMany(p => p.Pasos)
+            entity.HasOne(d => d.Receta).WithMany(p => p.Paso)
                 .HasForeignKey(d => d.RecetaId)
                 .HasConstraintName("paso_ibfk_1");
         });
 
-        modelBuilder.Entity<RecetaFavoritum>(entity =>
-        {
-            entity.HasKey(e => new { e.UsuarioId, e.RecetaId })
-                .HasName("PRIMARY")
-                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-
-            entity.ToTable("receta_favorita");
-
-            entity.HasIndex(e => e.RecetaId, "receta_id");
-
-            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
-            entity.Property(e => e.RecetaId).HasColumnName("receta_id");
-            entity.Property(e => e.Fecha)
-                .HasColumnType("datetime")
-                .HasColumnName("fecha");
-
-            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaFavorita)
-                .HasForeignKey(d => d.RecetaId)
-                .HasConstraintName("receta_favorita_ibfk_2");
-
-            entity.HasOne(d => d.Usuario).WithMany(p => p.RecetaFavorita)
-                .HasForeignKey(d => d.UsuarioId)
-                .HasConstraintName("receta_favorita_ibfk_1");
-        });
-
-        modelBuilder.Entity<RecetaImagen>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("receta_imagen");
-
-            entity.HasIndex(e => e.PasoId, "paso_id");
-
-            entity.HasIndex(e => e.RecetaId, "receta_id");
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.PasoId).HasColumnName("paso_id");
-            entity.Property(e => e.RecetaId).HasColumnName("receta_id");
-            entity.Property(e => e.Url)
-                .HasMaxLength(255)
-                .HasColumnName("url");
-
-            entity.HasOne(d => d.Paso).WithMany(p => p.RecetaImagens)
-                .HasForeignKey(d => d.PasoId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("receta_imagen_ibfk_2");
-
-            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaImagens)
-                .HasForeignKey(d => d.RecetaId)
-                .OnDelete(DeleteBehavior.Cascade)
-                .HasConstraintName("receta_imagen_ibfk_1");
-        });
-
-        modelBuilder.Entity<Recetum>(entity =>
+        modelBuilder.Entity<Receta>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
 
@@ -415,11 +360,11 @@ public partial class fobContext : DbContext
 
             entity.HasMany(d => d.Categoria).WithMany(p => p.Receta)
                 .UsingEntity<Dictionary<string, object>>(
-                    "RecetaCategorium",
-                    r => r.HasOne<Categorium>().WithMany()
+                    "RecetaCategoria",
+                    r => r.HasOne<Categoria>().WithMany()
                         .HasForeignKey("CategoriaId")
                         .HasConstraintName("receta_categoria_ibfk_2"),
-                    l => l.HasOne<Recetum>().WithMany()
+                    l => l.HasOne<Receta>().WithMany()
                         .HasForeignKey("RecetaId")
                         .HasConstraintName("receta_categoria_ibfk_1"),
                     j =>
@@ -432,6 +377,34 @@ public partial class fobContext : DbContext
                         j.IndexerProperty<int>("RecetaId").HasColumnName("receta_id");
                         j.IndexerProperty<int>("CategoriaId").HasColumnName("categoria_id");
                     });
+        });
+
+        modelBuilder.Entity<RecetaImagen>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("receta_imagen");
+
+            entity.HasIndex(e => e.PasoId, "paso_id");
+
+            entity.HasIndex(e => e.RecetaId, "receta_id");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.PasoId).HasColumnName("paso_id");
+            entity.Property(e => e.RecetaId).HasColumnName("receta_id");
+            entity.Property(e => e.Url)
+                .HasMaxLength(255)
+                .HasColumnName("url");
+
+            entity.HasOne(d => d.Paso).WithMany(p => p.RecetaImagen)
+                .HasForeignKey(d => d.PasoId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("receta_imagen_ibfk_2");
+
+            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaImagen)
+                .HasForeignKey(d => d.RecetaId)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("receta_imagen_ibfk_1");
         });
 
         modelBuilder.Entity<Rol>(entity =>
@@ -466,11 +439,11 @@ public partial class fobContext : DbContext
             entity.Property(e => e.SeguidoId).HasColumnName("seguido_id");
             entity.Property(e => e.SeguidorId).HasColumnName("seguidor_id");
 
-            entity.HasOne(d => d.Seguido).WithMany(p => p.SeguimientoUsuarioSeguidos)
+            entity.HasOne(d => d.Seguido).WithMany(p => p.SeguimientoUsuarioSeguido)
                 .HasForeignKey(d => d.SeguidoId)
                 .HasConstraintName("seguimiento_usuario_ibfk_2");
 
-            entity.HasOne(d => d.Seguidor).WithMany(p => p.SeguimientoUsuarioSeguidors)
+            entity.HasOne(d => d.Seguidor).WithMany(p => p.SeguimientoUsuarioSeguidor)
                 .HasForeignKey(d => d.SeguidorId)
                 .HasConstraintName("seguimiento_usuario_ibfk_1");
         });
@@ -500,7 +473,7 @@ public partial class fobContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("nombre");
 
-            entity.HasMany(d => d.Rols).WithMany(p => p.Usuarios)
+            entity.HasMany(d => d.Rol).WithMany(p => p.Usuario)
                 .UsingEntity<Dictionary<string, object>>(
                     "UsuarioRol",
                     r => r.HasOne<Rol>().WithMany()
@@ -539,11 +512,11 @@ public partial class fobContext : DbContext
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
             entity.Property(e => e.Valor).HasColumnName("valor");
 
-            entity.HasOne(d => d.Receta).WithMany(p => p.Votos)
+            entity.HasOne(d => d.Receta).WithMany(p => p.Voto)
                 .HasForeignKey(d => d.RecetaId)
                 .HasConstraintName("voto_ibfk_1");
 
-            entity.HasOne(d => d.Usuario).WithMany(p => p.Votos)
+            entity.HasOne(d => d.Usuario).WithMany(p => p.Voto)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("voto_ibfk_2");
         });

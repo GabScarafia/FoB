@@ -23,25 +23,23 @@ public partial class Usuario
 
     public string Nombre { get; set; }
 
-    public virtual ICollection<Comentario> Comentarios { get; set; } = new List<Comentario>();
+    public virtual ICollection<Comentario> Comentario { get; set; } = new List<Comentario>();
 
-    public virtual ICollection<MensajePrivado> MensajePrivadoDestinatarios { get; set; } = new List<MensajePrivado>();
+    public virtual ICollection<MensajePrivado> MensajePrivadoDestinatario { get; set; } = new List<MensajePrivado>();
 
-    public virtual ICollection<MensajePrivado> MensajePrivadoRemitentes { get; set; } = new List<MensajePrivado>();
+    public virtual ICollection<MensajePrivado> MensajePrivadoRemitente { get; set; } = new List<MensajePrivado>();
 
-    public virtual ICollection<Notificacion> Notificacions { get; set; } = new List<Notificacion>();
+    public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
 
-    public virtual ICollection<ParticipacionDesafio> ParticipacionDesafios { get; set; } = new List<ParticipacionDesafio>();
+    public virtual ICollection<ParticipacionDesafio> ParticipacionDesafio { get; set; } = new List<ParticipacionDesafio>();
 
-    public virtual ICollection<Recetum> Receta { get; set; } = new List<Recetum>();
+    public virtual ICollection<Receta> Receta { get; set; } = new List<Receta>();
 
-    public virtual ICollection<RecetaFavoritum> RecetaFavorita { get; set; } = new List<RecetaFavoritum>();
+    public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguido { get; set; } = new List<SeguimientoUsuario>();
 
-    public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguidors { get; set; } = new List<SeguimientoUsuario>();
+    public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguidor { get; set; } = new List<SeguimientoUsuario>();
 
-    public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguidos { get; set; } = new List<SeguimientoUsuario>();
+    public virtual ICollection<Voto> Voto { get; set; } = new List<Voto>();
 
-    public virtual ICollection<Voto> Votos { get; set; } = new List<Voto>();
-
-    public virtual ICollection<Rol> Rols { get; set; } = new List<Rol>();
+    public virtual ICollection<Rol> Rol { get; set; } = new List<Rol>();
 }

@@ -17,5 +17,5 @@ public partial class RecetaImagen
 
     public virtual Paso Paso { get; set; }
 
-    public virtual Recetum Receta { get; set; }
+    public virtual Receta Receta { get; set; }
 }

@@ -23,7 +23,7 @@ public partial class Comentario
 
     public virtual ICollection<Comentario> InverseRespuestaAComentario { get; set; } = new List<Comentario>();
 
-    public virtual Recetum Receta { get; set; }
+    public virtual Receta Receta { get; set; }
 
     public virtual Comentario RespuestaAComentario { get; set; }
 

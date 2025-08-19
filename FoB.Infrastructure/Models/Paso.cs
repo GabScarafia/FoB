@@ -15,7 +15,7 @@ public partial class Paso
 
     public int RecetaId { get; set; }
 
-    public virtual Recetum Receta { get; set; }
+    public virtual Receta Receta { get; set; }
 
-    public virtual ICollection<RecetaImagen> RecetaImagens { get; set; } = new List<RecetaImagen>();
+    public virtual ICollection<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 }
