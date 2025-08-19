@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import Weather from "../pages/Weather";
 import IniciarSesion from "../pages/IniciarSesion";
 import Registrarse from "../pages/Registrarse";
+import Feed from "../pages/Feed";
+
 /**
  * Componente que define las rutas principales de la aplicación.
  *
@@ -19,6 +21,7 @@ export default function AppRoutes() {
             {/* Rutas para la autenticación */}
             <Route path="/iniciar-sesion" element={<IniciarSesion />} />
             <Route path="/registrarse" element={<Registrarse />} />
+            <Route path="/feed" element={<Feed />} />
 
         </Routes>
     );

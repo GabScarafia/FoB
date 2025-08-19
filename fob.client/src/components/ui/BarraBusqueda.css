@@ -1,0 +1,47 @@
+.barra-busqueda-contenedor {
+    display: flex;
+    align-items: center;
+    padding: 8px 15px;
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+    border-radius: 30px;
+    max-width: 600px;
+    box-sizing: border-box;
+    height: 50px;
+}
+
+.logo-app {
+    height: 35px;
+    margin-right: 15px;
+}
+
+.input-busqueda {
+    flex-grow: 1;
+    margin: 0;
+    padding: 0;
+    border: none;
+    background-color: transparent;
+    font-size: 1.1em;
+    color: white;
+    outline: none;
+    &::placeholder
+
+{
+    color: rgba(255, 255, 255, 0.7);
+}
+
+}
+
+.input-busqueda:focus {
+    border-color: transparent;
+}
+
+.icono-busqueda {
+    font-size: 1.8em;
+    color: white;
+    cursor: pointer;
+    margin-left: 15px;
+}
+
+.icono-busqueda:hover {
+    color: #f0f0f0;
+}

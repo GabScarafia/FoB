@@ -1,1 +1,2 @@
 D:\Cosas\PROYECTO FINAL\FoB\fob.client\obj\Debug\fob.client.esproj.CoreCompileInputs.cache
+C:\Users\Marina\Source\Repos\FoB\fob.client\obj\Debug\fob.client.esproj.CoreCompileInputs.cache
