@@ -1,11 +1,12 @@
-﻿using FoB.Infrastructure.Context; // <-- ¡Este using es crucial!
+﻿using FoB.Infrastructure.Context;
+using FoB.Infrastructure.Interface;
 using FoB.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Threading.Tasks;
 
 namespace FoB.Infrastructure.Repositories;
 
-public class UserRepository : IUserRepository
+internal sealed class UserRepository : IUserRepository
 {
     private readonly fobContext _context;
     public UserRepository(fobContext context)

@@ -1,10 +1,10 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Application.Interfaces;
 using FoB.Infrastructure.Models;
-using FoB.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 using static BCrypt.Net.BCrypt;
 using System;
+using FoB.Infrastructure.Interface;
 
 namespace FoB.Infrastructure.Service
 {
