@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import Weather from "../pages/Weather";
 import IniciarSesion from "../pages/IniciarSesion";
 import Registrarse from "../pages/Registrarse";
+import ProtectedRoute from "../routes/ProtectedRoute";
 /**
  * Componente que define las rutas principales de la aplicación.
  *
@@ -13,13 +14,19 @@ import Registrarse from "../pages/Registrarse";
 export default function AppRoutes() {
     return (
         <Routes>
-            {/* Ruta para la página de Weather */}
-            <Route path="/" element={<Weather />} />
+            {/* Rutas protegidas */}
+            <Route
+                path="/"
+                element={
+                    <ProtectedRoute>
+                        <Weather />
+                    </ProtectedRoute>
+                }
+            />
 
-            {/* Rutas para la autenticación */}
+            {/* Rutas públicas */}
             <Route path="/iniciar-sesion" element={<IniciarSesion />} />
             <Route path="/registrarse" element={<Registrarse />} />
-
         </Routes>
     );
 }
