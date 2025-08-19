@@ -2,7 +2,7 @@
 using FoB.Infrastructure.Models;
 using System.Threading.Tasks;
 
-namespace FoB.Infrastructure.Repositories;
+namespace FoB.Infrastructure.Interface;
 
 public interface IUserRepository
 {

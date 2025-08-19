@@ -1,5 +1,7 @@
 ﻿using FoB.Application.Interfaces;
 using FoB.Infrastructure.Context;
+using FoB.Infrastructure.Interface;
+using FoB.Infrastructure.Repositories;
 using FoB.Infrastructure.Service;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -26,5 +28,8 @@ public static class ServiceExtensions
                                     .EnableDetailedErrors());
 
         services.AddTransient<IAuthenticationService, AuthenticationService>();
+        services.AddTransient<IRegisterService, RegisterService>();
+        services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IRecetaRepository, RecetaRepository>();
     }
 }
