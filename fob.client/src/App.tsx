@@ -27,7 +27,10 @@ const MainApp = () => {
     <Box sx={{ display: "flex", flexDirection: 'column', width: '100%', minHeight: '100vh' }}>
       <CssBaseline />
       <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> 
-      {/* Contenido principal que contendrá las rutas */}
+      {/* Barra superior solo si el usuario está logueado y no es página de login/registro */}
+      {!isAuthPage && isLoggedIn && <ButtonAppBar />}
+
+      {/* Contenido principal */}
       <Box
         component="main"
         sx={{
@@ -35,7 +38,8 @@ const MainApp = () => {
           p: isAuthPage ? 0 : 3,
           width:'100%',
           minHeight: '100vh',
-          pb: { xs: 9, sm: 0 }
+          pt: { xs: isAuthPage ? 0 : 8, sm: isAuthPage ? 0 : 8 }, // deja espacio para AppBar
+          pb: { xs: 9, sm: 0 } // espacio para BottomNavigation
         }}
       >
         <AppRoutes />
