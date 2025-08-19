@@ -32,4 +32,9 @@ public class UserRepository : IUserRepository
     {
         await _context.SaveChangesAsync();
     }
+
+    public async Task<Rol> GetRoleByNameAsync(string roleName)
+    {
+        return await _context.Rols.FirstOrDefaultAsync(r => r.Nombre == roleName);
+    }
 }

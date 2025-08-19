@@ -10,4 +10,5 @@ public interface IUserRepository
     Task<bool> UsernameExistsAsync(string username);
     Task AddAsync(Usuario user);
     Task SaveChangesAsync();
+    Task<Rol> GetRoleByNameAsync(string roleName);
 }
