@@ -458,6 +458,9 @@ public partial class fobContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Activo).HasColumnName("activo");
+            entity.Property(e => e.Apellido)
+                .HasMaxLength(255)
+                .HasColumnName("apellido");
             entity.Property(e => e.Biografia)
                 .HasMaxLength(255)
                 .HasColumnName("biografia");
@@ -472,6 +475,9 @@ public partial class fobContext : DbContext
             entity.Property(e => e.Nombre)
                 .HasMaxLength(255)
                 .HasColumnName("nombre");
+            entity.Property(e => e.NombreUsuario)
+                .HasMaxLength(255)
+                .HasColumnName("nombreUsuario");
 
             entity.HasMany(d => d.Rol).WithMany(p => p.Usuario)
                 .UsingEntity<Dictionary<string, object>>(
