@@ -29,7 +29,7 @@ public partial class MensajePrivado
 
     public virtual ICollection<MensajePrivado> InverseRespuestaAMensaje { get; set; } = new List<MensajePrivado>();
 
-    public virtual ICollection<MensajeEstado> MensajeEstados { get; set; } = new List<MensajeEstado>();
+    public virtual ICollection<MensajeEstado> MensajeEstado { get; set; } = new List<MensajeEstado>();
 
     public virtual Usuario Remitente { get; set; }
 

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FoB.Infrastructure.Models;
 
-public partial class IngredienteRecetum
+public partial class IngredienteReceta
 {
     public int Id { get; set; }
 
@@ -19,5 +19,5 @@ public partial class IngredienteRecetum
 
     public virtual Ingrediente Ingrediente { get; set; }
 
-    public virtual Recetum Receta { get; set; }
+    public virtual Receta Receta { get; set; }
 }

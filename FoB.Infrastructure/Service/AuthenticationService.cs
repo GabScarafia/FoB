@@ -35,7 +35,7 @@ public class AuthenticationService : IAuthenticationService
     {
         // 1. Busca el usuario por email
         var user = await _fbContext.Set<Usuario>()
-            .Include(x => x.Rols)
+            .Include(x => x.Rol)
             .FirstOrDefaultAsync(x => x.Email.ToLower() == email.ToLower());
 
         if (user == null)
@@ -59,14 +59,14 @@ public class AuthenticationService : IAuthenticationService
             Email = user.Email,
             Id = user.Id,
             Nombre = user.Nombre,
-            Roles = user.Rols.Select(x => x.Nombre).ToList()
+            Roles = user.Rol.Select(x => x.Nombre).ToList()
         };
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var securityKey = Encoding.ASCII.GetBytes(_JWTSettings.Key!);
         DateTime expDate = DateTime.UtcNow.AddMinutes(_JWTSettings.DurationInMinutes);
         var roleClaims = new List<Claim>();
-        foreach (var item in user.Rols)
+        foreach (var item in user.Rol)
             roleClaims.Add(new Claim(ClaimTypes.Role, item.Descripcion));
 
         ClaimsIdentity claims = new ClaimsIdentity(new[]

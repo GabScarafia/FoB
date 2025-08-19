@@ -19,5 +19,5 @@ public partial class Desafio
 
     public string Nombre { get; set; }
 
-    public virtual ICollection<ParticipacionDesafio> ParticipacionDesafios { get; set; } = new List<ParticipacionDesafio>();
+    public virtual ICollection<ParticipacionDesafio> ParticipacionDesafio { get; set; } = new List<ParticipacionDesafio>();
 }

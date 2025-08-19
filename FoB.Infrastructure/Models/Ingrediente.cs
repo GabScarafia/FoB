@@ -13,5 +13,5 @@ public partial class Ingrediente
 
     public string Nombre { get; set; }
 
-    public virtual ICollection<IngredienteRecetum> IngredienteReceta { get; set; } = new List<IngredienteRecetum>();
+    public virtual ICollection<IngredienteReceta> IngredienteReceta { get; set; } = new List<IngredienteReceta>();
 }

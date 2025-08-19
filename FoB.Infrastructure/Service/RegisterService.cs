@@ -1,10 +1,10 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Application.Interfaces;
 using FoB.Infrastructure.Models;
-using FoB.Infrastructure.Repositories;
 using Microsoft.Extensions.Logging;
 using static BCrypt.Net.BCrypt;
 using System;
+using FoB.Infrastructure.Interface;
 
 namespace FoB.Infrastructure.Service
 {
@@ -107,7 +107,7 @@ namespace FoB.Infrastructure.Service
                 }
 
                 // Asigno el rol al usuario
-                newUser.Rols.Add(rol);
+                newUser.Rol.Add(rol);
 
                 await _userRepository.AddAsync(newUser); // Agrega el nuevo usuario al contexto de EF Core
                 await _userRepository.SaveChangesAsync(); // Guarda los cambios en la base de datos

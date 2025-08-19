@@ -64,10 +64,6 @@
          "ObjectType": 0
       },
       {
-         "Name": "receta_favorita",
-         "ObjectType": 0
-      },
-      {
          "Name": "receta_imagen",
          "ObjectType": 0
       },
@@ -104,7 +100,7 @@
    "UseFluentApiOnly": true,
    "UseHandleBars": false,
    "UseHierarchyId": false,
-   "UseInflector": true,
+   "UseInflector": false,
    "UseInternalAccessModifiersForSprocsAndFunctions": false,
    "UseLegacyPluralizer": false,
    "UseManyToManyEntity": false,

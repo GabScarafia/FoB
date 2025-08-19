@@ -19,7 +19,7 @@ public partial class ParticipacionDesafio
 
     public virtual Desafio Desafio { get; set; }
 
-    public virtual Recetum Receta { get; set; }
+    public virtual Receta Receta { get; set; }
 
     public virtual Usuario Usuario { get; set; }
 }

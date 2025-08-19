@@ -1,5 +1,4 @@
 ﻿using FoB.Application.Interfaces;
-using FoB.Application.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -13,6 +12,5 @@ public static class ServiceExtensions
     public static void AddApplicationLayer(this IServiceCollection services, IConfiguration _config)
     {
 
-        services.AddTransient<IWeatherService, WeatherService>();
     }
 }
