@@ -36,6 +36,8 @@ public partial class fobContext : DbContext
 
     public virtual DbSet<Receta> Receta { get; set; }
 
+    public virtual DbSet<RecetaCategoria> RecetaCategoria { get; set; }
+
     public virtual DbSet<RecetaImagen> RecetaImagen { get; set; }
 
     public virtual DbSet<Rol> Rol { get; set; }
@@ -43,6 +45,8 @@ public partial class fobContext : DbContext
     public virtual DbSet<SeguimientoUsuario> SeguimientoUsuario { get; set; }
 
     public virtual DbSet<Usuario> Usuario { get; set; }
+
+    public virtual DbSet<UsuarioRol> UsuarioRol { get; set; }
 
     public virtual DbSet<Voto> Voto { get; set; }
 
@@ -159,7 +163,7 @@ public partial class fobContext : DbContext
             entity.Property(e => e.IngredienteId).HasColumnName("ingrediente_id");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.UnidadDeMedida)
-                .HasColumnType("enum('Gramos','Kilogramos','Litros','Mililitros')")
+                .HasMaxLength(255)
                 .HasColumnName("unidad_de_medida");
 
             entity.HasOne(d => d.Ingrediente).WithMany(p => p.IngredienteReceta)
@@ -348,7 +352,9 @@ public partial class fobContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_modificacion");
             entity.Property(e => e.PuntuacionPromedio).HasColumnName("puntuacion_promedio");
-            entity.Property(e => e.TiempoPreparacion).HasColumnName("tiempo_preparacion");
+            entity.Property(e => e.TiempoPreparacion)
+                .HasColumnType("time")
+                .HasColumnName("tiempo_preparacion");
             entity.Property(e => e.Titulo)
                 .HasMaxLength(255)
                 .HasColumnName("titulo");
@@ -357,26 +363,28 @@ public partial class fobContext : DbContext
             entity.HasOne(d => d.Usuario).WithMany(p => p.Receta)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("receta_ibfk_1");
+        });
 
-            entity.HasMany(d => d.Categoria).WithMany(p => p.Receta)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RecetaCategoria",
-                    r => r.HasOne<Categoria>().WithMany()
-                        .HasForeignKey("CategoriaId")
-                        .HasConstraintName("receta_categoria_ibfk_2"),
-                    l => l.HasOne<Receta>().WithMany()
-                        .HasForeignKey("RecetaId")
-                        .HasConstraintName("receta_categoria_ibfk_1"),
-                    j =>
-                    {
-                        j.HasKey("RecetaId", "CategoriaId")
-                            .HasName("PRIMARY")
-                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("receta_categoria");
-                        j.HasIndex(new[] { "CategoriaId" }, "categoria_id");
-                        j.IndexerProperty<int>("RecetaId").HasColumnName("receta_id");
-                        j.IndexerProperty<int>("CategoriaId").HasColumnName("categoria_id");
-                    });
+        modelBuilder.Entity<RecetaCategoria>(entity =>
+        {
+            entity.HasKey(e => new { e.RecetaId, e.CategoriaId })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("receta_categoria");
+
+            entity.HasIndex(e => e.CategoriaId, "categoria_id");
+
+            entity.Property(e => e.RecetaId).HasColumnName("receta_id");
+            entity.Property(e => e.CategoriaId).HasColumnName("categoria_id");
+
+            entity.HasOne(d => d.Categoria).WithMany(p => p.RecetaCategoria)
+                .HasForeignKey(d => d.CategoriaId)
+                .HasConstraintName("receta_categoria_ibfk_2");
+
+            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaCategoria)
+                .HasForeignKey(d => d.RecetaId)
+                .HasConstraintName("receta_categoria_ibfk_1");
         });
 
         modelBuilder.Entity<RecetaImagen>(entity =>
@@ -478,26 +486,28 @@ public partial class fobContext : DbContext
             entity.Property(e => e.NombreUsuario)
                 .HasMaxLength(255)
                 .HasColumnName("nombreUsuario");
+        });
 
-            entity.HasMany(d => d.Rol).WithMany(p => p.Usuario)
-                .UsingEntity<Dictionary<string, object>>(
-                    "UsuarioRol",
-                    r => r.HasOne<Rol>().WithMany()
-                        .HasForeignKey("RolId")
-                        .HasConstraintName("usuario_rol_ibfk_2"),
-                    l => l.HasOne<Usuario>().WithMany()
-                        .HasForeignKey("UsuarioId")
-                        .HasConstraintName("usuario_rol_ibfk_1"),
-                    j =>
-                    {
-                        j.HasKey("UsuarioId", "RolId")
-                            .HasName("PRIMARY")
-                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("usuario_rol");
-                        j.HasIndex(new[] { "RolId" }, "rol_id");
-                        j.IndexerProperty<int>("UsuarioId").HasColumnName("usuario_id");
-                        j.IndexerProperty<int>("RolId").HasColumnName("rol_id");
-                    });
+        modelBuilder.Entity<UsuarioRol>(entity =>
+        {
+            entity.HasKey(e => new { e.UsuarioId, e.RolId })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("usuario_rol");
+
+            entity.HasIndex(e => e.RolId, "rol_id");
+
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.RolId).HasColumnName("rol_id");
+
+            entity.HasOne(d => d.Rol).WithMany(p => p.UsuarioRol)
+                .HasForeignKey(d => d.RolId)
+                .HasConstraintName("usuario_rol_ibfk_2");
+
+            entity.HasOne(d => d.Usuario).WithMany(p => p.UsuarioRol)
+                .HasForeignKey(d => d.UsuarioId)
+                .HasConstraintName("usuario_rol_ibfk_1");
         });
 
         modelBuilder.Entity<Voto>(entity =>

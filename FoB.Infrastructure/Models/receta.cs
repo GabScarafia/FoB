@@ -23,7 +23,7 @@ public partial class Receta
 
     public float? PuntuacionPromedio { get; set; }
 
-    public int? TiempoPreparacion { get; set; }
+    public TimeOnly? TiempoPreparacion { get; set; }
 
     public string Titulo { get; set; }
 
@@ -37,11 +37,11 @@ public partial class Receta
 
     public virtual ICollection<Paso> Paso { get; set; } = new List<Paso>();
 
+    public virtual ICollection<RecetaCategoria> RecetaCategoria { get; set; } = new List<RecetaCategoria>();
+
     public virtual ICollection<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 
     public virtual Usuario Usuario { get; set; }
 
     public virtual ICollection<Voto> Voto { get; set; } = new List<Voto>();
-
-    public virtual ICollection<Categoria> Categoria { get; set; } = new List<Categoria>();
 }

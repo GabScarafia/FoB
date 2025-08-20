@@ -1,0 +1,56 @@
+﻿namespace FoB.Application.Entities;
+
+public class RecetaRequest
+{
+    public string Titulo { get; set; }
+    public string? Imagen { get; set; }
+    public string Descripcion { get; set; }
+
+    public DificultadEnum Dificultad { get; set; }
+
+    //public EstadoEnum Estado { get; set; }
+
+    public TimeSpan? TiempoPreparacion { get; set; }
+
+    public List<IngredienteRecetaRequest> Ingredientes { get; set; }
+    public List<CategoriaRequest> Categorias { get; set; }
+
+}
+
+public class IngredienteRecetaRequest
+{
+    public int? Id { get; set; }
+
+    public float? Cantidad { get; set; }
+
+    public string UnidadDeMedida { get; set; }
+
+    public string Nombre { get; set; }
+    public string? Descripcion { get; set; }
+
+}
+
+public class CategoriaRequest
+{
+    public int? Id { get; set; }
+    public string Nombre { get; set; }
+    public string? Descripcion { get; set; }
+
+}
+
+
+public enum DificultadEnum
+{
+    Facil,
+    Medio,
+    Dificil,
+    Experto
+}
+
+public enum EstadoEnum
+{
+    Aprobada,
+    Rechazada,
+    Revision,
+    Borrador
+}

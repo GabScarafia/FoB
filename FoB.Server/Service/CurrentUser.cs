@@ -20,7 +20,7 @@ namespace FoB.Server.Service
 
                 var userName = _httpContextAccessor.HttpContext.User.Identity.Name;
 
-                User = new CurrentUser(id, userName);
+                User = new CurrentUser(Convert.ToInt32(id), userName);
             }
         }
 

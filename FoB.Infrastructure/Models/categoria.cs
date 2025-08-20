@@ -13,5 +13,5 @@ public partial class Categoria
 
     public string Nombre { get; set; }
 
-    public virtual ICollection<Receta> Receta { get; set; } = new List<Receta>();
+    public virtual ICollection<RecetaCategoria> RecetaCategoria { get; set; } = new List<RecetaCategoria>();
 }

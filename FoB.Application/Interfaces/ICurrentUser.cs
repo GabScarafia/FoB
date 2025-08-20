@@ -13,5 +13,5 @@ namespace FoB.Application.Interfaces
     }
 
 
-    public record CurrentUser(string Id, string UserName);
+    public record CurrentUser(int Id, string UserName);
 }

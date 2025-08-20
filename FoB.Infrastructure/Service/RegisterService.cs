@@ -107,7 +107,11 @@ namespace FoB.Infrastructure.Service
                 }
 
                 // Asigno el rol al usuario
-                newUser.Rol.Add(rol);
+                UsuarioRol usuarioRol = new()
+                {
+                    RolId = rol.Id,
+                };
+                newUser.UsuarioRol.Add(usuarioRol);
 
                 await _userRepository.AddAsync(newUser); // Agrega el nuevo usuario al contexto de EF Core
                 await _userRepository.SaveChangesAsync(); // Guarda los cambios en la base de datos
