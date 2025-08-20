@@ -11,7 +11,7 @@ export default function ButtonBar() {
   const location = useLocation();
 
   // Mapeo de rutas
-  const routes = ["/", "/profile", "/tendences", "/create"];
+  const routes = ["/feed", "/profile", "/tendences", "/create"];
   const currentIndex = routes.indexOf(location.pathname);
   const [value, setValue] = React.useState(currentIndex === -1 ? 0 : currentIndex);
 
