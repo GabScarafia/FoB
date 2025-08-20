@@ -52,6 +52,7 @@ try
     
     builder.Services.AddDBLayer(builder.Configuration);
     builder.Services.AddApplicationLayer(builder.Configuration);
+    builder.Services.AddHttpContextAccessor(); // <-- Añade esta línea
 
     builder.Services.AddScoped<IRegisterService, RegisterService>();
 

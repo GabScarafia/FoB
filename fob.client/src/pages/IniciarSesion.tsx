@@ -44,7 +44,7 @@ const IniciarSesion: React.FC = () => {
       localStorage.setItem("authData", JSON.stringify(data));   
       login(data);
 
-      navigate('/');
+      navigate('/feed');
 
       // Redirigir a otra página si querés, por ejemplo /dashboard
       // navigate("/dashboard");

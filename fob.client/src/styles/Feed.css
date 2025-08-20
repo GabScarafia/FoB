@@ -1,0 +1,85 @@
+/* Contenedor principal que envuelve todo el Feed (incluyendo la barra de búsqueda) */
+.feed-contenedor-principal {
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: white;
+    min-height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Contenido del feed (las recetas), que estará debajo de las barras superiores */
+.feed-contenido {
+    flex-grow: 1;
+    padding-top: 15px;
+    padding-bottom: 80px;
+    background-color: white;
+}
+
+.feed-cargando, .feed-error {
+    text-align: center;
+    padding: 20px;
+    color: #555;
+    font-size: 1.1em;
+}
+
+.no-resultados {
+    text-align: center;
+    padding: 20px;
+    color: #888;
+    font-style: italic;
+}
+
+/* Estilos para la barra de navegación inferior */
+.barra-inferior-navegacion-placeholder {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 0;
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.barra-inferior-navegacion-placeholder .icono-nav {
+    font-size: 1.8em;
+    color: #555;
+    cursor: pointer;
+}
+
+.barra-inferior-navegacion-placeholder .icono-nav.activo {
+    color: #007bff;
+}
+
+.barra-inferior-navegacion-placeholder .icono-nav:hover {
+    color: #0056b3;
+}
+
+.barra-inferior-navegacion-placeholder .boton-agregar {
+    background-color: #007bff;
+    color: white;
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2em;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    cursor: pointer;
+}
+
+
+@media (min-width: 768px) {
+    .feed-contenedor-principal {
+        margin: 0 auto;
+    }
+}

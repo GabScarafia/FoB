@@ -2,6 +2,7 @@ import * as React from "react";
 import { BottomNavigation, BottomNavigationAction, Paper } from "@mui/material";
 import HomeIcon from "@mui/icons-material/Home";
 import StarIcon from "@mui/icons-material/Star";
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 import PersonIcon from "@mui/icons-material/Person";
 import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -11,7 +12,7 @@ export default function ButtonBar() {
   const location = useLocation();
 
   // Mapeo de rutas
-  const routes = ["/", "/profile", "/tendences", "/create"];
+  const routes = ["/feed", "/profile", "/tendences", "/create"];
   const currentIndex = routes.indexOf(location.pathname);
   const [value, setValue] = React.useState(currentIndex === -1 ? 0 : currentIndex);
 
@@ -33,7 +34,7 @@ export default function ButtonBar() {
       <BottomNavigation value={value} onChange={handleChange} showLabels sx={{ bgcolor: "primary.main" }}>
         <BottomNavigationAction label="Inicio" icon={<HomeIcon />} sx={{ color: "white" , "&.Mui-selected": { color: "white" },}} />
         <BottomNavigationAction label="Perfil" icon={<PersonIcon />} sx={{ color: "white" , "&.Mui-selected": { color: "white" }, }}/>
-        <BottomNavigationAction label="Tendencias" icon={<StarIcon />} sx={{ color: "white" , "&.Mui-selected": { color: "white" }, }}/>
+        <BottomNavigationAction label="Tendencias" icon={<WhatshotIcon />} sx={{ color: "white" , "&.Mui-selected": { color: "white" }, }}/>
         <BottomNavigationAction label="Nuevo" icon={<AddCircleOutlineOutlinedIcon />} sx={{ color: "white" , "&.Mui-selected": { color: "white" }, }}/>
       </BottomNavigation>
     </Paper>

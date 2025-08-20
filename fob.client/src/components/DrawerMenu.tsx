@@ -21,6 +21,11 @@ export default function DrawerMenu({
           <ListItemText primary="Inicio" />
         </ListItemButton>
 
+        <ListItemButton component={Link} to="/feed" onClick={handleDrawerToggle}>
+            <ListItemText primary="Feed" />
+        </ListItemButton>
+
+
         <ListItemButton component={Link} to="/weather" onClick={handleDrawerToggle}>
           <ListItemText primary="Sexo" />
         </ListItemButton>

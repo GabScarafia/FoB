@@ -4,6 +4,8 @@ import Weather from "../pages/Weather";
 import IniciarSesion from "../pages/IniciarSesion";
 import Registrarse from "../pages/Registrarse";
 import ProtectedRoute from "../routes/ProtectedRoute";
+import Feed from "../pages/Feed";
+
 /**
  * Componente que define las rutas principales de la aplicación.
  *
@@ -27,6 +29,8 @@ export default function AppRoutes() {
             {/* Rutas públicas */}
             <Route path="/iniciar-sesion" element={<IniciarSesion />} />
             <Route path="/registrarse" element={<Registrarse />} />
+            <Route path="/feed" element={<Feed />} />
+
         </Routes>
     );
 }
