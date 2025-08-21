@@ -11,15 +11,6 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 
 import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg'; 
 
-// Interfaz corregida para el usuario
-interface Usuario {
-    nombreUsuario: string;
-    imagen: string; 
-}
-
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'; // Guardar con borde
-import BookmarkIcon from '@mui/icons-material/Bookmark'; // Guardar relleno
-
 // Interfaz para la vista previa de comentarios
 interface VistaPreviaComentario {
     autor: Usuario;
@@ -29,11 +20,10 @@ interface VistaPreviaComentario {
 
 // Interfaz corregida para las props del componente Receta
 
-import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 import imagenRecetaLocal from '../assets/images/fanta.webp';
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from './DrawerComentarios'; // Importa la interfaz de comentarios
-import type { Usuario } from './DrawerComentarios'; // Importa la interfaz de usuario
+import type { Usuario } from '../pages/Feed'; // Importa la interfaz de usuario
 
 // interfaz para las props del componente Receta
 interface PropsReceta {
@@ -128,7 +118,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 <div className="info-autor">
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
-                        <div className="nombre-autor">{receta.usuario?.nombreUsuario}</div>
+                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
                         <div className="tiempo-publicacion">Publicado el {receta.tiempoPublicacion}</div>
                     </div>
                 </div>
@@ -191,7 +181,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     receta.vistaPreviaComentarios.map((comentario, index) => (
                         <div key={index} className="item-comentario">
                             <ChatBubbleIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> 
+                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> 
                             <span className="tiempo-comentario">
                                 {comentario.hora instanceof Date ? comentario.hora.toLocaleString() : comentario.hora}
                             </span>

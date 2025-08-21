@@ -14,20 +14,14 @@ import {
   Button,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-
-export interface Usuario {
-    nombreUsuario: string;
-    texto: string;
-    tiempo: Date;    
-    //foto:string;
-}
+import type { Usuario } from "../pages/Feed"
 
 export interface Comentario {
   id: number;
-  usuario: Usuario;
+  autor: Usuario;
   texto: string;
-  hora: Date
-  fotoUrl: string;
+  hora: Date | string;
+  imagen: string;
 }
 
 interface DrawerComentariosProps {
@@ -37,11 +31,12 @@ interface DrawerComentariosProps {
 }
 
 const DrawerComentarios: React.FC<DrawerComentariosProps> = ({ open, onClose, comentarios }) => {
-  if (!open) return null;
+    if (!open) return null;
+
 
    return (
     <Drawer anchor="bottom" open={open} onClose={onClose}>
-      <Box sx={{ width: 350, display: "flex", flexDirection: "column", height: "100%" }}>
+      <Box sx={{ width: '100%', maxHeight: '60vh', display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <Box
           sx={{
@@ -67,16 +62,16 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({ open, onClose, co
             {comentarios.map((c) => (
               <ListItem alignItems="flex-start" key={c.id}>
                 <ListItemAvatar>
-                  <Avatar src={c.fotoUrl} alt={c.usuario.nombreUsuario}>
-                    {c.usuario.nombreUsuario[0]}
+                  <Avatar src={c.imagen} alt={c.autor.nombreUsuario}>
+                    {c.autor.nombreUsuario[0]}
                   </Avatar>
                 </ListItemAvatar>
                 <ListItemText
                   primary={
                     <Typography variant="subtitle2" sx={{ fontWeight: "bold" }}>
-                      {c.usuario.nombreUsuario} •{" "}
+                      {c.autor.nombreUsuario} •{" "}
                       <span style={{ color: "gray" }}>
-                        {typeof c.hora === 'string' ? c.hora : c.hora.toLocaleString()}
+                        {typeof c.hora === 'string' ? c.hora : c.hora?.toLocaleString() || ''}
                       </span>
                     </Typography>
                   }

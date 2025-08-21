@@ -3,6 +3,7 @@ import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
 import { useAuth } from "../context/AuthContext"; // Asegúrate de la ruta
 import '../styles/Feed.css';
+import type { Comentario } from 'components/DrawerComentarios';
 
 // Definimos la interfaz para los datos de una receta
 interface DatosReceta {
@@ -17,7 +18,8 @@ interface DatosReceta {
     cantidadComentarios: number;
     titulo: string;
     descripcion: string;
-    vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
+    //vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
+    vistaPreviaComentarios?:Comentario[];
 }
 
 export interface Usuario {
@@ -25,7 +27,6 @@ export interface Usuario {
     texto: string;
     tiempo: string;    
     imagen: string; 
-    //foto:string;
 }
 const Feed: React.FC = () => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]); // Almacena todas las recetas
@@ -152,13 +153,13 @@ const Feed: React.FC = () => {
                         key={receta.id}
                         receta={{
                             ...receta,
-                            usuario: receta.autor,
+                            autor: receta.autor,
                             vistaPreviaComentarios: receta.vistaPreviaComentarios?.map((comentario, idx) => ({
                                 id: idx,
-                                usuario: comentario.autor,
+                                autor: comentario.autor,
                                 texto: comentario.texto,
-                                hora: comentario.tiempo, // mantenemos como string
-                                fotoUrl: '', // puedes agregar URL si la tienes
+                                hora: comentario.hora, // mantenemos como string
+                                imagen: '', // puedes agregar URL si la tienes
                             }))
                         }}
                     />
