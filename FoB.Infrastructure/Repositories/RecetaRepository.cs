@@ -34,7 +34,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             }],
         };
         if (receta.TiempoPreparacion.HasValue)
-            nuevaReceta.TiempoPreparacion = TimeOnly.FromTimeSpan(receta.TiempoPreparacion.Value);
+            nuevaReceta.TiempoPreparacion = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(receta.TiempoPreparacion.Value));
 
         List<IngredienteReceta> ingredienteRecetas = new();
         if(receta.Ingredientes != null && receta.Ingredientes.Count > 0)
@@ -131,6 +131,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             CantidadVotos = x.Voto.Count(),
             CantidadComentarios = x.Comentario.Count(),
             Estado = x.Estado,
+            Imagen = x.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
             FechaCreacion = x.FechaCreacion,
             MeGusta = x.Voto.Any(x=>x.UsuarioId == _currentUser.User.Id),
             FechaModificacion = x.FechaModificacion,
@@ -139,6 +140,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Autor = new UsuarioResponse
             {
                 Id = x.Usuario.Id,
+                Imagen = x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
                 NombreUsuario = x.Usuario.NombreUsuario,
                 Nombre = x.Usuario.Nombre,
                 Apellido = x.Usuario.Apellido,
@@ -213,6 +215,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             FechaCreacion = x.FechaCreacion,
             FechaModificacion = x.FechaModificacion,
             PuntuacionPromedio = x.PuntuacionPromedio,
+            Imagen = x.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
             TiempoPreparacion = x.TiempoPreparacion.HasValue ? x.TiempoPreparacion.Value.ToTimeSpan() : null,
             Autor = new UsuarioResponse
             {
@@ -220,7 +223,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 NombreUsuario = x.Usuario.NombreUsuario,
                 Nombre = x.Usuario.Nombre,
                 Apellido = x.Usuario.Apellido,
-                //VER: Foto = x.Usuario.Foto
+                Imagen = x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
             },
             Ingredientes = x.IngredienteReceta.Select(i => new IngredienteResponse
             {

@@ -11,7 +11,7 @@ interface DatosReceta {
     tiempoPublicacion: string;
     tipoContenido: string; // Por ejemplo, 'Imagen', 'Video'
     calificacion: number; // 1-3 estrellas
-    urlImagen: string;
+    imagen: string; 
     cantidadVotos: number;
     meGusta: boolean;
     cantidadComentarios: number;
@@ -24,6 +24,7 @@ interface Usuario {
     nombreUsuario: string;
     texto: string;
     tiempo: string;    
+    imagen: string; 
     //foto:string;
 }
 const Feed: React.FC = () => {
@@ -54,7 +55,7 @@ const Feed: React.FC = () => {
                 // Parsear la respuesta JSON
                 const datosRecetas: DatosReceta[] = await response.json();
 
-                datosRecetas.forEach(x=>x.urlImagen ='https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1')
+                //datosRecetas.forEach(x=>x.urlImagen ='https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1')
                 // Actualizar los estados con los datos de la API
                 setRecetas(datosRecetas);
                 setRecetasFiltradas(datosRecetas);

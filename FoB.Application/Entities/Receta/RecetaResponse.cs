@@ -46,6 +46,7 @@ public class ComentarioResponse
 public class UsuarioResponse
 {
     public int Id { get; set; }
+    public byte[] Imagen { get; set; }
     public string NombreUsuario { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
