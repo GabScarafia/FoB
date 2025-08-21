@@ -9,7 +9,7 @@ public class RecetaRequest
 
     //public EstadoEnum Estado { get; set; }
 
-    public TimeSpan? TiempoPreparacion { get; set; }
+    public int? TiempoPreparacion { get; set; }
 
     public List<IngredienteRecetaRequest> Ingredientes { get; set; }
     public List<CategoriaRequest> Categorias { get; set; }
