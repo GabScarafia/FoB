@@ -1,4 +1,4 @@
-﻿namespace FoB.Application.Entities;
+﻿namespace FoB.Application.Entities.Receta;
 
 public class RecetaRequest
 {

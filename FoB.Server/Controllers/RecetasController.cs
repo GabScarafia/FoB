@@ -1,5 +1,5 @@
 ﻿using FoB.Application.Dtos;
-using FoB.Application.Entities;
+using FoB.Application.Entities.Receta;
 using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +21,18 @@ public class RecetasController : ControllerBase
     {
         _logger = logger;
         _recetaRepository = recetaRepository;
+    }
+
+    [HttpGet("Feed")]
+    public async Task<IActionResult> Feed([FromQuery] int pageSize = 1)
+    {
+        return Ok(await _recetaRepository.FeedAsync(pageSize));
+    }
+
+    [HttpGet("Tendencias")]
+    public async Task<IActionResult> Tendencias([FromQuery] int pageSize = 1)
+    {
+        return Ok(await _recetaRepository.TendenciasAsync(pageSize));
     }
 
     [HttpPost]

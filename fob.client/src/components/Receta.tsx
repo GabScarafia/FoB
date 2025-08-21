@@ -17,21 +17,28 @@ import imagenRecetaLocal from '../assets/images/fanta.webp';
 
 // interfaz para la vista previa de comentarios
 interface VistaPreviaComentario {
-    autor: string;
+    autor: Usuario;
     texto: string;
     tiempo: string;
-}
 
+}
+interface Usuario {
+    nombreUsuario: string;
+    texto: string;
+    tiempo: string;    
+    //foto:string;
+}
 // interfaz para las props del componente Receta
 interface PropsReceta {
     receta: {
         id: number;
-        autor: string;
+        autor: Usuario;
         tiempoPublicacion: string;
         tipoContenido: string;
         calificacion: number; // 1-3 estrellas
         urlImagen: string;
-        meGusta: number;
+        cantidadVotos: number;
+        meGusta: boolean;
         cantidadComentarios: number;
         titulo: string;
         descripcion: string;
@@ -42,10 +49,10 @@ interface PropsReceta {
 
 const Receta: React.FC<PropsReceta> = ({ receta }) => {
     // Estado local para controlar si la receta ha sido marcada como "Me gusta"
-    const [liked, setLiked] = useState(false); // Inicialmente no le ha dado like
+    const [liked, setLiked] = useState(receta.meGusta); // Inicialmente no le ha dado like
 
     // Estado local para el conteo de likes, inicializado con el valor de la prop
-    const [likesCount, setLikesCount] = useState(receta.meGusta);
+    const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
 
     // Estado local para controlar si la receta ha sido guardada
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
@@ -104,7 +111,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 <div className="info-autor">
                     <img src={fotoPerfilLocal} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
-                        <div className="nombre-autor">{receta.autor}</div>
+                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
                         <div className="tiempo-publicacion">Publicado el {receta.tiempoPublicacion}</div>
                     </div>
                 </div>
@@ -167,7 +174,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     receta.vistaPreviaComentarios.map((comentario, index) => (
                         <div key={index} className="item-comentario">
                             <ChatBubbleIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.autor}:</span> <span className="texto-comentario">{comentario.texto}</span> <span className="tiempo-comentario">{comentario.tiempo}</span>
+                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> <span className="tiempo-comentario">{comentario.tiempo}</span>
                         </div>
                     ))
                 ) : (

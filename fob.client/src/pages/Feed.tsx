@@ -1,90 +1,128 @@
 import React, { useEffect, useState } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
+import { useAuth } from "../context/AuthContext"; // AsegÃºrate de la ruta
 import '../styles/Feed.css';
 
 // Definimos la interfaz para los datos de una receta
 interface DatosReceta {
     id: number;
-    autor: string;
+    autor: Usuario;
     tiempoPublicacion: string;
     tipoContenido: string; // Por ejemplo, 'Imagen', 'Video'
     calificacion: number; // 1-3 estrellas
     urlImagen: string;
-    meGusta: number;
+    cantidadVotos: number;
+    meGusta: boolean;
     cantidadComentarios: number;
     titulo: string;
     descripcion: string;
-    vistaPreviaComentarios?: { autor: string; texto: string; tiempo: string; }[];
+    vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
 }
 
+interface Usuario {
+    nombreUsuario: string;
+    texto: string;
+    tiempo: string;    
+    //foto:string;
+}
 const Feed: React.FC = () => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]); // Almacena todas las recetas
-    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // Almacena las recetas después de aplicar el filtro
+    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // Almacena las recetas despuï¿½s de aplicar el filtro
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const { authData } = useAuth(); // Lee el email del contexto
+    const token = authData?.token;
+    console.log(token);
 
     useEffect(() => {
         const obtenerRecetas = async () => {
             try {
-                // Simular una llamada a la API
-                await new Promise(resolve => setTimeout(resolve, 500)); // Simula un retraso de red
-
-                const recetasEjemplo: DatosReceta[] = [
-                    {
-                        id: 1,
-                        autor: 'Tomas Sbert',
-                        tiempoPublicacion: 'domingo 08:10AM',
-                        tipoContenido: 'Imagen',
-                        calificacion: 2,
-                        urlImagen: 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1',
-                        meGusta: 90,
-                        cantidadComentarios: 5,
-                        titulo: 'Fanta Loca',
-                        descripcion: 'En un vaso de 500cc agregar hielos hasta colmar el vaso, 125cc de Fernet Branca, 300cc de Coca Cola',
-                        vistaPreviaComentarios: [
-                            { autor: 'Manuel Morrullo', texto: 'Invitame uno compa', tiempo: '2m, 20:43hs' },
-                            { autor: 'Gabriel Scarafia', texto: 'A donde salimos hoy??', tiempo: '2m, 20:43hs' }
-                        ]
-                    },
-                    {
-                        id: 2,
-                        autor: 'Matias Russo',
-                        tiempoPublicacion: 'lunes 10:00AM',
-                        tipoContenido: 'Imagen',
-                        calificacion: 3,
-                        urlImagen: 'https://via.placeholder.com/600x400/3366FF/FFFFFF?text=Imagen+de+Receta+2',
-                        meGusta: 150,
-                        cantidadComentarios: 10,
-                        titulo: 'Fanta Loca',
-                        descripcion: 'Receta de otro trago, muy refrescante para el verano. Pruebenla!',
-                        vistaPreviaComentarios: []
+                // Realizar la llamada a la API
+                // ...dentro de la funciÃ³n obtenerRecetas
+                const response = await fetch('https://localhost:7084/Recetas/Feed?pageSize=1', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json' // Opcional, dependiendo de los requerimientos de la API
                     }
-                    // Aca se agregan mas recetas de ejemplo
-                ];
-                setRecetas(recetasEjemplo);
-                setRecetasFiltradas(recetasEjemplo); // Al inicio, las recetas filtradas son todas las recetas
+                });
+                console.log(response.headers)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                // Parsear la respuesta JSON
+                const datosRecetas: DatosReceta[] = await response.json();
+
+                datosRecetas.forEach(x=>x.urlImagen ='https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1')
+                // Actualizar los estados con los datos de la API
+                setRecetas(datosRecetas);
+                setRecetasFiltradas(datosRecetas);
             } catch (err) {
-                setError("Error al cargar las recetas.");
+                setError("Error al cargar las recetas. Por favor, intente de nuevo mÃ¡s tarde.");
                 console.error("Error al obtener recetas:", err);
             } finally {
                 setCargando(false);
             }
+            // try {
+            //     // Simular una llamada a la API
+            //     await new Promise(resolve => setTimeout(resolve, 500)); // Simula un retraso de red
+
+            //     const recetasEjemplo: DatosReceta[] = [
+            //         {
+            //             id: 1,
+            //             autor: 'Tomas Sbert',
+            //             tiempoPublicacion: 'domingo 08:10AM',
+            //             tipoContenido: 'Imagen',
+            //             calificacion: 2,
+            //             urlImagen: 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1',
+            //             meGusta: 90,
+            //             cantidadComentarios: 5,
+            //             titulo: 'Fanta Loca',
+            //             descripcion: 'En un vaso de 500cc agregar hielos hasta colmar el vaso, 125cc de Fernet Branca, 300cc de Coca Cola',
+            //             vistaPreviaComentarios: [
+            //                 { autor: 'Manuel Morrullo', texto: 'Invitame uno compa', tiempo: '2m, 20:43hs' },
+            //                 { autor: 'Gabriel Scarafia', texto: 'A donde salimos hoy??', tiempo: '2m, 20:43hs' }
+            //             ]
+            //         },
+            //         {
+            //             id: 2,
+            //             autor: 'Matias Russo',
+            //             tiempoPublicacion: 'lunes 10:00AM',
+            //             tipoContenido: 'Imagen',
+            //             calificacion: 3,
+            //             urlImagen: 'https://via.placeholder.com/600x400/3366FF/FFFFFF?text=Imagen+de+Receta+2',
+            //             meGusta: 150,
+            //             cantidadComentarios: 10,
+            //             titulo: 'Fanta Loca',
+            //             descripcion: 'Receta de otro trago, muy refrescante para el verano. Pruebenla!',
+            //             vistaPreviaComentarios: []
+            //         }
+            //         // Aca se agregan mas recetas de ejemplo
+            //     ];
+            //     setRecetas(recetasEjemplo);
+            //     setRecetasFiltradas(recetasEjemplo); // Al inicio, las recetas filtradas son todas las recetas
+            // } catch (err) {
+            //     setError("Error al cargar las recetas.");
+            //     console.error("Error al obtener recetas:", err);
+            // } finally {
+            //     setCargando(false);
+            // }
         };
 
         obtenerRecetas();
     }, []);
 
-    // Función que se pasa al componente BarraBusqueda para manejar la búsqueda
+    // Funciï¿½n que se pasa al componente BarraBusqueda para manejar la bï¿½squeda
     const manejarBusqueda = (termino: string) => {
         if (termino.trim() === '') {
-            setRecetasFiltradas(recetas); // Si el término de búsqueda está vacío, muestra todas las recetas
+            setRecetasFiltradas(recetas); // Si el tï¿½rmino de bï¿½squeda estï¿½ vacï¿½o, muestra todas las recetas
         } else {
             const resultados = recetas.filter(receta =>
                 receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-                receta.autor.toLowerCase().includes(termino.toLowerCase()) ||
+                receta.autor?.nombreUsuario.includes(termino.toLowerCase()) ||
                 receta.tipoContenido.toLowerCase().includes(termino.toLowerCase()) // Ejemplo: buscar por tipo de contenido
-                // Puedes añadir más campos a buscar aquí
+                // Puedes aï¿½adir mï¿½s campos a buscar aquï¿½
             );
             setRecetasFiltradas(resultados);
         }
@@ -102,11 +140,11 @@ const Feed: React.FC = () => {
         <div className="feed-contenedor-principal"> {/* contenedor principal para incluir la barra y el contenido */}
             <BarraBusqueda
                 onSearch={manejarBusqueda}
-                logoUrl="https://via.placeholder.com/100x30/007bff/FFFFFF?text=FOB"
+                //logoUrl="https://via.placeholder.com/100x30/007bff/FFFFFF?text=FOB"
             />
             <div className="feed-contenido"> {/* Contenedor para el contenido del feed (las recetas) */}
                 {recetasFiltradas.length === 0 && !cargando && !error && (
-                    <div className="no-resultados">No se encontraron recetas que coincidan con la búsqueda.</div>
+                    <div className="no-resultados">No se encontraron recetas que coincidan con la bï¿½squeda.</div>
                 )}
                 {recetasFiltradas.map(receta => (
                     <Receta key={receta.id} receta={receta} />
