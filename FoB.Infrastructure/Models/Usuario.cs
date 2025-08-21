@@ -19,8 +19,6 @@ public partial class Usuario
 
     public DateOnly? FechaRegistro { get; set; }
 
-    public string ImagenPerfil { get; set; }
-
     public string Nombre { get; set; }
 
     public string NombreUsuario { get; set; }
@@ -42,6 +40,8 @@ public partial class Usuario
     public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguido { get; set; } = new List<SeguimientoUsuario>();
 
     public virtual ICollection<SeguimientoUsuario> SeguimientoUsuarioSeguidor { get; set; } = new List<SeguimientoUsuario>();
+
+    public virtual ICollection<UsuarioImagen> UsuarioImagen { get; set; } = new List<UsuarioImagen>();
 
     public virtual ICollection<UsuarioRol> UsuarioRol { get; set; } = new List<UsuarioRol>();
 

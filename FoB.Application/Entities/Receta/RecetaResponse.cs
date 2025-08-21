@@ -9,6 +9,7 @@ public class RecetaResponse
     public string Dificultad { get; set; }
 
     public string Estado { get; set; }
+    public byte[] Imagen { get; set; }
 
     public DateTime? FechaCreacion { get; set; }
 

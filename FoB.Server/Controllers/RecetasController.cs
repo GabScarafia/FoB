@@ -12,7 +12,6 @@ namespace FoB.Server.Controllers;
 [Authorize]
 public class RecetasController : ControllerBase
 {
- 
     private readonly IRecetaRepository _recetaRepository;
 
     private readonly ILogger<RecetasController> _logger;

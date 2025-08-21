@@ -80,6 +80,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "usuario_imagen",
+         "ObjectType": 0
+      },
+      {
          "Name": "usuario_rol",
          "ObjectType": 0
       },

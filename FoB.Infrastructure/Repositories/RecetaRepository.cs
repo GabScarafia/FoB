@@ -28,6 +28,10 @@ internal sealed class RecetaRepository : IRecetaRepository
             Estado = EstadoEnum.Revision.ToString(),
             Dificultad = receta.Dificultad.ToString(),
             FechaCreacion = DateTime.Now,
+            RecetaImagen = [ new RecetaImagen
+            {
+                Imagen = receta.Imagen,
+            }],
         };
         if (receta.TiempoPreparacion.HasValue)
             nuevaReceta.TiempoPreparacion = TimeOnly.FromTimeSpan(receta.TiempoPreparacion.Value);
@@ -101,6 +105,8 @@ internal sealed class RecetaRepository : IRecetaRepository
         int pageSize = 10;
         IQueryable<Receta> query = _context.Set<Receta>()
             .Include(x => x.Usuario)
+                 .ThenInclude(x => x.UsuarioImagen)
+            .Include(x => x.RecetaImagen)
             .Include(x => x.Voto)
             .Include(x => x.Comentario)
             .Include(x => x.IngredienteReceta)
@@ -163,6 +169,8 @@ internal sealed class RecetaRepository : IRecetaRepository
 
         IQueryable<Receta> query = _context.Set<Receta>()
             .Include(x => x.Usuario)
+                .ThenInclude(x=>x.UsuarioImagen)
+            .Include(x => x.RecetaImagen)
             .Include(x => x.Voto)
             .Include(x => x.Comentario)
             .Include(x => x.IngredienteReceta)

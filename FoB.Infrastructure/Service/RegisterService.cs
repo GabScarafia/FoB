@@ -90,8 +90,7 @@ namespace FoB.Infrastructure.Service
                     Contrasena = hashedPassword,
                     Activo = true,
                     FechaRegistro = DateOnly.FromDateTime(DateTime.UtcNow), // Guarda la fecha de registro
-                    Biografia = null,
-                    ImagenPerfil = null
+                    Biografia = null
                 };
 
                 // Asignacion de rol

@@ -46,6 +46,8 @@ public partial class fobContext : DbContext
 
     public virtual DbSet<Usuario> Usuario { get; set; }
 
+    public virtual DbSet<UsuarioImagen> UsuarioImagen { get; set; }
+
     public virtual DbSet<UsuarioRol> UsuarioRol { get; set; }
 
     public virtual DbSet<Voto> Voto { get; set; }
@@ -398,6 +400,7 @@ public partial class fobContext : DbContext
             entity.HasIndex(e => e.RecetaId, "receta_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Imagen).HasColumnName("imagen");
             entity.Property(e => e.PasoId).HasColumnName("paso_id");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.Url)
@@ -477,15 +480,29 @@ public partial class fobContext : DbContext
                 .HasColumnName("contrasena");
             entity.Property(e => e.Email).HasColumnName("email");
             entity.Property(e => e.FechaRegistro).HasColumnName("fecha_registro");
-            entity.Property(e => e.ImagenPerfil)
-                .HasMaxLength(255)
-                .HasColumnName("imagen_perfil");
             entity.Property(e => e.Nombre)
                 .HasMaxLength(255)
                 .HasColumnName("nombre");
             entity.Property(e => e.NombreUsuario)
                 .HasMaxLength(255)
                 .HasColumnName("nombreUsuario");
+        });
+
+        modelBuilder.Entity<UsuarioImagen>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("usuario_imagen");
+
+            entity.HasIndex(e => e.UsuarioId, "usuario_imagen_usuario_FK");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Imagen).HasColumnName("imagen");
+            entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+
+            entity.HasOne(d => d.Usuario).WithMany(p => p.UsuarioImagen)
+                .HasForeignKey(d => d.UsuarioId)
+                .HasConstraintName("usuario_imagen_usuario_FK");
         });
 
         modelBuilder.Entity<UsuarioRol>(entity =>
