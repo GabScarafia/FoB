@@ -8,31 +8,22 @@ import FavoriteIcon from '@mui/icons-material/Favorite'; // Corazón relleno
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'; // Comentario con borde
 import ChatBubbleIcon from '@mui/icons-material/ChatBubble'; // Comentario relleno
 
+
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder'; // Guardar con borde
 import BookmarkIcon from '@mui/icons-material/Bookmark'; // Guardar relleno
 
 
 import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 import imagenRecetaLocal from '../assets/images/fanta.webp';
+import DrawerComentarios from '../components/DrawerComentarios';
+import type { Comentario } from './DrawerComentarios'; // Importa la interfaz de comentarios
+import type { Usuario } from './DrawerComentarios'; // Importa la interfaz de usuario
 
-// interfaz para la vista previa de comentarios
-interface VistaPreviaComentario {
-    autor: Usuario;
-    texto: string;
-    tiempo: string;
-
-}
-interface Usuario {
-    nombreUsuario: string;
-    texto: string;
-    tiempo: string;    
-    //foto:string;
-}
 // interfaz para las props del componente Receta
 interface PropsReceta {
     receta: {
         id: number;
-        autor: Usuario;
+        usuario: Usuario;
         tiempoPublicacion: string;
         tipoContenido: string;
         calificacion: number; // 1-3 estrellas
@@ -42,7 +33,7 @@ interface PropsReceta {
         cantidadComentarios: number;
         titulo: string;
         descripcion: string;
-        vistaPreviaComentarios?: VistaPreviaComentario[];
+        vistaPreviaComentarios?: Comentario[];
         isSavedInitially?: boolean;
     };
 }
@@ -59,6 +50,9 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
 
     // Estado para controlar si la descripción completa está expandida
     const [mostrarMas, setMostrarMas] = useState(false);
+
+    // Estado para controlar el estado del drawer de comentarios
+    const [drawerAbierto, setDrawerAbierto] = useState(false);
 
     // Límite de caracteres para la descripción truncada
     const LIMITE_CARACTERES = 100;
@@ -111,7 +105,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 <div className="info-autor">
                     <img src={fotoPerfilLocal} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
-                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                        <div className="nombre-autor">{receta.usuario?.nombreUsuario}</div>
                         <div className="tiempo-publicacion">Publicado el {receta.tiempoPublicacion}</div>
                     </div>
                 </div>
@@ -139,8 +133,11 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     )}
                     <span className="conteo-me-gusta">{likesCount}</span> {/* Mostramos el conteo actualizado */}
 
-                    {/* icono de comentario */}
-                    <ChatBubbleIcon className="icono-accion icono-comentario azul-relleno" />
+                    {/* Icono de comentario -> abre el Drawer */}
+                    <ChatBubbleIcon
+                    className="icono-accion icono-comentario azul-relleno"
+                    onClick={() => setDrawerAbierto(true)}
+                    />
                     <span className="conteo-comentarios">{receta.cantidadComentarios}</span>
                 </div>
                 <div className="acciones-derecha">
@@ -174,13 +171,24 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     receta.vistaPreviaComentarios.map((comentario, index) => (
                         <div key={index} className="item-comentario">
                             <ChatBubbleIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> <span className="tiempo-comentario">{comentario.tiempo}</span>
+                            <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> 
+                            <span className="tiempo-comentario">
+                                {comentario.hora instanceof Date ? comentario.hora.toLocaleString() : comentario.hora}
+                            </span>
                         </div>
                     ))
                 ) : (
                     <div className="sin-comentarios">Sé el primero en comentar...</div>
                 )}
             </div>
+
+            {/* Drawer */}
+            <DrawerComentarios
+                open={drawerAbierto}
+                onClose={() => setDrawerAbierto(false)}
+                comentarios={receta.vistaPreviaComentarios || []}
+            />
+
         </div>
     );
 };

@@ -20,11 +20,11 @@ interface DatosReceta {
     vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
 }
 
-interface Usuario {
+export interface Usuario {
     nombreUsuario: string;
     texto: string;
-    tiempo: string;    
-    //foto:string;
+    tiempo: Date; // Use Date for consistency
+    // foto: string;
 }
 const Feed: React.FC = () => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]); // Almacena todas las recetas
@@ -147,7 +147,20 @@ const Feed: React.FC = () => {
                     <div className="no-resultados">No se encontraron recetas que coincidan con la b�squeda.</div>
                 )}
                 {recetasFiltradas.map(receta => (
-                    <Receta key={receta.id} receta={receta} />
+                    <Receta
+                        key={receta.id}
+                        receta={{
+                            ...receta,
+                            usuario: receta.autor,
+                            vistaPreviaComentarios: receta.vistaPreviaComentarios?.map((comentario, idx) => ({
+                                id: idx,
+                                usuario: comentario.autor,
+                                texto: comentario.texto,
+                                hora: comentario.tiempo, // mantenemos como string
+                                fotoUrl: '', // puedes agregar URL si la tienes
+                            }))
+                        }}
+                    />
                 ))}
             </div>
         </div>
