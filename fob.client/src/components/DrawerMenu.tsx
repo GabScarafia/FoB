@@ -1,3 +1,6 @@
+//actualmente no esta en uso este componente, pero se mantiene para futuras referencias
+// src/components/DrawerMenu.tsx
+
 import React from "react";
 import { Drawer, Toolbar, List, ListItemButton, ListItemText, Box } from "@mui/material";
 import { Link } from "react-router-dom";

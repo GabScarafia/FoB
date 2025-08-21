@@ -92,6 +92,9 @@ try
             });
     });
 
+    builder.Services.AddScoped<IComentarioRepository, ComentarioRepository>();
+
+
     var app = builder.Build();
 
     // Usar CORS

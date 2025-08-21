@@ -5,6 +5,7 @@ import IniciarSesion from "../pages/IniciarSesion";
 import Registrarse from "../pages/Registrarse";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import Feed from "../pages/Feed";
+import ComentariosPage from "../pages/Comentarios";
 
 /**
  * Componente que define las rutas principales de la aplicación.
@@ -22,6 +23,15 @@ export default function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <Weather />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/comentarios/:recetaId"  // <-- nueva ruta con parámetro
+                element={
+                    <ProtectedRoute>
+                        <ComentariosPage />
                     </ProtectedRoute>
                 }
             />
