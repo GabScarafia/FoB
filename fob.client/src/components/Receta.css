@@ -51,7 +51,8 @@
     color: #1a2d72;
     border-radius: 4px;
 }
-/* Título de la receta */ /* <-- ¡Nuevo estilo! */
+
+/* Título de la receta */
 .titulo-receta {
     padding: 0 15px;
     margin-top: 5px;
@@ -64,6 +65,7 @@
     padding: 0;
     font-weight: bold;
 }
+
 .estrellas-calificacion .estrella {
     color: #ccc;
     font-size: 1.2em;
@@ -131,12 +133,63 @@
     transform: scale(1.1);
 }
 
-
 .conteo-me-gusta, .conteo-comentarios {
     font-size: 0.9em;
-    color: #666;
+    color: #393939;
     font-weight: bold;
     margin-left: -5px;
+}
+
+.icono-tiempo {
+    font-size: 28px !important;
+    color: #393939;
+    cursor: default;
+}
+
+.conteo-tiempo {
+    font-size: 0.9em;
+    color: #393939;
+    font-weight: bold;
+    margin-left: -5px;
+}
+
+/* Nuevos estilos para la sección de ingredientes y categorías */
+.informacion-adicional {
+    padding: 0 15px;
+    margin-top: 10px;
+    font-size: 0.95em;
+    color: #333;
+}
+
+.ingredientes-receta {
+    margin-bottom: 5px;
+}
+
+.categorias-receta {
+    margin-bottom: 5px;
+}
+
+.tag-categoria {
+    background-color: #e0e0e0;
+    border-radius: 12px;
+    margin-left: 3px;
+    padding: 2px 5px;
+    margin-right: 5px;
+    font-size: 0.85em;
+    display: inline-block;
+    color: #333;
+}
+
+.tag-ingrediente {
+    margin-left: 3px;
+}
+
+.ingredientes-receta strong {
+    color: black;
+}
+
+.categorias-receta strong {
+    color: black;
 }
 
 /* Descripción de la receta */
@@ -170,11 +223,13 @@
     margin-right: 5px;
     flex-shrink: 0;
 }
+
 .texto-comentario {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
 .autor-comentario {
     font-weight: bold;
     color: black;

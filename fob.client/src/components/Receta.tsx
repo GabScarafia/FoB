@@ -4,36 +4,33 @@ import './Receta.css';
 // Íconos de Material UI
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
+//import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import StarBorderIcon from '@mui/icons-material/StarBorder';
+import StarIcon from '@mui/icons-material/Star';
 
-import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg'; 
+import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 
-// Interfaz para la vista previa de comentarios
-interface VistaPreviaComentario {
-    autor: Usuario;
-    texto: string;
-    tiempo: string;
+import DrawerComentarios from '../components/DrawerComentarios';
+import type { Comentario } from './DrawerComentarios';
+import type { Usuario } from '../pages/Feed';
+
+interface Ingrediente {
+    id: number;
+    nombre: string;
+    cantidad: number;
+    unidadDeMedida: string;
 }
 
-// Interfaz corregida para las props del componente Receta
-
-import imagenRecetaLocal from '../assets/images/fanta.webp';
-import DrawerComentarios from '../components/DrawerComentarios';
-import type { Comentario } from './DrawerComentarios'; // Importa la interfaz de comentarios
-import type { Usuario } from '../pages/Feed'; // Importa la interfaz de usuario
-
-// interfaz para las props del componente Receta
 interface PropsReceta {
     receta: {
         id: number;
         autor: Usuario;
-        tiempoPublicacion: string;
+        fechaCreacion: string;
         tipoContenido: string;
         calificacion: number;
-        imagen: string; // Corregido a 'string'
+        imagen: string;
         cantidadVotos: number;
         meGusta: boolean;
         cantidadComentarios: number;
@@ -41,19 +38,11 @@ interface PropsReceta {
         descripcion: string;
         vistaPreviaComentarios?: Comentario[];
         isSavedInitially?: boolean;
+        tiempoPreparacion: string;
+        ingredientes: Ingrediente[];
+        categorias: string[];
     };
 }
-
-// Ya no necesitas esta función, tu backend ya hace el trabajo
-// const arrayBufferToBase64 = (buffer: number[]) => {
-//   let binary = '';
-//   const bytes = new Uint8Array(buffer);
-//   const len = bytes.byteLength;
-//   for (let i = 0; i < len; i++) {
-//     binary += String.fromCharCode(bytes[i]);
-//   }
-//   return window.btoa(binary);
-// };
 
 const Receta: React.FC<PropsReceta> = ({ receta }) => {
     const [liked, setLiked] = useState(receta.meGusta);
@@ -111,6 +100,51 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
         ? `data:image/jpeg;base64,${receta.autor.imagen}`
         : fotoPerfilLocal;
 
+    // Función para formatear el tiempo
+    const formatearTiempo = (tiempo: string): string => {
+        const partes = tiempo.split(':').map(part => parseInt(part, 10));
+        const horas = partes[0];
+        const minutos = partes[1];
+        const segundos = partes[2];
+        const resultado: string[] = [];
+
+        if (horas > 0) {
+            resultado.push(`${horas} hora${horas > 1 ? 's' : ''}`);
+        }
+        if (minutos > 0) {
+            resultado.push(`${minutos} minuto${minutos > 1 ? 's' : ''}`);
+        }
+        if (segundos > 0) {
+            resultado.push(`${segundos} segundo${segundos > 1 ? 's' : ''}`);
+        }
+
+        if (resultado.length === 0) {
+            return 'Menos de 1 minuto';
+        }
+
+        return resultado.join(' ');
+    };
+
+    // Función para formatear la fecha de creación y la hora
+    const formatearFecha = (fechaString: string): string => {
+        const fecha = new Date(fechaString);
+        const opciones = {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true // opción para el formato AM/PM
+        };
+        // Formatear la fecha a un formato legible
+        return fecha.toLocaleDateString('es-ES', opciones as any);
+    };
+
+    // Almacena el tiempo formateado en una variable para usarlo en el JSX
+    const tiempoFormateado = formatearTiempo(receta.tiempoPreparacion);
+    // Formatea la fecha de creación para su visualización
+    const fechaFormateada = formatearFecha(receta.fechaCreacion);
+
     return (
         <div className="tarjeta-receta">
             {/* Encabezado del usuario */}
@@ -119,7 +153,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
                         <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
-                        <div className="tiempo-publicacion">Publicado el {receta.tiempoPublicacion}</div>
+                        <div className="tiempo-publicacion">Publicado el {fechaFormateada}</div>
                     </div>
                 </div>
                 <div className="meta-receta">
@@ -146,17 +180,23 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     <span className="conteo-me-gusta">{likesCount}</span>
 
                     {/* Icono de comentario -> abre el Drawer */}
-                    <ChatBubbleIcon
-                    className="icono-accion icono-comentario azul-relleno"
-                    onClick={() => setDrawerAbierto(true)}
+                    <ChatBubbleOutlineIcon
+                        className="icono-accion icono-comentario azul-borde"
+                        onClick={() => setDrawerAbierto(true)}
                     />
                     <span className="conteo-comentarios">{receta.cantidadComentarios}</span>
+
+                    {/* Icono de reloj y tiempo de preparación */}
+                    <AccessTimeIcon className="icono-accion icono-tiempo azul-relleno" />
+                    <span className="conteo-tiempo">{tiempoFormateado}</span>
                 </div>
                 <div className="acciones-derecha">
                     {saved ? (
-                        <BookmarkIcon className="icono-accion icono-guardar azul-relleno" onClick={handleSaveClick} />
+                        // Si está guardado, muestra la estrella rellena
+                        <StarIcon className="icono-accion icono-guardar azul-relleno" onClick={handleSaveClick} />
                     ) : (
-                        <BookmarkBorderIcon className="icono-accion icono-guardar azul-borde" onClick={handleSaveClick} />
+                        // Si no está guardado, muestra la estrella sin relleno
+                        <StarBorderIcon className="icono-accion icono-guardar azul-borde" onClick={handleSaveClick} />
                     )}
                 </div>
             </div>
@@ -175,13 +215,40 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 )}
             </div>
 
+            {/* Sección de ingredientes y categorías */}
+            <div className="informacion-adicional">
+                {receta.ingredientes && receta.ingredientes.length > 0 && (
+                    <div className="ingredientes-receta">
+                        <strong>Ingredientes:</strong>
+                        {receta.ingredientes.map((ingrediente, index) => (
+                            <span key={ingrediente.id} className="tag-ingrediente">
+                                {ingrediente.nombre} {ingrediente.cantidad} {ingrediente.unidadDeMedida}
+                                {index < receta.ingredientes.length - 1 ? ', ' : ''}
+                            </span>
+                        ))}
+                    </div>
+                )}
+                {receta.categorias && receta.categorias.length > 0 && (
+                    <div className="categorias-receta">
+                        <strong>Categoría:</strong>
+                        {receta.categorias.map((categoria, index) => (
+                            <span key={index} className="tag-categoria">
+                                {categoria}
+                                {index < receta.categorias.length - 1 ? ', ' : ''}
+                            </span>
+                        ))}
+                    </div>
+                )}
+            </div>
+
             {/* Vista previa de comentarios */}
             <div className="vista-previa-comentarios">
                 {receta.vistaPreviaComentarios && receta.vistaPreviaComentarios.length > 0 ? (
                     receta.vistaPreviaComentarios.map((comentario, index) => (
-                        <div key={index} className="item-comentario">
-                            <ChatBubbleIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span> 
+                        // Se utiliza el 'id' del comentario si está disponible, sino se usa el índice
+                        <div key={comentario.id || index} className="item-comentario">
+                            <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
+                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
                             <span className="tiempo-comentario">
                                 {comentario.hora instanceof Date ? comentario.hora.toLocaleString() : comentario.hora}
                             </span>
@@ -198,7 +265,6 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 onClose={() => setDrawerAbierto(false)}
                 comentarios={receta.vistaPreviaComentarios || []}
             />
-
         </div>
     );
 };

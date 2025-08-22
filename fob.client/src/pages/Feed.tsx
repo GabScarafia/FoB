@@ -10,7 +10,7 @@ import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 interface DatosReceta {
     id: number;
     autor: Usuario;
-    tiempoPublicacion: string;
+    fechaCreacion: string;
     tipoContenido: string; // Por ejemplo, 'Imagen', 'Video'
     calificacion: number; // 1-3 estrellas
     imagen: string;
@@ -20,7 +20,10 @@ interface DatosReceta {
     titulo: string;
     descripcion: string;
     //vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
-    vistaPreviaComentarios?:Comentario[];
+    vistaPreviaComentarios?: Comentario[];
+    tiempoPreparacion: string;
+    ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
+    categorias: Array<{ id: number; nombre: string }>;
 }
 
 export interface Usuario {
@@ -81,7 +84,7 @@ const Feed: React.FC = () => {
             //         {
             //             id: 1,
             //             autor: 'Tomas Sbert',
-            //             tiempoPublicacion: 'domingo 08:10AM',
+            //             fechaCreacion: 'domingo 08:10AM',
             //             tipoContenido: 'Imagen',
             //             calificacion: 2,
             //             urlImagen: 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1',
@@ -97,7 +100,7 @@ const Feed: React.FC = () => {
             //         {
             //             id: 2,
             //             autor: 'Matias Russo',
-            //             tiempoPublicacion: 'lunes 10:00AM',
+            //             fechaCreacion: 'lunes 10:00AM',
             //             tipoContenido: 'Imagen',
             //             calificacion: 3,
             //             urlImagen: 'https://via.placeholder.com/600x400/3366FF/FFFFFF?text=Imagen+de+Receta+2',
