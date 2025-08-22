@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
-import { useAuth } from "../context/AuthContext"; // Asegúrate de la ruta
+import { useAuth } from "../context/AuthContext";
 import '../styles/Feed.css';
 import type { Comentario } from 'components/DrawerComentarios';
+import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
+import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 
-// Definimos la interfaz para los datos de una receta
 interface DatosReceta {
     id: number;
     autor: Usuario;
     tiempoPublicacion: string;
     tipoContenido: string; // Por ejemplo, 'Imagen', 'Video'
     calificacion: number; // 1-3 estrellas
-    imagen: string; 
+    imagen: string;
     cantidadVotos: number;
     meGusta: boolean;
     cantidadComentarios: number;
@@ -25,14 +26,16 @@ interface DatosReceta {
 export interface Usuario {
     nombreUsuario: string;
     texto: string;
-    tiempo: string;    
-    imagen: string; 
+    tiempo: string;
+    imagen: string;
 }
+
 const Feed: React.FC = () => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]); // Almacena todas las recetas
     const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // Almacena las recetas despu�s de aplicar el filtro
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [mensaje, setMensaje] = useState<string | null>(null);
     const { authData } = useAuth(); // Lee el email del contexto
     const token = authData?.token;
     console.log(token);
@@ -53,13 +56,17 @@ const Feed: React.FC = () => {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                // Parsear la respuesta JSON
-                const datosRecetas: DatosReceta[] = await response.json();
+                // 1. Obtiene el objeto JSON completo
+                const data = await response.json();
+
+                // 2. Extrae las recetas y el mensaje del objeto
+                setMensaje(data.mensaje);
+                const recetasObtenidas: DatosReceta[] = data.recetas;
 
                 //datosRecetas.forEach(x=>x.urlImagen ='https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1')
                 // Actualizar los estados con los datos de la API
-                setRecetas(datosRecetas);
-                setRecetasFiltradas(datosRecetas);
+                setRecetas(recetasObtenidas);
+                setRecetasFiltradas(recetasObtenidas);
             } catch (err) {
                 setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
                 console.error("Error al obtener recetas:", err);
@@ -142,12 +149,25 @@ const Feed: React.FC = () => {
         <div className="feed-contenedor-principal"> {/* contenedor principal para incluir la barra y el contenido */}
             <BarraBusqueda
                 onSearch={manejarBusqueda}
-                //logoUrl="https://via.placeholder.com/100x30/007bff/FFFFFF?text=FOB"
+            //logoUrl="https://via.placeholder.com/100x30/007bff/FFFFFF?text=FOB"
             />
             <div className="feed-contenido"> {/* Contenedor para el contenido del feed (las recetas) */}
-                {recetasFiltradas.length === 0 && !cargando && !error && (
-                    <div className="no-resultados">No se encontraron recetas que coincidan con la b�squeda.</div>
+                {recetasFiltradas.length === 0 && mensaje && (
+                    <div className="mensaje-feed">
+                        {/* Renderizado condicional del icono basado en el mensaje */}
+                        {mensaje.includes('Sigue a gente') && (
+                            <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                        )}
+                        {mensaje.includes('No hay publicaciones') && (
+                            <NewspaperOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                        )}
+                        <p>{mensaje}</p>
+                    </div>
                 )}
+                {recetasFiltradas.length === 0 && !mensaje && !cargando && !error && (
+                    <div className="no-resultados">No se encontraron recetas que coincidan con la búsqueda.</div>
+                )}
+
                 {recetasFiltradas.map(receta => (
                     <Receta
                         key={receta.id}

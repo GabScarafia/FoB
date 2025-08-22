@@ -9,7 +9,38 @@
     flex-direction: column;
 }
 
-/* Contenido del feed (las recetas), que estará debajo de las barras superiores */
+/* Estilos para el contenedor del mensaje del feed */
+.mensaje-feed {
+    text-align: center;
+    padding: 20px;
+    margin: 50px auto;
+    max-width: 600px;
+    background-color: #f0f0f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    font-size: 1.2em;
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.mensaje-feed p {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Estilos para el mensaje de "no resultados" de la búsqueda */
+.no-resultados {
+    text-align: center;
+    padding: 20px;
+    margin-top: 50px;
+    color: #888;
+    font-size: 1.1em;
+}
+
+/* Contenido del feed (recetas) */
 .feed-contenido {
     flex-grow: 1;
     padding-top: 15px;

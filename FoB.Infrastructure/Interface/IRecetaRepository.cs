@@ -8,4 +8,6 @@ public interface IRecetaRepository
     public Task<bool> CreateAsync(RecetaRequest receta);
     public Task<IEnumerable<RecetaResponse>> FeedAsync(int pageNumber = 1);
     public Task<IEnumerable<RecetaResponse>> TendenciasAsync(int pageNumber = 1);
+
+    public Task<bool> EstaSiguiendoAlguienAsync();
 }

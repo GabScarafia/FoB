@@ -238,4 +238,10 @@ internal sealed class RecetaRepository : IRecetaRepository
 
         return list;
     }
+
+    public async Task<bool> EstaSiguiendoAlguienAsync()
+    {
+        return await _context.Set<SeguimientoUsuario>()
+            .AnyAsync(s => s.SeguidorId == _currentUser.User.Id);
+    }
 }
