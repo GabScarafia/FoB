@@ -1,13 +1,4 @@
 ﻿/* src/App.css */
-#root {
-  text-align: center;
-}
-
-th,
-td {
-  padding-left: 1rem;
-  padding-right: 1rem;
-}
 
 /* Estilos para el header */
 .MuiToolbar-root {
