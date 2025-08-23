@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import ImagenRebotante from './components/ImagenRebotante';
 import logoImage from './assets/images/ronaldinho.jpg';
 import { useAuth } from "./context/AuthContext"; // Importamos el hook
+import './App.css';
 
 
 // Creamos un nuevo componente que contendrá la lógica principal

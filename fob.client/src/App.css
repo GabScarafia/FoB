@@ -8,3 +8,13 @@ td {
   padding-left: 1rem;
   padding-right: 1rem;
 }
+
+/* Estilos para el header */
+.MuiToolbar-root {
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+}
+
+/* Estilos para la barra de navegación inferior */
+.MuiBottomNavigation-root {
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+}
