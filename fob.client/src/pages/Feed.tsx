@@ -11,63 +11,65 @@ interface DatosReceta {
     id: number;
     autor: Usuario;
     fechaCreacion: string;
-    tipoContenido: string; // Por ejemplo, 'Imagen', 'Video'
-    calificacion: number; // 1-3 estrellas
+    tipoContenido: string;
+    calificacion: number;
     imagen: string;
     cantidadVotos: number;
     meGusta: boolean;
     cantidadComentarios: number;
     titulo: string;
     descripcion: string;
-    //vistaPreviaComentarios?: { autor: Usuario; texto: string; tiempo: string; }[];
     vistaPreviaComentarios?: Comentario[];
     tiempoPreparacion: string;
     ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
-    categorias: Array<{ id: number; nombre: string }>;
+    categorias: Array<any>;
 }
 
 export interface Usuario {
+    id: number;
+    nombre: string;
+    apellido: string;
     nombreUsuario: string;
-    texto: string;
-    tiempo: string;
-    imagen: string;
+    texto?: string;
+    tiempo?: string;
+    imagen?: string;
+    isFollowing: boolean;
 }
 
 const Feed: React.FC = () => {
-    const [recetas, setRecetas] = useState<DatosReceta[]>([]); // Almacena todas las recetas
-    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // Almacena las recetas despu�s de aplicar el filtro
+    const [recetas, setRecetas] = useState<DatosReceta[]>([]);
+    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]);
+    const [usuariosFiltrados, setUsuariosFiltrados] = useState<Usuario[]>([]);
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [mensaje, setMensaje] = useState<string | null>(null);
-    const { authData } = useAuth(); // Lee el email del contexto
+    const { authData } = useAuth();
     const token = authData?.token;
-    console.log(token);
+    const currentUserId = authData?.id;
 
     useEffect(() => {
+        if (!token) {
+            setCargando(false);
+            return;
+        }
+
         const obtenerRecetas = async () => {
             try {
-                // Realizar la llamada a la API
-                // ...dentro de la función obtenerRecetas
                 const response = await fetch('https://localhost:7084/Recetas/Feed?pageSize=1', {
                     headers: {
                         'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json' // Opcional, dependiendo de los requerimientos de la API
+                        'Content-Type': 'application/json'
                     }
                 });
-                console.log(response.headers)
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-                // 1. Obtiene el objeto JSON completo
                 const data = await response.json();
-
-                // 2. Extrae las recetas y el mensaje del objeto
                 setMensaje(data.mensaje);
                 const recetasObtenidas: DatosReceta[] = data.recetas;
 
-                //datosRecetas.forEach(x=>x.urlImagen ='https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1')
-                // Actualizar los estados con los datos de la API
                 setRecetas(recetasObtenidas);
                 setRecetasFiltradas(recetasObtenidas);
             } catch (err) {
@@ -76,67 +78,96 @@ const Feed: React.FC = () => {
             } finally {
                 setCargando(false);
             }
-            // try {
-            //     // Simular una llamada a la API
-            //     await new Promise(resolve => setTimeout(resolve, 500)); // Simula un retraso de red
-
-            //     const recetasEjemplo: DatosReceta[] = [
-            //         {
-            //             id: 1,
-            //             autor: 'Tomas Sbert',
-            //             fechaCreacion: 'domingo 08:10AM',
-            //             tipoContenido: 'Imagen',
-            //             calificacion: 2,
-            //             urlImagen: 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta+1',
-            //             meGusta: 90,
-            //             cantidadComentarios: 5,
-            //             titulo: 'Fanta Loca',
-            //             descripcion: 'En un vaso de 500cc agregar hielos hasta colmar el vaso, 125cc de Fernet Branca, 300cc de Coca Cola',
-            //             vistaPreviaComentarios: [
-            //                 { autor: 'Manuel Morrullo', texto: 'Invitame uno compa', tiempo: '2m, 20:43hs' },
-            //                 { autor: 'Gabriel Scarafia', texto: 'A donde salimos hoy??', tiempo: '2m, 20:43hs' }
-            //             ]
-            //         },
-            //         {
-            //             id: 2,
-            //             autor: 'Matias Russo',
-            //             fechaCreacion: 'lunes 10:00AM',
-            //             tipoContenido: 'Imagen',
-            //             calificacion: 3,
-            //             urlImagen: 'https://via.placeholder.com/600x400/3366FF/FFFFFF?text=Imagen+de+Receta+2',
-            //             meGusta: 150,
-            //             cantidadComentarios: 10,
-            //             titulo: 'Fanta Loca',
-            //             descripcion: 'Receta de otro trago, muy refrescante para el verano. Pruebenla!',
-            //             vistaPreviaComentarios: []
-            //         }
-            //         // Aca se agregan mas recetas de ejemplo
-            //     ];
-            //     setRecetas(recetasEjemplo);
-            //     setRecetasFiltradas(recetasEjemplo); // Al inicio, las recetas filtradas son todas las recetas
-            // } catch (err) {
-            //     setError("Error al cargar las recetas.");
-            //     console.error("Error al obtener recetas:", err);
-            // } finally {
-            //     setCargando(false);
-            // }
         };
 
         obtenerRecetas();
-    }, []);
+    }, [token]);
 
-    // Funci�n que se pasa al componente BarraBusqueda para manejar la b�squeda
-    const manejarBusqueda = (termino: string) => {
+    const manejarBusqueda = async (termino: string) => {
+        if (!token) {
+            console.error("No hay token de autenticación para la búsqueda.");
+            return;
+        }
+
         if (termino.trim() === '') {
-            setRecetasFiltradas(recetas); // Si el t�rmino de b�squeda est� vac�o, muestra todas las recetas
-        } else {
-            const resultados = recetas.filter(receta =>
-                receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-                receta.autor?.nombreUsuario.includes(termino.toLowerCase()) ||
-                receta.tipoContenido.toLowerCase().includes(termino.toLowerCase()) // Ejemplo: buscar por tipo de contenido
-                // Puedes a�adir m�s campos a buscar aqu�
-            );
-            setRecetasFiltradas(resultados);
+            setRecetasFiltradas(recetas);
+            setUsuariosFiltrados([]);
+            return;
+        }
+
+        const resultadosRecetas = recetas.filter(receta =>
+            receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.titulo.toLowerCase().includes(termino.toLowerCase())
+        );
+        setRecetasFiltradas(resultadosRecetas);
+
+        try {
+            const response = await fetch(`https://localhost:7084/Busqueda/usuarios?termino=${termino}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                let usuariosObtenidos: Usuario[] = await response.json();
+                setUsuariosFiltrados(usuariosObtenidos);
+            } else {
+                try {
+                    const errorData = await response.json();
+                    console.error("Error al buscar usuarios:", errorData.message);
+                } catch {
+                    const errorText = await response.text();
+                    console.error("Error al buscar usuarios:", errorText);
+                }
+                setUsuariosFiltrados([]);
+            }
+        } catch (error) {
+            setUsuariosFiltrados([]);
+            console.error("Error de red al buscar usuarios:", error);
+        }
+    };
+
+    const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {
+        if (!token) {
+            console.error("No hay token de autenticación.");
+            return;
+        }
+
+        const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+        try {
+            const response = await fetch(`https://localhost:7084/Follow/${followedId}`, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                try {
+                    const successData = await response.json();
+                    console.log(successData.message);
+                } catch {
+                    console.log(`Usuario ${isCurrentlyFollowing ? 'dejado de seguir' : 'seguido'} exitosamente.`);
+                }
+                setUsuariosFiltrados(prevUsuarios =>
+                    prevUsuarios.map(u =>
+                        u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+                    )
+                );
+            } else {
+                try {
+                    const errorData = await response.json();
+                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorData.message);
+                } catch {
+                    const errorText = await response.text();
+                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorText);
+                }
+            }
+        } catch (error) {
+            console.error('Error de red al seguir/dejar de seguir:', error);
         }
     };
 
@@ -149,15 +180,16 @@ const Feed: React.FC = () => {
     }
 
     return (
-        <div className="feed-contenedor-principal"> {/* contenedor principal para incluir la barra y el contenido */}
+        <div className="feed-contenedor-principal">
             <BarraBusqueda
                 onSearch={manejarBusqueda}
-            //logoUrl="https://via.placeholder.com/100x30/007bff/FFFFFF?text=FOB"
+                usuarios={usuariosFiltrados}
+                onFollow={manejarSeguirUsuario}
+                currentUserId={currentUserId}
             />
-            <div className="feed-contenido"> {/* Contenedor para el contenido del feed (las recetas) */}
-                {recetasFiltradas.length === 0 && mensaje && (
+            <div className="feed-contenido">
+                {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && mensaje && (
                     <div className="mensaje-feed">
-                        {/* Renderizado condicional del icono basado en el mensaje */}
                         {mensaje.includes('Sigue a gente') && (
                             <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
                         )}
@@ -167,26 +199,30 @@ const Feed: React.FC = () => {
                         <p>{mensaje}</p>
                     </div>
                 )}
-                {recetasFiltradas.length === 0 && !mensaje && !cargando && !error && (
-                    <div className="no-resultados">No se encontraron recetas que coincidan con la búsqueda.</div>
+                {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && !mensaje && !cargando && !error && (
+                    <div className="no-resultados">No se encontraron recetas ni usuarios que coincidan con la búsqueda.</div>
                 )}
 
-                {recetasFiltradas.map(receta => (
-                    <Receta
-                        key={receta.id}
-                        receta={{
-                            ...receta,
-                            autor: receta.autor,
-                            vistaPreviaComentarios: receta.vistaPreviaComentarios?.map((comentario, idx) => ({
-                                id: idx,
-                                autor: comentario.autor,
-                                texto: comentario.texto,
-                                hora: comentario.hora, // mantenemos como string
-                                imagen: '', // puedes agregar URL si la tienes
-                            }))
-                        }}
-                    />
-                ))}
+                {recetasFiltradas.map(receta => {
+                    const categoriasFormateadas = (receta.categorias || []).map(cat => {
+                        // Verifica si el elemento es un objeto con la propiedad 'nombre'
+                        if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
+                            return cat.nombre;
+                        }
+                        // Si no es un objeto con 'nombre', asume que ya es una cadena.
+                        return cat;
+                    });
+
+                    return (
+                        <Receta
+                            key={receta.id}
+                            receta={{
+                                ...receta,
+                                categorias: categoriasFormateadas
+                            }}
+                        />
+                    );
+                })}
             </div>
         </div>
     );

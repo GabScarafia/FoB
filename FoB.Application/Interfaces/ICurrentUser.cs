@@ -1,17 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using FoB.Application.Dtos;
 
 namespace FoB.Application.Interfaces
 {
     public interface ICurrentUser
     {
-        CurrentUser User { get; }
+        UsuarioDto User { get; }
         bool IsInRole(string roleName);
     }
-
-
-    public record CurrentUser(int Id, string UserName);
 }

@@ -3,6 +3,7 @@ using FoB.Application.Interfaces;
 using FoB.Infrastructure;
 using FoB.Infrastructure.Interface;
 using FoB.Infrastructure.Repositories;
+using FoB.Infrastructure.Repository;
 using FoB.Infrastructure.Service;
 using FoB.Infrastructure.Settings;
 using FoB.Server.Service;
@@ -52,12 +53,12 @@ try
     
     builder.Services.AddDBLayer(builder.Configuration);
     builder.Services.AddApplicationLayer(builder.Configuration);
-    builder.Services.AddHttpContextAccessor(); // <-- Añade esta línea
+    builder.Services.AddHttpContextAccessor();
 
     builder.Services.AddScoped<IRegisterService, RegisterService>();
 
     builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-    builder.Services.AddScoped<ICurrentUser, CurrentUserService>();
+    builder.Services.AddScoped<ICurrentUser, FoB.Server.Service.CurrentUserService>();
 
     builder.Services.AddAuthentication(options =>
     {
@@ -93,6 +94,9 @@ try
     });
 
     builder.Services.AddScoped<IComentarioRepository, ComentarioRepository>();
+    builder.Services.AddScoped<IBusquedaRepository, BusquedaRepository>();
+    builder.Services.AddScoped<IUserRepository, UserRepository>();
+    builder.Services.AddScoped<BusquedaService>();
 
 
     var app = builder.Build();

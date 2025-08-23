@@ -26,27 +26,28 @@ public class RecetasController : ControllerBase
     [HttpGet("Feed")]
     public async Task<IActionResult> Feed([FromQuery] int pageSize = 1)
     {
-        // Verifica si el usuario sigue a alguien.
-        bool estaSiguiendo = await _recetaRepository.EstaSiguiendoAlguienAsync();
-
-        if (!estaSiguiendo)
-        {
-            // Caso 1: El usuario no sigue a nadie.
-            // Devuelve un mensaje invitándolo a seguir a otras personas.
-            return Ok(new { Mensaje = "No sigues a nadie. Sigue a gente para ver sus publicaciones!", Recetas = new List<RecetaResponse>() });
-        }
-
-        // Si el usuario sigue a alguien, intenta obtener las publicaciones.
+        // 1. Obtener las publicaciones de las personas que el usuario sigue.
         var recetas = await _recetaRepository.FeedAsync(pageSize);
 
+        // 2. Si no se encuentran recetas, se verifica la razón.
         if (recetas == null || !recetas.Any())
         {
-            // Caso 2: El usuario sigue a alguien, pero no hay publicaciones disponibles.
-            return Ok(new { Mensaje = "No hay publicaciones de las personas que sigues.", Recetas = new List<RecetaResponse>() });
+            // Se usa el repositorio para verificar si el usuario sigue a alguien.
+            bool estaSiguiendo = await _recetaRepository.EstaSiguiendoAlguienAsync();
+
+            if (estaSiguiendo)
+            {
+                // Caso 1: El usuario sigue a alguien, pero esas personas no tienen publicaciones.
+                return Ok(new { Mensaje = "No hay publicaciones de las personas que sigues.", Recetas = new List<RecetaResponse>() });
+            }
+            else
+            {
+                // Caso 2: El usuario no sigue a nadie en absoluto.
+                return Ok(new { Mensaje = "No sigues a nadie. Sigue a gente para ver sus publicaciones!", Recetas = new List<RecetaResponse>() });
+            }
         }
 
-        // Caso 3: Hay publicaciones.
-        // Devuelve las recetas y un mensaje de éxito.
+        // 3. Si se encontraron recetas, se devuelven.
         return Ok(new { Mensaje = "Recetas cargadas con éxito.", Recetas = recetas });
     }
 

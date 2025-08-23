@@ -2,7 +2,7 @@ import React, { createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 
 interface AuthData {
-  id: number;
+  id: number | null | undefined;
   token: string;
   expDate: string;
   nombre: string;
@@ -11,7 +11,7 @@ interface AuthData {
 }
 
 interface AuthContextType {
-  authData: AuthData | null; // 👈 Cambia el estado para guardar todo el objeto
+  authData: AuthData | null;
   login: (authData: AuthData) => void;
   clearAuthData: () => void;
 }
@@ -23,14 +23,14 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [authData, setAuthData] = useState<AuthData | null>(null); // 👈 Usa setAuthData
+  const [authData, setAuthData] = useState<AuthData | null>(null);
 
   useEffect(() => {
     const authDataString = localStorage.getItem("authData");
     if (authDataString) {
       try {
         const storedAuthData: AuthData = JSON.parse(authDataString);
-        setAuthData(storedAuthData); // 👈 Actualiza el estado con el objeto completo
+        setAuthData(storedAuthData);
       } catch (error) {
         console.error("Error parsing authData:", error);
         setAuthData(null);
@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   const login = (newAuthData: AuthData) => {
     localStorage.setItem("authData", JSON.stringify(newAuthData));
-    setAuthData(newAuthData); // 👈 Actualiza el estado de React con el objeto completo
+    setAuthData(newAuthData);
   };
 
   const clearAuthData = () => {

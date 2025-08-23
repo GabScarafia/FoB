@@ -38,4 +38,39 @@ internal sealed class UserRepository : IUserRepository
     {
         return await _context.Rol.FirstOrDefaultAsync(r => r.Nombre == roleName);
     }
+
+    // Seguir Usuario
+    public async Task FollowUserAsync(int followerId, int followedId)
+    {
+        var existingFollow = await _context.SeguimientoUsuario
+            .FirstOrDefaultAsync(s => s.SeguidorId == followerId && s.SeguidoId == followedId);
+
+        if (existingFollow == null)
+        {
+            var newFollow = new SeguimientoUsuario
+            {
+                SeguidorId = followerId,
+                SeguidoId = followedId,
+                FechaSeguimiento = DateTime.Now
+            };
+            await _context.SeguimientoUsuario.AddAsync(newFollow);
+        }
+    }
+
+    public async Task UnfollowUserAsync(int followerId, int followedId)
+    {
+        var existingFollow = await _context.SeguimientoUsuario
+            .FirstOrDefaultAsync(s => s.SeguidorId == followerId && s.SeguidoId == followedId);
+
+        if (existingFollow != null)
+        {
+            _context.SeguimientoUsuario.Remove(existingFollow);
+        }
+    }
+
+    public async Task<bool> IsFollowingAsync(int followerId, int followedId)
+    {
+        return await _context.SeguimientoUsuario
+            .AnyAsync(s => s.SeguidorId == followerId && s.SeguidoId == followedId);
+    }
 }

@@ -162,31 +162,43 @@ internal sealed class RecetaRepository : IRecetaRepository
     public async Task<IEnumerable<RecetaResponse>> FeedAsync(int pageNumber = 1)
     {
         int pageSize = 10;
+        var currentUserId = _currentUser.User.Id;
+        Console.WriteLine("cid: ",currentUserId);
 
-        // First, get the IDs of all users the current user is following.
-        List<int> idsSeguidos = await _context.Set<Usuario>()
-            .Where(x => x.SeguimientoUsuarioSeguido.Any(s => s.SeguidorId == _currentUser.User.Id))
-            .Select(x => x.Id)
-            .ToListAsync();
+        // 1. Obtiene los IDs de los usuarios que el usuario actual sigue.
+        // Esta es la forma más directa y eficiente de hacerlo.
+        var followedUserIds = await _context.Set<SeguimientoUsuario>()
+                                            .Where(s => s.SeguidorId == currentUserId)
+                                            .Select(s => s.SeguidoId)
+                                            .ToListAsync();
 
-        IQueryable<Receta> query = _context.Set<Receta>()
-            .Include(x => x.Usuario)
-                .ThenInclude(x=>x.UsuarioImagen)
-            .Include(x => x.RecetaImagen)
-            .Include(x => x.Voto)
-            .Include(x => x.Comentario)
-            .Include(x => x.IngredienteReceta)
-                .ThenInclude(x => x.Ingrediente)
-            .Include(x => x.RecetaCategoria)
-                .ThenInclude(x => x.Categoria)
-            .Where(x => x.Activa == true && idsSeguidos.Contains(x.UsuarioId));
+        // 2. Si la lista de seguidos está vacía, devuelve una lista vacía de publicaciones.
+        if (!followedUserIds.Any())
+        {
+            return new List<RecetaResponse>();
+        }
 
-        // Sort by creation date (desc)
+        // 3. Obtiene las publicaciones de los usuarios seguidos, incluyendo todas las relaciones necesarias.
+        var query = _context.Set<Receta>()
+                            .Include(x => x.Usuario)
+                                .ThenInclude(x => x.UsuarioImagen)
+                            .Include(x => x.RecetaImagen)
+                            .Include(x => x.Voto)
+                            .Include(x => x.Comentario)
+                                .ThenInclude(x => x.Usuario) // Incluye el usuario del comentario para la vista previa
+                            .Include(x => x.IngredienteReceta)
+                                .ThenInclude(x => x.Ingrediente)
+                            .Include(x => x.RecetaCategoria)
+                                .ThenInclude(x => x.Categoria)
+                            .Where(x => x.Activa == true && followedUserIds.Contains(x.UsuarioId));
+
+        // Ordena por fecha de creación de forma descendente.
         query = query.OrderByDescending(x => x.FechaCreacion);
 
-        // Pagination
+        // Aplica la paginación.
         query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
+        // 4. Mapea la consulta a la respuesta y la ejecuta.
         var list = await query.Select(x => new RecetaResponse
         {
             Id = x.Id,
@@ -194,23 +206,22 @@ internal sealed class RecetaRepository : IRecetaRepository
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
             CantidadVotos = x.Voto.Count(),
-            MeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id),
+            MeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId),
             CantidadComentarios = x.Comentario.Count(),
-            VistaPreviaComentarios = x.Comentario.OrderByDescending(c => c.Fecha)
-                                        .Take(3)
-                                        .Select(c => new ComentarioResponse
-                                        {
-                                            Id = c.Id,
-                                            Texto = c.Texto,
-                                            Autor = new UsuarioResponse
-                                            {
-                                                Id = c.Usuario.Id,
-                                                NombreUsuario = c.Usuario.NombreUsuario,
-                                                Nombre = c.Usuario.Nombre,
-                                                Apellido = c.Usuario.Apellido,
-                                                //VER: Foto = c.Usuario.Foto
-                                            }
-                                        }).ToList(),
+            VistaPreviaComentarios = x.Comentario.OrderByDescending(c => c.Fecha).Take(3)
+                                                .Select(c => new ComentarioResponse
+                                                {
+                                                    Id = c.Id,
+                                                    Texto = c.Texto,
+                                                    Autor = new UsuarioResponse
+                                                    {
+                                                        Id = c.Usuario.Id,
+                                                        NombreUsuario = c.Usuario.NombreUsuario,
+                                                        Nombre = c.Usuario.Nombre,
+                                                        Apellido = c.Usuario.Apellido,
+                                                        Imagen = c.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
+                                                    }
+                                                }).ToList(),
             Estado = x.Estado,
             FechaCreacion = x.FechaCreacion,
             FechaModificacion = x.FechaModificacion,

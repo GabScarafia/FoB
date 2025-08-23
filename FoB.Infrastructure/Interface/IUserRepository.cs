@@ -11,4 +11,9 @@ public interface IUserRepository
     Task AddAsync(Usuario user);
     Task SaveChangesAsync();
     Task<Rol> GetRoleByNameAsync(string roleName);
+
+    // Seguir usuario
+    Task FollowUserAsync(int followerId, int followedId);
+    Task UnfollowUserAsync(int followerId, int followedId);
+    Task<bool> IsFollowingAsync(int followerId, int followedId);
 }
