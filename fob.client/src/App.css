@@ -9,3 +9,11 @@
 .MuiBottomNavigation-root {
     background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
 }
+
+.css-pn4200-MuiPaper-root-MuiAppBar-root {
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242) !important;
+}
+
+.css-1fyzp41-MuiPaper-root-MuiAppBar-root {
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242) !important;
+}

@@ -23,6 +23,7 @@ interface DatosReceta {
     tiempoPreparacion: string;
     ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
     categorias: Array<any>;
+    pasos: Array<any>;
 }
 
 export interface Usuario {

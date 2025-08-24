@@ -35,6 +35,16 @@ public class RecetaResponse
     //public virtual List<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 
     public virtual UsuarioResponse Autor { get; set; }
+
+    public virtual List<PasoResponse> Pasos { get; set; } = new List<PasoResponse>();
+}
+
+
+public class PasoResponse
+{
+    public int Numero { get; set; }
+    public string Titulo { get; set; }
+    public string Descripcion { get; set; }
 }
 
 public class ComentarioResponse

@@ -13,7 +13,15 @@ public class RecetaRequest
 
     public List<IngredienteRecetaRequest> Ingredientes { get; set; }
     public List<CategoriaRequest> Categorias { get; set; }
+    public List<PasoRequest> Pasos { get; set; }
 
+}
+
+public class PasoRequest
+{
+    public int Numero { get; set; }
+    public string Titulo { get; set; }
+    public string Descripcion { get; set; }
 }
 
 public class IngredienteRecetaRequest
