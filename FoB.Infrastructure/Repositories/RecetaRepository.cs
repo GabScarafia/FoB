@@ -246,7 +246,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                                                     Id = c.Id,
                                                     Texto = c.Texto,
                                                     Fecha = c.Fecha,
-                                                    Autor = new UsuarioResponse
+                                                    Usuario = new UsuarioResponse
                                                     {
                                                         Id = c.Usuario.Id,
                                                         NombreUsuario = c.Usuario.NombreUsuario,
