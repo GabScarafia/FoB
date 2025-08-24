@@ -18,9 +18,6 @@
  */
 export const formatoTiempoRelativo = (fechaEntrada: Date): string => {
     let fecha: Date;
-
-    console.log("fecha entrada",fechaEntrada)
-    console.log("tipo", typeof(fechaEntrada))
     // Si la entrada ya es un objeto Date, la usa directamente
     if (fechaEntrada instanceof Date) {
         fecha = fechaEntrada;

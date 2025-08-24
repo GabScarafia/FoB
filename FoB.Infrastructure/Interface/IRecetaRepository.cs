@@ -10,4 +10,6 @@ public interface IRecetaRepository
     public Task<IEnumerable<RecetaResponse>> TendenciasAsync(int pageNumber = 1);
 
     public Task<bool> EstaSiguiendoAlguienAsync();
+
+    public Task<bool> LikeOrDislike(int idReceta);
 }

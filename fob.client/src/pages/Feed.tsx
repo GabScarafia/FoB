@@ -9,10 +9,10 @@ import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 
 interface DatosReceta {
     id: number;
-    usuario: Usuario;
+    autor: Usuario;
     fechaCreacion: string;
     tipoContenido: string;
-    calificacion: number;
+    dificultad:string;
     imagen: string;
     cantidadVotos: number;
     meGusta: boolean;
@@ -102,7 +102,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
         const resultadosRecetas = recetas.filter(receta =>
             receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.usuario?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
             receta.titulo.toLowerCase().includes(termino.toLowerCase())
         );
         setRecetasFiltradas(resultadosRecetas);

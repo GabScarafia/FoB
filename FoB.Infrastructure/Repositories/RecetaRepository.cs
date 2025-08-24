@@ -163,7 +163,6 @@ internal sealed class RecetaRepository : IRecetaRepository
     {
         int pageSize = 10;
         var currentUserId = _currentUser.User.Id;
-        Console.WriteLine("cid: ",currentUserId);
 
         // 1. Obtiene los IDs de los usuarios que el usuario actual sigue.
         // Esta es la forma más directa y eficiente de hacerlo.
@@ -171,7 +170,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                                             .Where(s => s.SeguidorId == currentUserId)
                                             .Select(s => s.SeguidoId)
                                             .ToListAsync();
-
+        //Para que aparezcan las tuyas
+        followedUserIds.Add(currentUserId);
         // 2. Si la lista de seguidos está vacía, devuelve una lista vacía de publicaciones.
         if (!followedUserIds.Any())
         {
@@ -255,5 +255,28 @@ internal sealed class RecetaRepository : IRecetaRepository
     {
         return await _context.Set<SeguimientoUsuario>()
             .AnyAsync(s => s.SeguidorId == _currentUser.User.Id);
+    }
+
+    public async Task<bool> LikeOrDislike(int idReceta)
+    {
+        var idUsuario = _currentUser.User.Id;
+        var votoExistente = _context.Set<Voto>()
+            .FirstOrDefault(v => v.RecetaId == idReceta && v.UsuarioId == idUsuario);
+        // Si ya existe un voto, lo elimina (dislike)
+        if(votoExistente != null)
+            _context.Set<Voto>().Remove(votoExistente);
+        else // Si no existe, crea un nuevo voto (like)
+        {
+            
+            Voto nuevoVoto = new()
+            {
+                RecetaId = idReceta,
+                UsuarioId = idUsuario,
+                FechaDeVoto = DateTime.Now
+            };
+            _context.Set<Voto>().Add(nuevoVoto);
+        }
+        await _context.SaveChangesAsync();
+        return true;
     }
 }

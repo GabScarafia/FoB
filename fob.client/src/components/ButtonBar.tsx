@@ -13,7 +13,7 @@ export default function ButtonBar() {
   const location = useLocation();
   const [openDialog, setOpenDialog] = React.useState(false);
 
-  const routes = ["/feed", "/profile", "/tendences"];
+  const routes = ["/feed","" , "/tendences","/profile"];
   const currentIndex = routes.indexOf(location.pathname);
   const [value, setValue] = React.useState(currentIndex === -1 ? 0 : currentIndex);
 
@@ -23,7 +23,7 @@ export default function ButtonBar() {
   }, [location.pathname]);
 
   const handleChange = (_: React.SyntheticEvent, newValue: number) => {
-    if (newValue === 3) {
+    if (newValue === 1) {
       setOpenDialog(true);
     } else {
       setValue(newValue);
@@ -43,9 +43,9 @@ export default function ButtonBar() {
       >
         <BottomNavigation value={value} onChange={handleChange} showLabels sx={{ bgcolor: "primary.main" }}>
           <BottomNavigationAction label="Inicio" icon={<HomeIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
-          <BottomNavigationAction label="Perfil" icon={<PersonIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
-          <BottomNavigationAction label="Tendencias" icon={<WhatshotIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
           <BottomNavigationAction label="Nuevo" icon={<AddCircleOutlineOutlinedIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
+          <BottomNavigationAction label="Tendencias" icon={<WhatshotIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
+          <BottomNavigationAction label="Perfil" icon={<PersonIcon />} sx={{ color: "white", "&.Mui-selected": { color: "white" }, }} />
         </BottomNavigation>
       </Paper>
       <CreateRecetaDialog open={openDialog} onClose={handleCloseDialog} />

@@ -142,6 +142,7 @@
 
 .icono-tiempo {
     font-size: 28px !important;
+    pointer-events: none;
     color: #393939;
     cursor: default;
 }

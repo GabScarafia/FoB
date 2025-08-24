@@ -62,4 +62,10 @@ public class RecetasController : ControllerBase
     {
         return Ok(await _recetaRepository.CreateAsync(recetaRequest));
     }
+
+    [HttpPost("LikeOrDislike/{idReceta}")]
+    public async Task<IActionResult> LikeOrDislike([FromRoute] int idReceta)
+    {
+        return Ok(await _recetaRepository.LikeOrDislike(idReceta));
+    }
 }

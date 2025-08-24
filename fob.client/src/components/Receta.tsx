@@ -113,15 +113,39 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
         return estrellas;
     };
 
-    const handleLikeClick = () => {
-        if (liked) {
-            setLiked(false);
-            setLikesCount(prevCount => prevCount - 1);
+    const handleLikeClick = async () => {
+    // Usamos el estado actual para determinar la acción (like o dislike)
+    try {
+        const response = await fetch(`https://localhost:7084/Recetas/LikeOrDislike/${receta.id}`, {
+            method: 'POST', // Usamos POST para esta acción
+            headers: {
+                'Authorization': `Bearer ${authData?.token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            // La llamada a la API fue exitosa, ahora actualizamos el estado
+            if (liked) {
+                setLiked(false);
+                setLikesCount(prevCount => prevCount - 1);
+            } else {
+                setLiked(true);
+                setLikesCount(prevCount => prevCount + 1);
+            }
         } else {
-            setLiked(true);
-            setLikesCount(prevCount => prevCount + 1);
+            // Manejamos el error de la API
+            const errorData = await response.json();
+            console.error("Error al dar like/dislike:", errorData.message);
+            // Si hay un error, no actualizamos el estado local
+            alert("Ocurrió un error. Intenta de nuevo."); 
         }
-    };
+    } catch (error) {
+        // Manejamos errores de red
+        console.error("Error de red al dar like/dislike:", error);
+        alert("Ocurrió un error de conexión. Intenta de nuevo.");
+    }
+};
 
     const handleSaveClick = () => {
         setSaved(prevSaved => !prevSaved);
@@ -185,16 +209,27 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
     // Función para formatear la fecha de creación y la hora
     const formatearFecha = (fechaString: string): string => {
         const fecha = new Date(fechaString);
-        const opciones = {
+
+        const opcionesFecha = {
             year: 'numeric',
-            month: 'long',
-            day: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        };
+
+        const opcionesHora = {
             hour: '2-digit',
             minute: '2-digit',
-            hour12: true // opción para el formato AM/PM
+            hour12: true
         };
-        // Formatear la fecha a un formato legible
-        return fecha.toLocaleDateString('es-ES', opciones as any);
+
+        // Formatear la fecha a dd/mm/yyyy
+        const fechaFormato = fecha.toLocaleDateString('es-ES', opcionesFecha as any);
+        
+        // Formatear la hora a hh:ss a. m./p. m.
+        const horaFormato = fecha.toLocaleTimeString('es-ES', opcionesHora as any);
+
+        // Unir la fecha y la hora
+        return `${fechaFormato}, ${horaFormato}`;
     };
 
     // Almacena el tiempo formateado en una variable para usarlo en el JSX
@@ -228,7 +263,13 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
 
             {/* Interacciones (Me Gusta, Comentarios, Guardar) */}
             <div className="acciones-receta">
-                <div className="acciones-izquierda">
+                <div className="acciones-izquierda">                    
+                    {liked ? (
+                        <FavoriteIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleLikeClick} />
+                    ) : (
+                        <FavoriteBorderIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleLikeClick} />
+                    )}
+                    <span className="conteo-me-gusta">{likesCount}</span>
                     {/* ... (código de likes y likesCount) */}
                     <ChatBubbleOutlineIcon
                         className="icono-accion icono-comentario azul-borde"
