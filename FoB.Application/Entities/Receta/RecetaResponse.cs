@@ -42,7 +42,7 @@ public class ComentarioResponse
     public int Id { get; set; }
     public string Texto { get; set; }
     public DateTime Fecha { get; set; }
-    public UsuarioResponse Autor { get; set; }
+    public UsuarioResponse Usuario { get; set; }
 }
 public class UsuarioResponse
 {
