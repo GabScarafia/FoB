@@ -113,10 +113,10 @@ internal sealed class RecetaRepository : IRecetaRepository
                 .ThenInclude(x => x.Ingrediente)
             .Include(x => x.RecetaCategoria)
                 .ThenInclude(x => x.Categoria)
-            .Where(x => x.Activa == true /*&& x.Estado == EstadoEnum.Aprobada.ToString()*/);
+            .Where(x => x.Activa == true  && x.UsuarioId != _currentUser.User.Id);
 
         // Sort by creation date (desc) and then by average rating (desc)
-        query = query.OrderByDescending(x => x.FechaCreacion.Date)
+        query = query.OrderByDescending(x => x.FechaCreacion)
                      .ThenByDescending(x => x.PuntuacionPromedio);
 
         // Pagination

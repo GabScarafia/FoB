@@ -13,7 +13,7 @@ export default function ButtonBar() {
   const location = useLocation();
   const [openDialog, setOpenDialog] = React.useState(false);
 
-  const routes = ["/feed","" , "/tendences","/profile"];
+  const routes = ["/feed","" , "/tendencias","/perfil"];
   const currentIndex = routes.indexOf(location.pathname);
   const [value, setValue] = React.useState(currentIndex === -1 ? 0 : currentIndex);
 

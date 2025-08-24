@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { CssBaseline, Box } from "@mui/material";
 import AppRoutes from "./components/AppRoutes";
 import { AuthProvider } from "./context/AuthContext"
-import ButtonAppBar from "./components/ButtonAppBar";
+import UpperAppBar from "./components/UpperAppBar";
 import ButtonBar from "./components/ButtonBar";
 import { useLocation } from "react-router-dom";
 import ImagenRebotante from './components/ImagenRebotante';
@@ -35,7 +35,7 @@ const MainApp = () => {
       <CssBaseline />
       <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> 
       {/* Barra superior solo si el usuario está logueado y no es página de login/registro */}
-      {!isAuthPage && isLoggedIn && <ButtonAppBar />}
+      {!isAuthPage && isLoggedIn && <UpperAppBar />}
 
       {/* Contenido principal */}
       <Box

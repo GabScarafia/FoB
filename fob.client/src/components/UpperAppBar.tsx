@@ -4,7 +4,7 @@ import { AppBar, Toolbar, IconButton, Typography, Box } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAuth } from "../context/AuthContext";
 
-export default function ButtonAppBar() {
+export default function UpperAppBar() {
     const { authData, clearAuthData } = useAuth();
     const navigate = useNavigate();
 
