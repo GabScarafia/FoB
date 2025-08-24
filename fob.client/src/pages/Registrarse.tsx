@@ -5,7 +5,7 @@ import Boton from 'components/ui/Boton';
 import CasillaVerificacion from 'components/ui/CasillaVerificacion';
 import '../styles/Registrarse.css';
 import logoImage from '../assets/images/logo.png';
-import TerminosYCondicionesModal from 'components/TerminosYCondicionesModal';
+import TerminosYCondicionesModal from 'components/Modal/TerminosYCondicionesModal';
 
 const Registrarse: React.FC = () => {
     const [nombre, setNombre] = useState<string>('');

@@ -15,11 +15,20 @@ const IniciarSesion: React.FC = () => {
   const [cargando, setCargando] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { authData } = useAuth();  
+  const isLoggedIn = !!authData; 
+  console.log("isLogged", isLoggedIn);
+    if(isLoggedIn === true){
+      navigate('/feed');
+    }
 
   const manejarEnvioInicioSesion = async (e: React.FormEvent<HTMLFormElement>) => {
+    
     e.preventDefault();
     setCargando(true);
     setError(null);
+
+   
 
     try {
       const response = await fetch("https://localhost:7084/Authentication", {

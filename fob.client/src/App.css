@@ -10,6 +10,12 @@
     background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
 }
 
+main.MuiBox-root {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+}
+
 .css-pn4200-MuiPaper-root-MuiAppBar-root {
     background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242) !important;
 }

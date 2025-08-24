@@ -14,5 +14,9 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/iniciar-sesion" replace />;
   }
 
+  if (isLoggedIn) {
+    return <Navigate to="/iniciar-sesion" replace />;
+  }
+
   return children;
 }

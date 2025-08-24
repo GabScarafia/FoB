@@ -1,0 +1,77 @@
+.tendencias-container {
+  /* Use a consistent padding on both sides to create a small gutter */
+  padding: 6px; /* Adjust this value as needed */
+  width: 100%; /* Ensure it takes up the full width */
+  box-sizing: border-box; /* This is key to include padding in the total width */
+  overflow-x: hidden; /* Prevents horizontal scrolling */
+}
+/* main.MuiBox-root {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+} */
+
+
+
+.grilla-tendencias {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+  /* Use auto margins to center the grid, and ensure no left-side margin pushes it over */
+  margin: 0 auto; 
+  padding: 0; /* Important: remove any padding on the grid container itself */
+}
+.receta-preview-container {
+    /* El contenedor individual de cada imagen */
+    width: 100%;
+    overflow: hidden; /* Oculta cualquier parte de la imagen que se desborde */
+    border-radius: 8px; /* Un poco de estilo en los bordes */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra para que se vea mejor */
+}
+/* Tendencias.css */
+
+
+.receta-preview-container {
+    /* El contenedor de cada imagen individual */
+    width: 100%;
+    /* No definas una altura o relación de aspecto fija */
+    overflow: hidden; /* Oculta cualquier parte de la imagen que se desborde */
+    border-radius: 8px; /* Bordes redondeados */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.receta-preview-container img {
+    /* ¡Aquí está el RESIZE! */
+    width: 100%; /* La imagen ocupará el 100% del ancho de su contenedor */
+    height: auto; /* La altura se ajustará automáticamente para mantener la proporción de la imagen */
+    display: block; /* Elimina cualquier espacio extra debajo de la imagen */
+    object-fit: cover; /* Mantiene la proporción de la imagen mientras llena el contenedor */
+}
+
+.header-contenedor-principal {
+    position: relative;
+    max-width: 800px;
+    margin: 20px auto;
+    box-sizing: border-box;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    flex-direction: column;
+    z-index: 1000;
+}
+.logo-app {
+    height: 35px;
+    margin-right: 15px;
+    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+}
+/* Secci�n del input y el icono de b�squeda */
+.header-input-seccion {
+    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
+    color: white;
+    font-Weight: bold;
+    padding: 8px 16px;
+    border-radius: 25px;
+    justify-self: 'space-between';
+    cursor: 'pointer';        
+    display: 'flex';
+    align-Items: 'center';
+}

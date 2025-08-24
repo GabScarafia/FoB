@@ -1,0 +1,15 @@
+.receta-preview-card {
+width: 200px; 
+height: 200px; 
+overflow: hidden; 
+border-radius: 8px; 
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+cursor: pointer; 
+}
+
+.receta-preview-imagen {
+width: 100%;
+height: 100%;
+object-fit: cover; 
+display: block; 
+}
