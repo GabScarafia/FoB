@@ -7,14 +7,13 @@ import ProtectedRoute from "../routes/ProtectedRoute";
 import Feed from "../pages/Feed";
 import ComentariosPage from "../pages/Comentarios";
 
-/**
- * Componente que define las rutas principales de la aplicación.
- *
- * Aquí se configuran los paths y los componentes que se renderizan
- * cuando el usuario navega a dichas rutas.
- *
- */
-export default function AppRoutes() {
+// 1. Define la interfaz de las props que AppRoutes debe recibir
+interface AppRoutesProps {
+  onDrawerToggle: (isOpen: boolean) => void;
+}
+
+// 2. Recibe la prop en el componente
+export default function AppRoutes({ onDrawerToggle }: AppRoutesProps) {
     return (
         <Routes>
             {/* Rutas protegidas */}
@@ -28,7 +27,7 @@ export default function AppRoutes() {
             />
 
             <Route
-                path="/comentarios/:recetaId"  // <-- nueva ruta con parámetro
+                path="/comentarios/:recetaId"
                 element={
                     <ProtectedRoute>
                         <ComentariosPage />
@@ -39,8 +38,8 @@ export default function AppRoutes() {
             {/* Rutas públicas */}
             <Route path="/iniciar-sesion" element={<IniciarSesion />} />
             <Route path="/registrarse" element={<Registrarse />} />
-            <Route path="/feed" element={<Feed />} />
-
+            {/*Pasa la prop onDrawerToggle a la página Feed */}
+            <Route path="/feed" element={<Feed onDrawerToggle={onDrawerToggle} />} />
         </Routes>
     );
 }

@@ -9,7 +9,7 @@ import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 
 interface DatosReceta {
     id: number;
-    autor: Usuario;
+    usuario: Usuario;
     fechaCreacion: string;
     tipoContenido: string;
     calificacion: number;
@@ -36,7 +36,12 @@ export interface Usuario {
     isFollowing: boolean;
 }
 
-const Feed: React.FC = () => {
+// Define la interfaz de props para el componente Feed
+interface FeedProps {
+    onDrawerToggle: (isOpen: boolean) => void;
+}
+
+const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]);
     const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]);
     const [usuariosFiltrados, setUsuariosFiltrados] = useState<Usuario[]>([]);
@@ -97,7 +102,7 @@ const Feed: React.FC = () => {
 
         const resultadosRecetas = recetas.filter(receta =>
             receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.usuario?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
             receta.titulo.toLowerCase().includes(termino.toLowerCase())
         );
         setRecetasFiltradas(resultadosRecetas);
@@ -220,6 +225,7 @@ const Feed: React.FC = () => {
                                 ...receta,
                                 categorias: categoriasFormateadas
                             }}
+                            onDrawerToggle={onDrawerToggle}
                         />
                     );
                 })}

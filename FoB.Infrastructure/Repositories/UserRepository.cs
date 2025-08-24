@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FoB.Infrastructure.Repositories;
 
-internal sealed class UserRepository : IUserRepository
+public class UserRepository : IUserRepository
 {
     private readonly fobContext _context;
     public UserRepository(fobContext context)

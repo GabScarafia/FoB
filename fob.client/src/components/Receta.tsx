@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+// import { useComentariosService } from 'services/comentarioService'; este tengo q ver para la preview
 import './Receta.css';
 
 // Íconos de Material UI
@@ -13,8 +14,10 @@ import StarIcon from '@mui/icons-material/Star';
 import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 
 import DrawerComentarios from '../components/DrawerComentarios';
-import type { Comentario } from './DrawerComentarios';
+import type { Comentario } from '../components/DrawerComentarios';
 import type { Usuario } from '../pages/Feed';
+import { useAuth } from '../context/AuthContext';
+import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 
 interface Ingrediente {
     id: number;
@@ -26,7 +29,7 @@ interface Ingrediente {
 interface PropsReceta {
     receta: {
         id: number;
-        autor: Usuario;
+        usuario: Usuario;
         fechaCreacion: string;
         tipoContenido: string;
         calificacion: number;
@@ -42,13 +45,30 @@ interface PropsReceta {
         ingredientes: Ingrediente[];
         categorias: string[];
     };
+    onDrawerToggle: (open: boolean) => void; // Función opcional para abrir el drawer desde el componente padre
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
+
+    // Agregamos un nuevo estado para el contador de comentarios
+    const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
+    
+    // Función para manejar la adición de un nuevo comentario al estado local
+    const handleComentarioAgregado = (nuevoComentario: Comentario) => {
+        // Actualizamos el estado de los comentarios
+        setComentarios([...comentarios, nuevoComentario]);
+        // ¡Y también el contador!
+        setComentariosCount(prevCount => prevCount + 1);
+    };
+
+    const { authData } = useAuth(); // Usamos el hook para el token
+
+    // Se agrega el estado para manejar la lista completa de comentarios
+    const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
 
     // Estado para controlar el estado del drawer de comentarios
     const [drawerAbierto, setDrawerAbierto] = useState(false);
@@ -84,6 +104,16 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
         setMostrarMas(prevMostrarMas => !prevMostrarMas);
     };
 
+    const handleOpenDrawer = () => {
+        setDrawerAbierto(true);
+        onDrawerToggle(true); // Notificar al padre que el drawer está abierto
+    };
+
+    const handleCloseDrawer = () => {
+        setDrawerAbierto(false);
+        onDrawerToggle(false); // Notificar al padre que el drawer está cerrado
+    };
+
     const descripcionMostrada = mostrarMas || receta.descripcion.length <= LIMITE_CARACTERES
         ? receta.descripcion
         : `${receta.descripcion.substring(0, LIMITE_CARACTERES)}...`;
@@ -96,8 +126,8 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
         : 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta';
 
     // Construye la URL de la foto de perfil desde la cadena Base64
-    const fotoPerfilUrl = receta.autor?.imagen
-        ? `data:image/jpeg;base64,${receta.autor.imagen}`
+    const fotoPerfilUrl = receta.usuario?.imagen
+        ? `data:image/jpeg;base64,${receta.usuario.imagen}`
         : fotoPerfilLocal;
 
     // Función para formatear el tiempo
@@ -152,7 +182,7 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                 <div className="info-autor">
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
-                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                        <div className="nombre-autor">{receta.usuario?.nombreUsuario}</div>
                         <div className="tiempo-publicacion">Publicado el {fechaFormateada}</div>
                     </div>
                 </div>
@@ -172,19 +202,13 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
             {/* Interacciones (Me Gusta, Comentarios, Guardar) */}
             <div className="acciones-receta">
                 <div className="acciones-izquierda">
-                    {liked ? (
-                        <FavoriteIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleLikeClick} />
-                    ) : (
-                        <FavoriteBorderIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleLikeClick} />
-                    )}
-                    <span className="conteo-me-gusta">{likesCount}</span>
-
-                    {/* Icono de comentario -> abre el Drawer */}
+                    {/* ... (código de likes y likesCount) */}
                     <ChatBubbleOutlineIcon
                         className="icono-accion icono-comentario azul-borde"
-                        onClick={() => setDrawerAbierto(true)}
+                        onClick={handleOpenDrawer}
                     />
-                    <span className="conteo-comentarios">{receta.cantidadComentarios}</span>
+                    {/* ¡Aquí se utiliza el nuevo estado! */}
+                    <span className="conteo-comentarios">{comentariosCount}</span>
 
                     {/* Icono de reloj y tiempo de preparación */}
                     <AccessTimeIcon className="icono-accion icono-tiempo azul-relleno" />
@@ -240,17 +264,16 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
                     </div>
                 )}
             </div>
-
+        
             {/* Vista previa de comentarios */}
             <div className="vista-previa-comentarios">
-                {receta.vistaPreviaComentarios && receta.vistaPreviaComentarios.length > 0 ? (
-                    receta.vistaPreviaComentarios.map((comentario, index) => (
-                        // Se utiliza el 'id' del comentario si está disponible, sino se usa el índice
+                {comentarios && comentarios.length > 0 ? (
+                    comentarios.slice(0, 3).map((comentario, index) => (
                         <div key={comentario.id || index} className="item-comentario">
                             <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.autor?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
+                            <span className="autor-comentario">{comentario.usuario?.nombreUsuario }:</span> <span className="texto-comentario">{comentario.texto}</span>
                             <span className="tiempo-comentario">
-                                {comentario.hora instanceof Date ? comentario.hora.toLocaleString() : comentario.hora}
+                                • {formatoTiempoRelativo(comentario.fecha || new Date().toISOString())}
                             </span>
                         </div>
                     ))
@@ -262,8 +285,9 @@ const Receta: React.FC<PropsReceta> = ({ receta }) => {
             {/* Drawer */}
             <DrawerComentarios
                 open={drawerAbierto}
-                onClose={() => setDrawerAbierto(false)}
-                comentarios={receta.vistaPreviaComentarios || []}
+                onClose={handleCloseDrawer}
+                idReceta={receta.id}
+                onComentarioAgregado={handleComentarioAgregado}
             />
         </div>
     );

@@ -22,6 +22,12 @@ const MainApp = () => {
   location.pathname === "/iniciar-sesion" ||
   location.pathname === "/registrarse";
 
+  // Nuevo estado para controlar si el drawer de comentarios está abierto
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const handleDrawerToggle = (isOpen: boolean) => {
+    setIsDrawerOpen(isOpen);
+  };
 
 
   return (
@@ -43,9 +49,11 @@ const MainApp = () => {
           pb: { xs: 9, sm: 0 } // espacio para BottomNavigation
         }}
       >
-        <AppRoutes />
+        {/* Pasamos la función a AppRoutes */}
+        <AppRoutes onDrawerToggle={handleDrawerToggle} />
       </Box>
-      {!isAuthPage && isLoggedIn && <ButtonBar />}
+      {/* Ocultar la ButtonBar si el drawer está abierto */}
+      {!isAuthPage && isLoggedIn && !isDrawerOpen && <ButtonBar />}
     </Box>
   );
 };

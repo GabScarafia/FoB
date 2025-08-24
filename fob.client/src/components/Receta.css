@@ -52,7 +52,7 @@
     border-radius: 4px;
 }
 
-/* Título de la receta */
+/* Tï¿½tulo de la receta */
 .titulo-receta {
     padding: 0 15px;
     margin-top: 5px;
@@ -89,7 +89,7 @@
     border-radius: 6px;
 }
 
-/* Sección de acciones (me gusta, comentarios, guardar) */
+/* Secciï¿½n de acciones (me gusta, comentarios, guardar) */
 .acciones-receta {
     display: flex;
     justify-content: space-between;
@@ -104,12 +104,12 @@
     gap: 10px;
 }
 
-/* Base para todos los iconos de acción */
+/* Base para todos los iconos de acciï¿½n */
 .icono-accion {
     font-size: 28px !important;
     cursor: pointer;
     transition: color 0.2s ease-in-out, transform 0.1s ease-out;
-    /* Estas propiedades son importantes para que el SVG del ícono ocupe el espacio correcto */
+    /* Estas propiedades son importantes para que el SVG del ï¿½cono ocupe el espacio correcto */
     width: 1em;
     height: 1em;
     display: flex;
@@ -117,17 +117,17 @@
     align-items: center;
 }
 
-/* Color azul general para iconos con borde (como el corazón antes de dar like) */
+/* Color azul general para iconos con borde (como el corazï¿½n antes de dar like) */
 .icono-accion.azul-borde {
     color: #1a2d72;
 }
 
-/* Color azul general para iconos rellenos (como el corazón después de dar like, comentario y guardar) */
+/* Color azul general para iconos rellenos (como el corazï¿½n despuï¿½s de dar like, comentario y guardar) */
 .icono-accion.azul-relleno {
     color: #1a2d72;
 }
 
-/* Efecto al pasar el mouse sobre cualquier icono de acción */
+/* Efecto al pasar el mouse sobre cualquier icono de acciï¿½n */
 .icono-accion:hover {
     color: #0056b3;
     transform: scale(1.1);
@@ -153,7 +153,7 @@
     margin-left: -5px;
 }
 
-/* Nuevos estilos para la sección de ingredientes y categorías */
+/* Nuevos estilos para la secciï¿½n de ingredientes y categorï¿½as */
 .informacion-adicional {
     padding: 0 15px;
     margin-top: 10px;
@@ -192,7 +192,7 @@
     color: black;
 }
 
-/* Descripción de la receta */
+/* Descripciï¿½n de la receta */
 .descripcion-receta {
     padding: 5px 15px 10px 15px;
     font-size: 0.95em;
@@ -216,7 +216,7 @@
     text-overflow: ellipsis;
 }
 
-/* icono de comentario pequeño */
+/* icono de comentario pequeï¿½o */
 .icono-comentario-pequeno {
     font-size: 1em !important;
     color: black;
@@ -249,7 +249,7 @@
     padding-top: 5px;
 }
 
-/* Estilos para el botón "Leer más" */
+/* Estilos para el botï¿½n "Leer mï¿½s" */
 .boton-leer-mas {
     background: none;
     border: none;
