@@ -116,7 +116,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             .Where(x => x.Activa == true /*&& x.Estado == EstadoEnum.Aprobada.ToString()*/);
 
         // Sort by creation date (desc) and then by average rating (desc)
-        query = query.OrderByDescending(x => x.FechaCreacion.Value.Date)
+        query = query.OrderByDescending(x => x.FechaCreacion.Date)
                      .ThenByDescending(x => x.PuntuacionPromedio);
 
         // Pagination
@@ -213,6 +213,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                                                 {
                                                     Id = c.Id,
                                                     Texto = c.Texto,
+                                                    Fecha = c.Fecha,
                                                     Autor = new UsuarioResponse
                                                     {
                                                         Id = c.Usuario.Id,

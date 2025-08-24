@@ -16,22 +16,25 @@
  * 
  * si alguno tiene una idea de como arreglarlo, se agradece.
  */
-export const formatoTiempoRelativo = (fechaEntrada: string | Date): string => {
+export const formatoTiempoRelativo = (fechaEntrada: Date): string => {
     let fecha: Date;
 
+    console.log("fecha entrada",fechaEntrada)
+    console.log("tipo", typeof(fechaEntrada))
     // Si la entrada ya es un objeto Date, la usa directamente
     if (fechaEntrada instanceof Date) {
         fecha = fechaEntrada;
     } else {
-        // Analiza la cadena ISO 8601 de forma robusta
-        const partes = fechaEntrada.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}).(\d{3})Z$/);
-        if (partes) {
-            // Usa Date.UTC para que la fecha siempre se base en el huso horario universal (UTC)
-            fecha = new Date(Date.UTC(+partes[1], +partes[2] - 1, +partes[3], +partes[4], +partes[5], +partes[6], +partes[7]));
-        } else {
-            // Reserva para formatos no estándar
-            fecha = new Date(fechaEntrada);
-        }
+        fecha = new Date(fechaEntrada);
+        // // Analiza la cadena ISO 8601 de forma robusta
+        // const partes = fechaEntrada.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}).(\d{3})Z$/);
+        // if (partes) {
+        //     // Usa Date.UTC para que la fecha siempre se base en el huso horario universal (UTC)
+        //     fecha = new Date(Date.UTC(+partes[1], +partes[2] - 1, +partes[3], +partes[4], +partes[5], +partes[6], +partes[7]));
+        // } else {
+        //     // Reserva para formatos no estándar
+        //     fecha = new Date(fechaEntrada);
+        // }
     }
 
     // Si la fecha no es válida, devolvemos un mensaje de error

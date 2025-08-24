@@ -92,7 +92,7 @@ const Comentarios: React.FC<ComentariosProps> = ({ idReceta, token }) => {
           {comentarios.map((c) => (
             <li key={c.id}>
               <strong>Usuario {c.usuarioId}:</strong> {c.texto}{" "}
-              <em>({new Date(c.fecha).toLocaleString()})</em>
+              <em>({c.fecha})</em>
             </li>
           ))}
         </ul>

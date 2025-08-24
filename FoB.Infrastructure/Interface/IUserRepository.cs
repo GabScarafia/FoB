@@ -8,6 +8,7 @@ public interface IUserRepository
 {
     Task<bool> EmailExistsAsync(string email);
     Task<bool> UsernameExistsAsync(string username);
+    Task<UsuarioComentarioDTO> GetUsuarioComentarioByIdAsync(long id);
     Task AddAsync(Usuario user);
     Task SaveChangesAsync();
     Task<Rol> GetRoleByNameAsync(string roleName);

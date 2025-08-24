@@ -15,7 +15,7 @@ namespace FoB.Application.Dtos
         public string Texto { get; set; }
 
         [Required]
-        public DateTime FechaCreacion { get; set; }
+        public DateTime Fecha { get; set; }
 
         [Required]
         public UsuarioComentarioDTO Usuario { get; set; }
@@ -30,5 +30,5 @@ public class UsuarioComentarioDTO
     public string Nombre { get; set; }
     public string Apellido { get; set; }
     public string NombreUsuario { get; set; }
-    public string FotoUrl { get; set; } = "";
+    public byte[] Imagen { get; set; }
 }

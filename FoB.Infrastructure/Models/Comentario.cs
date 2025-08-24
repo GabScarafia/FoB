@@ -9,7 +9,7 @@ public partial class Comentario
 {
     public int Id { get; set; }
 
-    public DateTime? Fecha { get; set; }
+    public DateTime Fecha { get; set; }
 
     public DateTime? FechaModificacion { get; set; }
 

@@ -23,21 +23,23 @@ namespace FoB.Infrastructure.Repositories
 
         public async Task<IEnumerable<ComentarioDTO>> GetByRecetaAsync(int idReceta)
         {
-            return await _context.Comentario
+            return await _context.Set<Comentario>()
+                .Include(x=>x.Usuario)
+                    .ThenInclude(x=>x.UsuarioImagen)
                 .Where(c => c.RecetaId == idReceta)
                 .Select(c => new ComentarioDTO
                 {
                     Id = c.Id,
                     IdReceta = c.RecetaId,
                     Texto = c.Texto,
-                    FechaCreacion = (DateTime)c.Fecha,
+                    Fecha = c.Fecha,
                     RespuestaAComentarioId = c.RespuestaAComentarioId,
                     Usuario = new UsuarioComentarioDTO
                     {
                         Nombre = c.Usuario.Nombre,
                         Apellido = c.Usuario.Apellido,
                         NombreUsuario = c.Usuario.NombreUsuario,
-                        FotoUrl = "" // vacío por ahora
+                        Imagen = c.Usuario.UsuarioImagen.FirstOrDefault().Imagen,
                     }
                 }).ToListAsync();
         }

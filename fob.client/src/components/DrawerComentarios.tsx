@@ -24,10 +24,9 @@ import './DrawerComentarios.css';
 
 export interface Comentario {
   id: number;
-  usuario: Usuario; /**que onda loco, cambie de autor a usuario, xq sino no me tomaba bien lo q viene de la api en la db. creo q se rompio 
-  el autor de la receta, pero lo mio anda jaja saludos */
+  usuario: Usuario; 
   texto: string;
-  fecha: Date|string;
+  fecha: Date;
   imagen: string;
 }
 
@@ -113,6 +112,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   
       const nuevoComentario = await response.json();
   
+      console.log("Nuevo comentario creado:", nuevoComentario);
       // Actualiza el estado local con el nuevo comentario
       setComentariosCompletos(prev => [...prev, nuevoComentario]);
       setNuevoTexto("");
@@ -158,18 +158,18 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
                 <ListItem className="comment-list-item" alignItems="flex-start" key={c.id}>
                   <ListItemAvatar>
                     <Avatar 
-                        src={c.usuario?.imagen || fotoPerfilLocal} 
-                        alt={c.usuario?.nombreUsuario || 'Usuario Desconocido'}
+                        src={c.usuario.imagen ? `data:image/jpeg;base64,${c.usuario.imagen}` : fotoPerfilLocal} 
+                        alt={c.usuario.nombreUsuario}
                     >
-                        {c.usuario?.nombreUsuario?.[0]}
+                        {c.usuario.nombreUsuario}
                     </Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={
                       <Typography variant="subtitle2" className="comment-text-primary">
-                        {c.usuario?.nombreUsuario || 'Usuario Desconocido'} •{" "}
+                        {c.usuario?.nombreUsuario }
                         <span className="comment-time">
-                          {formatoTiempoRelativo(c.fecha || new Date().toISOString())}
+                          {formatoTiempoRelativo(c.fecha)}
                         </span>
                       </Typography>
                     }

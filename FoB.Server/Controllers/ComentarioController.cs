@@ -1,6 +1,7 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Application.Entities;
 using FoB.Application.Interfaces;
+using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,12 @@ namespace FoB.API.Controllers;
 public class ComentarioController : ControllerBase
 {
     private readonly IComentarioRepository _repository;
+    private readonly IUserRepository _userRepository;
 
-    public ComentarioController(IComentarioRepository repository)
+    public ComentarioController(IComentarioRepository repository, IUserRepository userRepository)
     {
         _repository = repository;
+        _userRepository = userRepository;
     }
 
     // GET api/comentario/receta/{idReceta}
@@ -30,7 +33,7 @@ public class ComentarioController : ControllerBase
             Id = c.Id,
             IdReceta = c.IdReceta,
             Texto = c.Texto,
-            FechaCreacion = c.FechaCreacion,
+            Fecha = c.Fecha,
             RespuestaAComentarioId = c.RespuestaAComentarioId,
             Usuario = c.Usuario,
             Respuestas = new List<ComentarioDTO>()
@@ -75,15 +78,9 @@ public class ComentarioController : ControllerBase
             Id = creado.Id,
             IdReceta = creado.RecetaId,
             Texto = creado.Texto,
-            FechaCreacion = creado.Fecha ?? DateTime.Now,
+            Fecha = creado.Fecha ?? DateTime.Now,
             RespuestaAComentarioId = creado.RespuestaAComentarioId,
-            Usuario = new UsuarioComentarioDTO
-            {
-                Nombre = "Test",       // reemplazar por usuario real
-                Apellido = "",
-                NombreUsuario = "JhonnyTest",
-                FotoUrl = ""
-            },
+            Usuario = await _userRepository.GetUsuarioComentarioByIdAsync(creado.UsuarioId),
             Respuestas = new List<ComentarioDTO>()
         };
 

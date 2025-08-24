@@ -11,7 +11,7 @@ public class RecetaResponse
     public string Estado { get; set; }
     public byte[] Imagen { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateTime FechaCreacion { get; set; }
 
     public DateTime? FechaModificacion { get; set; }
 
@@ -41,6 +41,7 @@ public class ComentarioResponse
 {
     public int Id { get; set; }
     public string Texto { get; set; }
+    public DateTime Fecha { get; set; }
     public UsuarioResponse Autor { get; set; }
 }
 public class UsuarioResponse

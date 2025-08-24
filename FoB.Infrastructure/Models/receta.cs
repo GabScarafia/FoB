@@ -17,7 +17,7 @@ public partial class Receta
 
     public string Estado { get; set; }
 
-    public DateTime? FechaCreacion { get; set; }
+    public DateTime FechaCreacion { get; set; }
 
     public DateTime? FechaModificacion { get; set; }
 

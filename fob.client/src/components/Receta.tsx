@@ -29,10 +29,10 @@ interface Ingrediente {
 interface PropsReceta {
     receta: {
         id: number;
-        usuario: Usuario;
+        autor: Usuario;
         fechaCreacion: string;
         tipoContenido: string;
-        calificacion: number;
+        dificultad: string;
         imagen: string;
         cantidadVotos: number;
         meGusta: boolean;
@@ -76,12 +76,39 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
     // Límite de caracteres para la descripción truncada
     const LIMITE_CARACTERES = 100;
 
-    const renderizarEstrellas = (calificacion: number) => {
+    const renderizarEstrellas = (dificultad: string) => {
         const estrellas = [];
-        for (let i = 0; i < 3; i++) {
-            estrellas.push(
-                <span key={i} className={`estrella ${i < calificacion ? 'rellena' : ''}`}>★</span>
-            );
+        if(dificultad === 'Facil'){
+            for (let i = 0; i < 1; i++) {
+                estrellas.push(
+                    <span key={i} className={`estrella ${i < 1 ? 'rellena' : ''}`}>★</span>
+                );
+
+            }
+        }
+        if(dificultad === 'Medio'){
+            for (let i = 0; i < 2; i++) {
+                estrellas.push(
+                    <span key={i} className={`estrella ${i < 2 ? 'rellena' : ''}`}>★</span>
+                );
+
+            }
+        }
+        if(dificultad === 'Dificil'){
+            for (let i = 0; i < 3 ; i++) {
+                estrellas.push(
+                    <span key={i} className={`estrella ${i < 3? 'rellena' : ''}`}>★</span>
+                );
+
+            }
+        }
+        if(dificultad === 'Experto'){
+            for (let i = 0; i < 4; i++) {
+                estrellas.push(
+                    <span key={i} className={`estrella ${i < 4 ? 'rellena' : ''}`}>★</span>
+                );
+
+            }
         }
         return estrellas;
     };
@@ -126,8 +153,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
         : 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta';
 
     // Construye la URL de la foto de perfil desde la cadena Base64
-    const fotoPerfilUrl = receta.usuario?.imagen
-        ? `data:image/jpeg;base64,${receta.usuario.imagen}`
+    const fotoPerfilUrl = receta.autor?.imagen
+        ? `data:image/jpeg;base64,${receta.autor.imagen}`
         : fotoPerfilLocal;
 
     // Función para formatear el tiempo
@@ -182,14 +209,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 <div className="info-autor">
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
-                        <div className="nombre-autor">{receta.usuario?.nombreUsuario}</div>
+                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
                         <div className="tiempo-publicacion">Publicado el {fechaFormateada}</div>
                     </div>
                 </div>
                 <div className="meta-receta">
-                    <span className="tipo-contenido">Media</span>
+                    <span className="tipo-contenido">{receta.dificultad}</span>
                     <div className="estrellas-calificacion">
-                        {renderizarEstrellas(receta.calificacion)}
+                        {renderizarEstrellas(receta.dificultad)}
                     </div>
                 </div>
             </div>
@@ -273,7 +300,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                             <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
                             <span className="autor-comentario">{comentario.usuario?.nombreUsuario }:</span> <span className="texto-comentario">{comentario.texto}</span>
                             <span className="tiempo-comentario">
-                                • {formatoTiempoRelativo(comentario.fecha || new Date().toISOString())}
+                                • {formatoTiempoRelativo(comentario.fecha)}
                             </span>
                         </div>
                     ))

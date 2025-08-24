@@ -1,4 +1,5 @@
-﻿using FoB.Infrastructure.Context;
+﻿using FoB.Application.Dtos;
+using FoB.Infrastructure.Context;
 using FoB.Infrastructure.Interface;
 using FoB.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,18 @@ public class UserRepository : IUserRepository
         _context = context;
     }
 
+    public async Task<UsuarioComentarioDTO> GetUsuarioComentarioByIdAsync(long id)
+    {
+        var result = await _context.Usuario.Include(u => u.UsuarioRol).Include(u => u.UsuarioImagen).FirstOrDefaultAsync(u => u.Id ==id);
+        if (result == null) return null;
+        return new UsuarioComentarioDTO
+        {
+            Nombre = result.Nombre,
+            Apellido = result.Apellido,
+            NombreUsuario = result.NombreUsuario,
+            Imagen = result.UsuarioImagen.FirstOrDefault()?.Imagen
+        };
+    }
     public async Task<bool> EmailExistsAsync(string email)
     {
         return await _context.Usuario.AnyAsync(u => u.Email == email);
