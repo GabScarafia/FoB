@@ -12,22 +12,25 @@ import {
   Avatar,
   ListItemText,
   TextField,
+  Link,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SendIcon from "@mui/icons-material/Send";
+import ReplyIcon from "@mui/icons-material/Reply";
 import type { Usuario } from "../pages/Feed";
 import { useAuth } from "../context/AuthContext";
-import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg'; // Importa la foto de perfil local
-import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
+import fotoPerfilLocal from "../assets/images/bicho-arabe.jpg";
+import { formatoTiempoRelativo } from "../utils/formateoDeTiempo";
+import "./DrawerComentarios.css";
 
-import './DrawerComentarios.css';
-
+// Interfaz para un solo comentario, incluyendo las respuestas anidadas.
 export interface Comentario {
   id: number;
-  usuario: Usuario; 
+  usuario: Usuario;
   texto: string;
-  fecha: Date;
-  imagen: string;
+  fecha: Date | string;
+  respuestaAComentarioId: number | null;
+  respuestas?: Comentario[];
 }
 
 interface DrawerComentariosProps {
@@ -37,6 +40,95 @@ interface DrawerComentariosProps {
   onComentarioAgregado: (nuevoComentario: Comentario) => void;
 }
 
+// Interfaz para las propiedades del componente ComentarioAnidado.
+interface ComentarioAnidadoProps {
+  comentario: Comentario;
+  handleReplyClick: (comentario: Comentario) => void;
+  fotoPerfilLocal: string;
+}
+
+// Este es el componente recursivo que muestra un comentario y sus respuestas.
+const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
+  comentario,
+  handleReplyClick,
+  fotoPerfilLocal,
+}) => {
+  return (
+    <List key={comentario.id} sx={{ p: 0 }}>
+      <ListItem
+        className="comment-list-item"
+        alignItems="flex-start"
+        sx={{
+          marginLeft: comentario.respuestaAComentarioId ? "20px" : "0",
+        }}
+      >
+        <ListItemAvatar>
+          <Avatar
+            src={
+              // Usa encadenamiento opcional para evitar errores si la imagen es nula
+              comentario.usuario?.imagen
+                ? `data:image/jpeg;base64,${comentario.usuario.imagen}`
+                : fotoPerfilLocal
+            }
+            // Usa encadenamiento opcional para evitar errores si el nombre de usuario es nulo
+            alt={comentario.usuario?.nombreUsuario}
+          />
+        </ListItemAvatar>
+        <ListItemText
+          primary={
+            <Typography variant="subtitle2" className="comment-text-primary">
+              {/* Usa encadenamiento opcional aquí también */}
+              {comentario.usuario?.nombreUsuario || "Usuario Desconocido"}
+              <span className="comment-time">
+                {formatoTiempoRelativo(comentario.fecha)}
+              </span>
+            </Typography>
+          }
+          secondary={
+            <React.Fragment>
+              <Typography variant="body2" className="comment-text-secondary">
+                {comentario.texto}
+              </Typography>
+              <Box sx={{ mt: 1 }}>
+                <Link
+                  component="button"
+                  variant="body2"
+                  onClick={() => handleReplyClick(comentario)}
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    color: "gray",
+                    textDecoration: "none",
+                    "&:hover": {
+                      textDecoration: "underline",
+                    },
+                  }}
+                >
+                  <ReplyIcon sx={{ fontSize: "1rem", color: "gray" }} />
+                  Responder
+                </Link>
+              </Box>
+            </React.Fragment>
+          }
+        />
+      </ListItem>
+      {comentario.respuestas && comentario.respuestas.length > 0 && (
+        <List sx={{ pl: 4 }}>
+          {comentario.respuestas.map((reply) => (
+            <ComentarioAnidado
+              key={reply.id}
+              comentario={reply}
+              handleReplyClick={handleReplyClick}
+              fotoPerfilLocal={fotoPerfilLocal}
+            />
+          ))}
+        </List>
+      )}
+    </List>
+  );
+};
+
 const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   open,
   onClose,
@@ -44,48 +136,76 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   onComentarioAgregado,
 }) => {
   const [nuevoTexto, setNuevoTexto] = useState("");
-  const [comentariosCompletos, setComentariosCompletos] = useState<Comentario[]>([]);
+  const [comentarios, setComentarios] = useState<Comentario[]>([]);
   const [cargandoComentarios, setCargandoComentarios] = useState(true);
   const [errorComentarios, setErrorComentarios] = useState<string | null>(null);
+  const [comentarioPadre, setComentarioPadre] = useState<{ id: number; usuario: string } | null>(null);
   const { authData } = useAuth();
   const token = authData?.token;
   const currentUserId = authData?.id;
 
-  // aca tuve que hacer una llamada a la api para traer todos los comentarios de la receta, xq en la propiedad comentarios
-  // de la receta solo vienen 3 comentarios, y no me andaba el drawer xq no tenia todos los comentarios.
+  // Lógica de anidamiento de comentarios en el frontend (solo para el POST)
+  const findAndAddReply = (comments: Comentario[], newReply: Comentario): boolean => {
+    for (const comment of comments) {
+      if (comment.id === comentarioPadre?.id) {
+        if (!comment.respuestas) {
+          comment.respuestas = [];
+        }
+        comment.respuestas.push(newReply);
+        return true;
+      }
+      if (comment.respuestas && findAndAddReply(comment.respuestas, newReply)) {
+        return true;
+      }
+    }
+    return false;
+  };
 
-// me da miedo como autocompleta el vs code, xq se me hace comentarios q yo si haria de verdad jajajaj. Son las 2.40 am
-//  y estoy re podrido, pero bueno, ahi va. ESO LO PUSO SOLO EL COSO ESTE MAN Q MIEDDO
+  const obtenerTodosLosComentarios = async () => {
+    setCargandoComentarios(true);
+    setErrorComentarios(null);
+    try {
+      // El backend ahora devuelve una lista anidada, por lo que no es necesario procesarla aquí
+      const response = await fetch(`https://localhost:7084/api/Comentario/receta/${idReceta}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Error al cargar comentarios: ${response.status}`);
+      }
+
+      const data: Comentario[] = await response.json();
+      const comentariosConFecha = data.map(c => ({
+          ...c,
+          fecha: new Date(c.fecha)
+      }));
+      setComentarios(comentariosConFecha);
+    } catch (error) {
+      console.error("Error al obtener comentarios:", error);
+      setErrorComentarios("No se pudieron cargar los comentarios.");
+    } finally {
+      setCargandoComentarios(false);
+    }
+  };
+
   useEffect(() => {
     if (open && token) {
-      const obtenerTodosLosComentarios = async () => {
-        setCargandoComentarios(true);
-        setErrorComentarios(null);
-        try {
-          const response = await fetch(`https://localhost:7084/api/Comentario/receta/${idReceta}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`,
-              'Content-Type': 'application/json'
-            }
-          });
-
-          if (!response.ok) {
-            throw new Error(`Error al cargar comentarios: ${response.status}`);
-          }
-
-          const data = await response.json();
-          setComentariosCompletos(data); 
-        } catch (error) {
-          console.error("Error al obtener comentarios:", error);
-          setErrorComentarios("No se pudieron cargar los comentarios.");
-        } finally {
-          setCargandoComentarios(false);
-        }
-      };
-      
       obtenerTodosLosComentarios();
     }
   }, [open, idReceta, token]);
+
+  const handleReplyClick = (comentario: Comentario) => {
+    setComentarioPadre({ id: comentario.id, usuario: comentario.usuario.nombreUsuario });
+    setNuevoTexto("");
+  };
+
+  const handleCancelReply = () => {
+    setComentarioPadre(null);
+    setNuevoTexto("");
+  };
 
   const handleSubmit = async () => {
     if (!nuevoTexto || !token || !currentUserId) return;
@@ -93,7 +213,8 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     const comentarioACrear = {
       texto: nuevoTexto,
       idReceta: idReceta,
-      idUsuario: currentUserId
+      idUsuario: currentUserId,
+      respuestaAComentarioId: comentarioPadre?.id || null
     };
 
     try {
@@ -105,19 +226,47 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
         },
         body: JSON.stringify(comentarioACrear)
       });
-  
+
       if (!response.ok) {
-        throw new Error('Error al enviar el comentario.');
+        throw new Error("Error al enviar el comentario.");
       }
-  
-      const nuevoComentario = await response.json();
-  
-      console.log("Nuevo comentario creado:", nuevoComentario);
-      // Actualiza el estado local con el nuevo comentario
-      setComentariosCompletos(prev => [...prev, nuevoComentario]);
+
+      const nuevaRespuesta: Comentario = await response.json();
+      nuevaRespuesta.fecha = new Date(nuevaRespuesta.fecha);
+
+      if (authData) {
+        nuevaRespuesta.usuario = {
+            id: currentUserId,
+            nombre: authData.nombre,
+            apellido: "",
+            nombreUsuario: authData.email.split('@')[0],
+            isFollowing: false,
+            // Utilizamos la imagen de perfil local para el nuevo comentario, ya que la API no la retorna inmediatamente.
+            imagen: fotoPerfilLocal,
+        };
+      } else {
+        nuevaRespuesta.usuario = {
+          id: currentUserId,
+          nombre: "Usuario",
+          apellido: "",
+          nombreUsuario: "Anónimo",
+          isFollowing: false,
+          imagen: fotoPerfilLocal,
+        };
+      }
+
+      if (comentarioPadre) {
+        const comentariosCopia = [...comentarios];
+        findAndAddReply(comentariosCopia, nuevaRespuesta);
+        setComentarios(comentariosCopia);
+      } else {
+        setComentarios(prev => [...prev, nuevaRespuesta]);
+      }
+
       setNuevoTexto("");
-      onComentarioAgregado(nuevoComentario);
-      
+      setComentarioPadre(null);
+      onComentarioAgregado(nuevaRespuesta);
+
     } catch (error) {
       console.error("Error al enviar comentario:", error);
     }
@@ -126,9 +275,9 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   return (
     <Drawer anchor="bottom" open={open} onClose={onClose}>
       <Box sx={{ width: "100%", maxHeight: "60vh", display: "flex", flexDirection: "column" }}>
-        {/* Header (Azul) */}
+        {/* Header */}
         <Box
-          className="drawer-header" // <-- Aplica la clase del header aquí
+          className="drawer-header"
           sx={{
             display: "flex",
             alignItems: "center",
@@ -153,29 +302,14 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
           ) : errorComentarios ? (
             <p>{errorComentarios}</p>
           ) : (
-            <List>
-              {comentariosCompletos.map((c) => (
-                <ListItem className="comment-list-item" alignItems="flex-start" key={c.id}>
-                  <ListItemAvatar>
-                    <Avatar 
-                        src={c.usuario.imagen ? `data:image/jpeg;base64,${c.usuario.imagen}` : fotoPerfilLocal} 
-                        alt={c.usuario.nombreUsuario}
-                    >
-                        {c.usuario.nombreUsuario}
-                    </Avatar>
-                  </ListItemAvatar>
-                  <ListItemText
-                    primary={
-                      <Typography variant="subtitle2" className="comment-text-primary">
-                        {c.usuario?.nombreUsuario }
-                        <span className="comment-time">
-                          {formatoTiempoRelativo(c.fecha)}
-                        </span>
-                      </Typography>
-                    }
-                    secondary={<Typography variant="body2" className="comment-text-secondary">{c.texto}</Typography>}
-                  />
-                </ListItem>
+            <List sx={{ p: 0 }}>
+              {comentarios.map((comentario) => (
+                <ComentarioAnidado
+                  key={comentario.id}
+                  comentario={comentario}
+                  handleReplyClick={handleReplyClick}
+                  fotoPerfilLocal={fotoPerfilLocal}
+                />
               ))}
             </List>
           )}
@@ -183,12 +317,13 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
 
         <Divider className="drawer-divider" />
 
-        {/* Caja de nuevo comentario (Versión Azul) */}
+        {/* Caja de nuevo comentario */}
         <Box
-          className="comment-input-box" // <-- Aplica la clase del input aquí
+          className="comment-input-box"
           sx={{
             p: 0.3,
             display: "flex",
+            flexDirection: "column",
             alignItems: "center",
             gap: 1,
             bgcolor: "#1f46b2",
@@ -196,33 +331,44 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
             maxHeight: '90px'
           }}
         >
-          <TextField
-            fullWidth
-            size="small"
-            placeholder="Dejar un comentario..."
-            variant="outlined"
-            value={nuevoTexto}
-            onChange={(e) => setNuevoTexto(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                handleSubmit();
-              }
-            }}
-            // Aplica la clase del input al TextField
-            className="comment-input" 
-          />
-          <IconButton
-            onClick={handleSubmit}
-            disabled={!nuevoTexto}
-            sx={{
-              color: 'white', // Color del ícono en blanco
-              "&:disabled": {
-                color: "rgba(255, 255, 255, 0.26)",
-              },
-            }}
-          >
-            <SendIcon />
-          </IconButton>
+          {comentarioPadre && (
+            <Box sx={{ width: '100%', px: 1, py: 0.5 }}>
+              <Typography variant="caption" sx={{ color: 'white', fontStyle: 'italic' }}>
+                Respondiendo a "{comentarioPadre.usuario}"
+              </Typography>
+              <IconButton onClick={handleCancelReply} size="small" sx={{ color: 'white' }}>
+                <CloseIcon fontSize="inherit" />
+              </IconButton>
+            </Box>
+          )}
+          <Box sx={{ display: 'flex', width: '100%', gap: 1, px: 1 }}>
+            <TextField
+              fullWidth
+              size="small"
+              placeholder={comentarioPadre ? '' : "Dejar un comentario..."}
+              variant="outlined"
+              value={nuevoTexto}
+              onChange={(e) => setNuevoTexto(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSubmit();
+                }
+              }}
+              className="comment-input"
+            />
+            <IconButton
+              onClick={handleSubmit}
+              disabled={!nuevoTexto}
+              sx={{
+                color: 'white',
+                "&:disabled": {
+                  color: "rgba(255, 255, 255, 0.26)",
+                },
+              }}
+            >
+              <SendIcon />
+            </IconButton>
+          </Box>
         </Box>
       </Box>
     </Drawer>
