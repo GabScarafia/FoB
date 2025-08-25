@@ -6,13 +6,14 @@ import '../styles/Feed.css';
 import type { Comentario } from 'components/DrawerComentarios';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
+import { Modal, Box, Button, Typography } from '@mui/material';
 
 interface DatosReceta {
     id: number;
     autor: Usuario;
     fechaCreacion: string;
     tipoContenido: string;
-    dificultad:string;
+    dificultad: string;
     imagen: string;
     cantidadVotos: number;
     meGusta: boolean;
@@ -37,10 +38,21 @@ export interface Usuario {
     isFollowing: boolean;
 }
 
-// Define la interfaz de props para el componente Feed
 interface FeedProps {
     onDrawerToggle: (isOpen: boolean) => void;
 }
+
+const style = {
+    position: 'absolute' as 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+    width: 400,
+    bgcolor: 'background.paper',
+    border: '2px solid #000',
+    boxShadow: 24,
+    p: 4,
+};
 
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]);
@@ -52,6 +64,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const { authData } = useAuth();
     const token = authData?.token;
     const currentUserId = authData?.id;
+
+    // Estados para el modal de confirmación
+    const [modalOpen, setModalOpen] = useState(false);
+    const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
 
     useEffect(() => {
         if (!token) {
@@ -88,6 +104,53 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
         obtenerRecetas();
     }, [token]);
+
+    // función para manejar la eliminación de recetas
+    const handleDeleteReceta = async (recetaId: number) => {
+        if (!token) {
+            console.error("No hay token de autenticación para eliminar la receta.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`https://localhost:7084/Recetas/${recetaId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (response.status === 204) {
+                setRecetas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
+                setRecetasFiltradas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
+                console.log(`Receta con ID ${recetaId} eliminada exitosamente.`);
+            } else {
+                const errorData = await response.json();
+                throw new Error(`Error al eliminar la receta: ${response.statusText} - ${JSON.stringify(errorData)}`);
+            }
+        } catch (error) {
+            console.error('Error al eliminar la receta:', error);
+            alert('Error al eliminar la receta. Por favor, inténtelo de nuevo.');
+        } finally {
+            handleCloseModal();
+        }
+    };
+
+    // Manejadores del modal
+    const handleOpenModal = (recetaId: number) => {
+        setRecetaAEliminarId(recetaId);
+        setModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setRecetaAEliminarId(null);
+    };
+
+    const handleConfirmDelete = () => {
+        if (recetaAEliminarId !== null) {
+            handleDeleteReceta(recetaAEliminarId);
+        }
+    };
 
     const manejarBusqueda = async (termino: string) => {
         if (!token) {
@@ -191,7 +254,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 onSearch={manejarBusqueda}
                 usuarios={usuariosFiltrados}
                 onFollow={manejarSeguirUsuario}
-                currentUserId={currentUserId}
+                currentUserId={currentUserId ?? null}
             />
             <div className="feed-contenido">
                 {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && mensaje && (
@@ -211,11 +274,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 {recetasFiltradas.map(receta => {
                     const categoriasFormateadas = (receta.categorias || []).map(cat => {
-                        // Verifica si el elemento es un objeto con la propiedad 'nombre'
                         if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
                             return cat.nombre;
                         }
-                        // Si no es un objeto con 'nombre', asume que ya es una cadena.
                         return cat;
                     });
 
@@ -227,10 +288,36 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 categorias: categoriasFormateadas
                             }}
                             onDrawerToggle={onDrawerToggle}
+                            currentUserId={currentUserId ?? null}
+                            onDeleteReceta={handleOpenModal}
                         />
                     );
                 })}
             </div>
+
+            {/* Modal de confirmación de eliminación */}
+            <Modal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                aria-labelledby="modal-eliminar-receta"
+            >
+                <Box className="modal-contenedor">   
+                    <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
+                        Confirmar eliminación
+                    </Typography>  
+                    <Typography className="modal-descripcion" sx={{ mt: 2 }}>
+                        ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
+                    </Typography>
+                    <Box className="modal-acciones" sx={{ mt: 3 }}>
+                        <Button onClick={handleCloseModal} variant="outlined" className="modal-btn-cancelar">
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleConfirmDelete} variant="contained" className="modal-btn-eliminar">
+                            Eliminar
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
         </div>
     );
 };

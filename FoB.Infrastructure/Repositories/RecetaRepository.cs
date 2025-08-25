@@ -318,4 +318,24 @@ internal sealed class RecetaRepository : IRecetaRepository
         await _context.SaveChangesAsync();
         return true;
     }
+
+    // método para eliminar una receta
+    public async Task<bool> DeleteAsync(int recetaId)
+    {
+        var currentUserId = _currentUser.User.Id;
+
+        var recetaToDelete = await _context.Receta
+                                            .FirstOrDefaultAsync(r => r.Id == recetaId && r.UsuarioId == currentUserId);
+
+        if (recetaToDelete == null)
+        {
+            // La receta no existe o el usuario actual no es el autor
+            return false;
+        }
+
+        _context.Receta.Remove(recetaToDelete);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }

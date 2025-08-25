@@ -1,15 +1,20 @@
 ﻿import React, { useState } from 'react';
-// import { useComentariosService } from 'services/comentarioService'; este tengo q ver para la preview
 import './Receta.css';
 
 // Íconos de Material UI
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-//import ChatBubbleIcon from '@mui/icons-material/ChatBubble';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import IconButton from '@mui/material/IconButton';
 
 import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 
@@ -53,29 +58,45 @@ interface PropsReceta {
         pasos: Paso[];
     };
     onDrawerToggle: (open: boolean) => void;
+    // Nueva prop para el ID del usuario actual
+    currentUserId: number | null;
+    // Nueva prop para la función de eliminar receta
+    onDeleteReceta: (recetaId: number) => Promise<void>;
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta }) => {
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
     const [modalPasosAbierto, setModalPasosAbierto] = useState(false);
 
-    // Agregamos un nuevo estado para el contador de comentarios
     const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
-
-    // Se agrega el estado para manejar la lista completa de comentarios
     const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
 
-    const { authData } = useAuth(); // Usamos el hook para el token
+    const { authData } = useAuth();
 
-    // Estado para controlar el estado del drawer de comentarios
     const [drawerAbierto, setDrawerAbierto] = useState(false);
 
     const LIMITE_CARACTERES = 100;
 
-    // Lógica para el modal de Pasos
+    // Estado y manejadores para el menú de opciones 
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const openMenu = Boolean(anchorEl);
+
+    const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleCloseMenu = () => {
+        setAnchorEl(null);
+    };
+
+    const handleDeleteClick = async () => {
+        handleCloseMenu();
+        onDeleteReceta(receta.id);
+    };
+
     const handleOpenModalPasos = () => {
         setModalPasosAbierto(true);
     };
@@ -84,7 +105,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
         setModalPasosAbierto(false);
     };
 
-    // Función para manejar la adición de un nuevo comentario al estado local
     const handleComentarioAgregado = (nuevoComentario: Comentario) => {
         setComentarios([...comentarios, nuevoComentario]);
         setComentariosCount(prevCount => prevCount + 1);
@@ -182,9 +202,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
 
     const fechaFormateada = formatoTiempoRelativo(receta.fechaCreacion);
 
+    // Determina si la receta es del usuario actual
+    const esRecetaPropia = currentUserId === receta.autor.id;
+
     return (
         <div className="tarjeta-receta">
-            {/* Encabezado del usuario */}
             <div className="encabezado-receta">
                 <div className="info-autor">
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
@@ -193,20 +215,53 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                         <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
                     </div>
                 </div>
-                <div className="meta-receta">
-                    <span className="tipo-contenido">{receta.dificultad}</span>
-                    <div className="estrellas-calificacion">
-                        {renderizarEstrellas(receta.dificultad)}
+                {/* Contenedor para la dificultad y el menú de opciones */}
+                <div className="meta-receta-y-menu">
+                    <div className="meta-receta">
+                        <span className="tipo-contenido">{receta.dificultad}</span>
+                        <div className="estrellas-calificacion">
+                            {renderizarEstrellas(receta.dificultad)}
+                        </div>
                     </div>
+                    {/* Menú de opciones visible solo para recetas propias */}
+                    {esRecetaPropia && (
+                        <>
+                            <IconButton
+                                aria-label="más opciones"
+                                id="basic-button"
+                                aria-controls={openMenu ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={openMenu ? 'true' : undefined}
+                                onClick={handleClickMenu}
+                                sx={{ color: '#0b2553', p: 0.5, ml: 1 }}
+                            >
+                                <MoreVertIcon />
+                            </IconButton>
+                            <Menu
+                                id="basic-menu"
+                                anchorEl={anchorEl}
+                                open={openMenu}
+                                onClose={handleCloseMenu}
+                                MenuListProps={{
+                                    'aria-labelledby': 'basic-button',
+                                }}
+                            >
+                                <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
+                                    <ListItemIcon>
+                                        <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
+                                    </ListItemIcon>
+                                    <ListItemText>Eliminar</ListItemText>
+                                </MenuItem>
+                            </Menu>
+                        </>
+                    )}
                 </div>
             </div>
 
-            {/* Imagen de la receta */}
             <div className="contenedor-imagen-receta">
                 <img src={urlReceta} alt="Receta" className="imagen-receta" />
             </div>
 
-            {/* Interacciones (Me Gusta, Comentarios, Guardar) */}
             <div className="acciones-receta">
                 <div className="acciones-izquierda">
                     {liked ? (
@@ -221,7 +276,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                     />
                     <span className="conteo-comentarios">{comentariosCount}</span>
 
-                    {/* Icono de reloj y tiempo de preparación */}
                     <AccessTimeIcon className="icono-accion icono-tiempo azul-relleno" />
                     <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
                 </div>
@@ -234,7 +288,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 </div>
             </div>
 
-            {/* Título y descripción */}
             <div className="titulo-receta">
                 <h3>{receta.titulo}</h3>
             </div>
@@ -248,7 +301,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 )}
             </div>
 
-            {/* Sección de ingredientes y categorías */}
             <div className="informacion-adicional">
                 {receta.ingredientes && receta.ingredientes.length > 0 && (
                     <div className="ingredientes-receta">
@@ -267,7 +319,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                         {receta.categorias.map((categoria, index) => (
                             <span key={index} className="tag-categoria">
                                 {categoria}
-                                {index < receta.categorias.length - 1 ? '' : ''}
+                                {index < receta.categorias.length - 1 ? ', ' : ''}
                             </span>
                         ))}
                     </div>
@@ -281,7 +333,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 )}
             </div>
 
-            {/* Vista previa de comentarios */}
             <div className="vista-previa-comentarios">
                 {comentarios && comentarios.length > 0 ? (
                     comentarios.slice(0, 3).map((comentario, index) => (
@@ -298,17 +349,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 )}
             </div>
 
-            {/* Modal de Pasos  */}
             {modalPasosAbierto && (
                 <div className="modal-overlay" onClick={handleCloseModalPasos}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>
                         <h3>Pasos de la Receta</h3>
                         <button className="boton-cerrar-modal" onClick={handleCloseModalPasos}>×</button>
                         <div className="lista-pasos">
-                            {/* Se ordena la lista por el número de paso antes de renderizarla */}
                             {receta.pasos.sort((a, b) => a.numero - b.numero).map((paso, index) => (
                                 <div key={index} className="paso-item">
-                                    {/* Se usa paso.numero para la numeración y se le da un estilo */}
                                     <div className="paso-titulo-contenedor">
                                         <h4 className="paso-numero-titulo">
                                             {paso.numero}- {paso.titulo}
@@ -322,7 +370,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle }) => {
                 </div>
             )}
 
-            {/* Drawer */}
             <DrawerComentarios
                 open={drawerAbierto}
                 onClose={handleCloseDrawer}

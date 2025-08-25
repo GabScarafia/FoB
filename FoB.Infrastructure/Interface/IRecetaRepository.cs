@@ -12,4 +12,6 @@ public interface IRecetaRepository
     public Task<bool> EstaSiguiendoAlguienAsync();
 
     public Task<bool> LikeOrDislike(int idReceta);
+
+    Task<bool> DeleteAsync(int recetaId);
 }

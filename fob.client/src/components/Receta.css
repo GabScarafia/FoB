@@ -66,6 +66,25 @@
     font-weight: bold;
 }
 
+
+.meta-receta-y-menu {
+    display: flex;
+    align-items: center; /* Alinea verticalmente los elementos */
+    gap: 8px; /* Espacio entre la dificultad y el menú */
+}
+
+.meta-receta {
+    display: flex;
+    align-items: center;
+    /* Ajusta el margen derecho si es necesario para dar espacio al menú */
+    /* margin-right: 10px; */
+}
+
+.estrellas-calificacion {
+    display: flex;
+    align-items: center;
+}
+
 .estrellas-calificacion .estrella {
     color: #ccc;
     font-size: 1.2em;

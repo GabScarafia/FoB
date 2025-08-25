@@ -4,6 +4,7 @@ using FoB.Application.Interfaces;
 using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace FoB.Server.Controllers;
 
@@ -67,5 +68,22 @@ public class RecetasController : ControllerBase
     public async Task<IActionResult> LikeOrDislike([FromRoute] int idReceta)
     {
         return Ok(await _recetaRepository.LikeOrDislike(idReceta));
+    }
+
+    // Endpoint para eliminar una receta
+    [HttpDelete("{id}")]
+    [ProducesResponseType((int)HttpStatusCode.NoContent)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+    public async Task<IActionResult> DeleteReceta(int id)
+    {
+        var result = await _recetaRepository.DeleteAsync(id);
+
+        if (!result)
+        {
+            return NotFound(new { message = "Receta no encontrada o no tienes permiso para eliminarla." });
+        }
+
+        return NoContent(); // 204 No Content para indicar que la eliminación fue exitosa
     }
 }
