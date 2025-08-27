@@ -1,11 +1,11 @@
-﻿using FoB.Application.Dtos;
-using FoB.Application.Entities;
+﻿// src/FoB.Infrastructure/Repositories/ComentarioRepository.cs
+using FoB.Application.Dtos;
 using FoB.Application.Interfaces;
 using FoB.Infrastructure.Context;
 using FoB.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace FoB.Infrastructure.Repositories
@@ -23,9 +23,9 @@ namespace FoB.Infrastructure.Repositories
 
         public async Task<IEnumerable<ComentarioDTO>> GetByRecetaAsync(int idReceta)
         {
-            return await _context.Set<Comentario>()
-                .Include(x=>x.Usuario)
-                    .ThenInclude(x=>x.UsuarioImagen)
+            var comentarios = await _context.Set<Comentario>()
+                .Include(x => x.Usuario)
+                    .ThenInclude(x => x.UsuarioImagen)
                 .Where(c => c.RecetaId == idReceta)
                 .Select(c => new ComentarioDTO
                 {
@@ -40,34 +40,70 @@ namespace FoB.Infrastructure.Repositories
                         Apellido = c.Usuario.Apellido,
                         NombreUsuario = c.Usuario.NombreUsuario,
                         Imagen = c.Usuario.UsuarioImagen.FirstOrDefault().Imagen,
-                    }
+                    },
+                    Respuestas = new List<ComentarioDTO>()
                 }).ToListAsync();
+
+            var comentarioMap = comentarios.ToDictionary(c => c.Id);
+            var comentariosPadre = new List<ComentarioDTO>();
+
+            foreach (var comentario in comentarios.OrderBy(c => c.Fecha))
+            {
+                if (comentario.RespuestaAComentarioId.HasValue && comentarioMap.ContainsKey(comentario.RespuestaAComentarioId.Value))
+                {
+                    var padre = comentarioMap[comentario.RespuestaAComentarioId.Value];
+                    if (padre.Respuestas == null)
+                    {
+                        padre.Respuestas = new List<ComentarioDTO>();
+                    }
+                    padre.Respuestas.Add(comentario);
+                }
+                else
+                {
+                    comentariosPadre.Add(comentario);
+                }
+            }
+
+            return comentariosPadre;
         }
 
-        public async Task<Application.Entities.ComentarioRequest> AddAsync(Application.Entities.ComentarioRequest comentario)
+        public async Task<ComentarioDTO> AddAsync(ComentarioCreateDTO comentarioDto)
         {
-            // Si necesitas convertir de FoB.Application.Entities.Comentario a FoB.Infrastructure.Models.Comentario,
-            // realiza el mapeo aquí. Ejemplo:
-
-            var receta = await _context.Receta.FirstOrDefaultAsync(x=>x.Id == comentario.RecetaId);
-            var recetas = await _context.Receta.ToListAsync();
-            
             var comentarioInfra = new FoB.Infrastructure.Models.Comentario
             {
-                // Asigna las propiedades necesarias desde 'comentario' (de Entities) a 'comentarioInfra' (de Model
-                RecetaId = comentario.RecetaId,
-                Fecha = DateTime.Now,
-                Texto = comentario.Texto,
-                FechaModificacion = comentario.FechaModificacion,
+                RecetaId = comentarioDto.IdReceta,
+                Fecha = System.DateTime.Now,
+                Texto = comentarioDto.Texto,
                 UsuarioId = _currentUser.User.Id,
-                RespuestaAComentarioId = comentario.RespuestaAComentarioId
-                // Agrega otras propiedades si es necesario
+                RespuestaAComentarioId = comentarioDto.IdComentario
             };
 
             _context.Comentario.Add(comentarioInfra);
             await _context.SaveChangesAsync();
-            return comentario; // O regresa el objeto de Models si tu interfaz lo requiere
-        }
 
+            var usuario = await _context.Set<FoB.Infrastructure.Models.Usuario>()
+                .Include(u => u.UsuarioImagen)
+                .FirstOrDefaultAsync(u => u.Id == _currentUser.User.Id);
+
+            var nuevoComentarioDTO = new ComentarioDTO
+            {
+                Id = comentarioInfra.Id,
+                IdReceta = comentarioInfra.RecetaId,
+                Texto = comentarioInfra.Texto,
+                Fecha = comentarioInfra.Fecha,
+                // CORRECCIÓN: Aquí es donde estaba el error. Usamos 'RespuestaAComentarioId'
+                RespuestaAComentarioId = comentarioInfra.RespuestaAComentarioId,
+                Usuario = new UsuarioComentarioDTO
+                {
+                    Nombre = usuario.Nombre,
+                    Apellido = usuario.Apellido,
+                    NombreUsuario = usuario.NombreUsuario,
+                    Imagen = usuario.UsuarioImagen.FirstOrDefault()?.Imagen,
+                },
+                Respuestas = new List<ComentarioDTO>()
+            };
+
+            return nuevoComentarioDTO;
+        }
     }
 }

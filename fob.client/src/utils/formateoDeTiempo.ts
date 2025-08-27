@@ -6,15 +6,12 @@
  * @param fechaEntrada La cadena de fecha o el objeto Date.
  * @returns El tiempo relativo formateado.
  */
-export const formatoTiempoRelativo = (fechaEntrada: Date | string): string => {
+export const formatoTiempoRelativo = (fechaEntrada: string | Date): string => {
     let fecha: Date;
-    
-    // Si la entrada es un string, la convierte a un objeto Date
-    if (typeof fechaEntrada === 'string') {
-        fecha = new Date(fechaEntrada);
-    } else {
-        // Si ya es un objeto Date, la usa directamente
+    if (fechaEntrada instanceof Date) {
         fecha = fechaEntrada;
+    } else {
+        fecha = new Date(fechaEntrada);
     }
 
     // Si la fecha no es válida, devolvemos un mensaje de error

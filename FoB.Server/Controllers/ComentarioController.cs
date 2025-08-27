@@ -1,7 +1,7 @@
-﻿using FoB.Application.Dtos;
-using FoB.Application.Entities;
+﻿// src/FoB.Server/Controllers/ComentarioController.cs
+
+using FoB.Application.Dtos;
 using FoB.Application.Interfaces;
-using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -13,77 +13,32 @@ namespace FoB.API.Controllers;
 public class ComentarioController : ControllerBase
 {
     private readonly IComentarioRepository _repository;
-    private readonly IUserRepository _userRepository;
 
-    public ComentarioController(IComentarioRepository repository, IUserRepository userRepository)
+    public ComentarioController(IComentarioRepository repository)
     {
         _repository = repository;
-        _userRepository = userRepository;
     }
 
     // GET api/comentario/receta/{idReceta}
     [HttpGet("receta/{idReceta}")]
     public async Task<ActionResult<IEnumerable<ComentarioDTO>>> GetByReceta(int idReceta)
     {
+        // El repositorio ahora se encarga de anidar los comentarios.
         var comentarios = await _repository.GetByRecetaAsync(idReceta);
-
-        // mapear a DTO
-        var comentariosDTO = comentarios.Select(c => new ComentarioDTO
-        {
-            Id = c.Id,
-            IdReceta = c.IdReceta,
-            Texto = c.Texto,
-            Fecha = c.Fecha,
-            RespuestaAComentarioId = c.RespuestaAComentarioId,
-            Usuario = c.Usuario,
-            Respuestas = new List<ComentarioDTO>()
-        }).ToList();
-
-        // armar jerarquía de respuestas
-        var comentariosPadre = comentariosDTO
-            .Where(c => c.RespuestaAComentarioId == null)
-            .ToList();
-
-        foreach (var padre in comentariosPadre)
-        {
-            padre.Respuestas = comentariosDTO
-                .Where(r => r.RespuestaAComentarioId == padre.Id)
-                .ToList();
-        }
-
-        return Ok(comentariosPadre);
+        return Ok(comentarios);
     }
 
-    // Reemplaza el método Crear para asegurar que todas las rutas devuelven un valor.
     [HttpPost]
     public async Task<ActionResult<ComentarioDTO>> Crear([FromBody] ComentarioCreateDTO dto)
     {
-        var comentario = new ComentarioRequest
-        {
-            RecetaId = dto.IdReceta,
-            Texto = dto.Texto,
-            RespuestaAComentarioId = dto.IdComentario,
-            Fecha = DateTime.Now
-        };
-
-        var creado = await _repository.AddAsync(comentario);
+        // Pasa directamente el DTO de creación al repositorio.
+        var creado = await _repository.AddAsync(dto);
 
         if (creado == null)
         {
             return BadRequest("No se pudo crear el comentario.");
         }
 
-        var comentarioDTO = new ComentarioDTO
-        {
-            Id = creado.Id,
-            IdReceta = creado.RecetaId,
-            Texto = creado.Texto,
-            Fecha = creado.Fecha ?? DateTime.Now,
-            RespuestaAComentarioId = creado.RespuestaAComentarioId,
-            Usuario = await _userRepository.GetUsuarioComentarioByIdAsync(creado.UsuarioId),
-            Respuestas = new List<ComentarioDTO>()
-        };
-
-        return Ok(comentarioDTO);
+        return Ok(creado);
     }
 }

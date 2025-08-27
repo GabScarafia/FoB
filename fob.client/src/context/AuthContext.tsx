@@ -1,3 +1,4 @@
+// src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 
@@ -14,6 +15,7 @@ interface AuthContextType {
   authData: AuthData | null;
   login: (authData: AuthData) => void;
   clearAuthData: () => void;
+  isLoading: boolean; // <-- Nuevo: Indica si la app está cargando el estado
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,12 +26,14 @@ interface AuthProviderProps {
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [authData, setAuthData] = useState<AuthData | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // <-- Estado de carga inicial en true
 
   useEffect(() => {
     const authDataString = localStorage.getItem("authData");
     if (authDataString) {
       try {
         const storedAuthData: AuthData = JSON.parse(authDataString);
+        // Aquí podrías agregar la lógica de validación del token si no la tienes
         setAuthData(storedAuthData);
       } catch (error) {
         console.error("Error parsing authData:", error);
@@ -38,6 +42,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     } else {
       setAuthData(null);
     }
+    setIsLoading(false); // <-- Se pone en false cuando termina la carga
   }, []);
 
   const login = (newAuthData: AuthData) => {
@@ -50,9 +55,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     setAuthData(null);
   };
 
-  const value = { authData, login, clearAuthData };
+  const value = { authData, login, clearAuthData, isLoading }; // <-- Se agrega isLoading aquí
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {

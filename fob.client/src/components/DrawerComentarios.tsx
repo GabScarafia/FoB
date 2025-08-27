@@ -199,6 +199,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
 
   const handleReplyClick = (comentario: Comentario) => {
     setComentarioPadre({ id: comentario.id, usuario: comentario.usuario.nombreUsuario });
+    console.log("Comentario padre seleccionado:", comentario);
     setNuevoTexto("");
   };
 
@@ -214,9 +215,10 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
       texto: nuevoTexto,
       idReceta: idReceta,
       idUsuario: currentUserId,
-      respuestaAComentarioId: comentarioPadre?.id || null
+      idComentario: comentarioPadre?.id
     };
-
+    console.log("Enviando comentario:", comentarioACrear);
+    console.log("Comentario padre:", comentarioPadre);
     try {
       const response = await fetch('https://localhost:7084/api/Comentario', {
         method: 'POST',
@@ -233,27 +235,6 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
 
       const nuevaRespuesta: Comentario = await response.json();
       nuevaRespuesta.fecha = new Date(nuevaRespuesta.fecha);
-
-      if (authData) {
-        nuevaRespuesta.usuario = {
-            id: currentUserId,
-            nombre: authData.nombre,
-            apellido: "",
-            nombreUsuario: authData.email.split('@')[0],
-            isFollowing: false,
-            // Utilizamos la imagen de perfil local para el nuevo comentario, ya que la API no la retorna inmediatamente.
-            imagen: fotoPerfilLocal,
-        };
-      } else {
-        nuevaRespuesta.usuario = {
-          id: currentUserId,
-          nombre: "Usuario",
-          apellido: "",
-          nombreUsuario: "Anónimo",
-          isFollowing: false,
-          imagen: fotoPerfilLocal,
-        };
-      }
 
       if (comentarioPadre) {
         const comentariosCopia = [...comentarios];
