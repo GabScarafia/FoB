@@ -193,6 +193,7 @@ public class RecetasController : ControllerBase
 
         var receta = await _context.Receta
             .Include(r => r.Usuario)
+                .ThenInclude(u => u.UsuarioImagen)
             .Include(r => r.RecetaImagen)
             .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
             .Include(r => r.Paso)
@@ -221,7 +222,9 @@ public class RecetasController : ControllerBase
             {
                 Id = receta.Usuario.Id,
                 Nombre = receta.Usuario.Nombre,
-                NombreUsuario = receta.Usuario.NombreUsuario
+                NombreUsuario = receta.Usuario.NombreUsuario,
+                Apellido = receta.Usuario.Apellido,
+                Imagen = receta.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen
             } : null,
             Ingredientes = receta.IngredienteReceta?.Select(ir => new IngredienteResponse
             {

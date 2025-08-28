@@ -20,7 +20,13 @@ interface RecetaDto {
 }
 
 interface RecetaCompleta extends RecetaDto {
-    autor: any;
+    autor: {
+        Id: number;
+        Nombre: string;
+        NombreUsuario: string;
+        Apellido: string | null;
+        Imagen: string | null;
+    };
     fechaCreacion: string;
     tipoContenido: string;
     dificultad: string;
