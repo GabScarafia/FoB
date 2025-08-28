@@ -1,9 +1,11 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Application.Entities.Receta;
 using FoB.Application.Interfaces;
+using FoB.Infrastructure.Context;
 using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Net;
 
 namespace FoB.Server.Controllers;
@@ -16,39 +18,38 @@ public class RecetasController : ControllerBase
     private readonly IRecetaRepository _recetaRepository;
     private readonly ICurrentUser _currentUser;
     private readonly ILogger<RecetasController> _logger;
+    private readonly fobContext _context;
 
-    public RecetasController(ILogger<RecetasController> logger, IRecetaRepository recetaRepository, ICurrentUser currentUser)
+    public RecetasController(
+        ILogger<RecetasController> logger,
+        IRecetaRepository recetaRepository,
+        ICurrentUser currentUser,
+        fobContext context)
     {
         _logger = logger;
         _recetaRepository = recetaRepository;
         _currentUser = currentUser;
+        _context = context;
     }
 
     [HttpGet("Feed")]
     public async Task<IActionResult> Feed([FromQuery] int pageSize = 1)
     {
-        // 1. Obtener las publicaciones de las personas que el usuario sigue.
         var recetas = await _recetaRepository.FeedAsync(pageSize);
 
-        // 2. Si no se encuentran recetas, se verifica la razón.
         if (recetas == null || !recetas.Any())
         {
-            // Se usa el repositorio para verificar si el usuario sigue a alguien.
             bool estaSiguiendo = await _recetaRepository.EstaSiguiendoAlguienAsync();
 
             if (estaSiguiendo)
             {
-                // Caso 1: El usuario sigue a alguien, pero esas personas no tienen publicaciones.
                 return Ok(new { Mensaje = "No hay publicaciones de las personas que sigues.", Recetas = new List<RecetaResponse>() });
             }
             else
             {
-                // Caso 2: El usuario no sigue a nadie en absoluto.
                 return Ok(new { Mensaje = "No sigues a nadie. Sigue a gente para ver sus publicaciones!", Recetas = new List<RecetaResponse>() });
             }
         }
-
-        // 3. Si se encontraron recetas, se devuelven.
         return Ok(new { Mensaje = "Recetas cargadas con éxito.", Recetas = recetas });
     }
 
@@ -70,7 +71,6 @@ public class RecetasController : ControllerBase
         return Ok(await _recetaRepository.LikeOrDislike(idReceta));
     }
 
-    // Endpoint para eliminar una receta
     [HttpDelete("{id}")]
     [ProducesResponseType((int)HttpStatusCode.NoContent)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -83,7 +83,177 @@ public class RecetasController : ControllerBase
         {
             return NotFound(new { message = "Receta no encontrada o no tienes permiso para eliminarla." });
         }
-
-        return NoContent(); // 204 No Content para indicar que la eliminación fue exitosa
+        return NoContent();
     }
+
+    [HttpGet("Get")]
+    [Authorize] // Solo usuarios autenticados pueden ver recetas (puedes quitarlo si querés permitir acceso público)
+    public async Task<ActionResult<IEnumerable<RecetaResponse>>> GetRecetas([FromQuery] int? userId)
+    {
+        // Si no se pasó userId, usamos el del usuario autenticado
+        var idUsuario = userId ?? _currentUser.User?.Id;
+
+        if (idUsuario == null)
+        {
+            _logger.LogWarning("Intento de acceder a recetas sin usuario autenticado");
+            return Unauthorized(new { Mensaje = "Usuario no autenticado." });
+        }
+
+        try
+        {
+            // Traemos todas las recetas del usuario con toda la información
+            var recetasDb = await _context.Receta
+                .Where(r => r.UsuarioId == idUsuario)
+                .Include(r => r.Usuario)
+                .Include(r => r.RecetaImagen)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+                .Include(r => r.Paso)
+                .Include(r => r.RecetaCategoria).ThenInclude(rc => rc.Categoria)
+                .Include(r => r.Voto)
+                .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
+                .ToListAsync();
+
+            if (!recetasDb.Any())
+            {
+                return Ok(new { Mensaje = "Aún no hay recetas.", Recetas = new List<RecetaResponse>() });
+            }
+
+            // Mapear a DTO
+            var recetasResponse = recetasDb
+                .OrderByDescending(r => r.FechaCreacion)
+                .Select(receta => new RecetaResponse
+                {
+                    Id = receta.Id,
+                    Titulo = receta.Titulo,
+                    Descripcion = receta.Descripcion,
+                    Dificultad = receta.Dificultad,
+                    TiempoPreparacion = receta.TiempoPreparacion != null
+                        ? new TimeSpan(receta.TiempoPreparacion.Value.Hour,
+                                       receta.TiempoPreparacion.Value.Minute,
+                                       receta.TiempoPreparacion.Value.Second)
+                        : (TimeSpan?)null,
+                    FechaCreacion = receta.FechaCreacion,
+                    Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
+                    Autor = receta.Usuario != null ? new UsuarioResponse
+                    {
+                        Id = receta.Usuario.Id,
+                        Nombre = receta.Usuario.Nombre,
+                        NombreUsuario = receta.Usuario.NombreUsuario
+                    } : null,
+                    Ingredientes = receta.IngredienteReceta?
+                        .Select(ir => new IngredienteResponse
+                        {
+                            Id = ir.Ingrediente.Id,
+                            Nombre = ir.Ingrediente.Nombre,
+                            Cantidad = ir.Cantidad,
+                            UnidadDeMedida = ir.UnidadDeMedida
+                        }).ToList() ?? new List<IngredienteResponse>(),
+                    Pasos = receta.Paso?
+                        .Select(p => new PasoResponse
+                        {
+                            Numero = p.Numero,
+                            Titulo = p.Titulo,
+                            Descripcion = p.Descripcion
+                        }).ToList() ?? new List<PasoResponse>(),
+                    Categorias = receta.RecetaCategoria?
+                        .Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
+                    CantidadVotos = receta.Voto.Count,
+                    MeGusta = receta.Voto.Any(v => v.UsuarioId == idUsuario),
+                    CantidadComentarios = receta.Comentario.Count,
+                    VistaPreviaComentarios = receta.Comentario?
+                        .Where(c => c.Usuario != null)
+                        .OrderByDescending(c => c.Fecha)
+                        .Take(3)
+                        .Select(c => new ComentarioResponse
+                        {
+                            Id = c.Id,
+                            Texto = c.Texto,
+                            Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
+                            Fecha = c.Fecha
+                        }).ToList() ?? new List<ComentarioResponse>()
+                }).ToList();
+
+            return Ok(new { Mensaje = "Recetas cargadas con éxito.", Recetas = recetasResponse });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al cargar recetas del usuario {UserId}", idUsuario);
+            return StatusCode(500, new { Mensaje = "Error interno al cargar recetas.", Recetas = new List<RecetaResponse>() });
+        }
+    }
+
+    [HttpGet("{id}")]
+    [ProducesResponseType((int)HttpStatusCode.OK)]
+    [ProducesResponseType((int)HttpStatusCode.NotFound)]
+    [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
+    public async Task<IActionResult> GetRecetaById([FromRoute] int id)
+    {
+        // Obtiene el ID del usuario actual para saber si le gusta la receta
+        var userId = _currentUser.User?.Id;
+
+        var receta = await _context.Receta
+            .Include(r => r.Usuario)
+            .Include(r => r.RecetaImagen)
+            .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+            .Include(r => r.Paso)
+            .Include(r => r.RecetaCategoria).ThenInclude(rc => rc.Categoria)
+            .Include(r => r.Voto)
+            .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
+            .FirstOrDefaultAsync(r => r.Id == id);
+
+        if (receta == null)
+        {
+            return NotFound(new { message = "Receta no encontrada." });
+        }
+
+        var recetaResponse = new RecetaResponse
+        {
+            Id = receta.Id,
+            Titulo = receta.Titulo,
+            Descripcion = receta.Descripcion,
+            Dificultad = receta.Dificultad,
+            TiempoPreparacion = receta.TiempoPreparacion != null
+                ? new TimeSpan(receta.TiempoPreparacion.Value.Hour, receta.TiempoPreparacion.Value.Minute, receta.TiempoPreparacion.Value.Second)
+                : (TimeSpan?)null,
+            FechaCreacion = receta.FechaCreacion,
+            Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
+            Autor = receta.Usuario != null ? new UsuarioResponse
+            {
+                Id = receta.Usuario.Id,
+                Nombre = receta.Usuario.Nombre,
+                NombreUsuario = receta.Usuario.NombreUsuario
+            } : null,
+            Ingredientes = receta.IngredienteReceta?.Select(ir => new IngredienteResponse
+            {
+                Id = ir.Ingrediente.Id,
+                Nombre = ir.Ingrediente.Nombre,
+                Cantidad = ir.Cantidad,
+                UnidadDeMedida = ir.UnidadDeMedida
+            }).ToList() ?? new List<IngredienteResponse>(),
+            Pasos = receta.Paso?.Select(p => new PasoResponse
+            {
+                Numero = p.Numero,
+                Titulo = p.Titulo,
+                Descripcion = p.Descripcion
+            }).ToList() ?? new List<PasoResponse>(),
+            Categorias = receta.RecetaCategoria?.Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
+            CantidadVotos = receta.Voto.Count,
+            // Utiliza el ID del usuario para verificar si le gusta la receta
+            MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),
+            CantidadComentarios = receta.Comentario.Count,
+            VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
+                .OrderByDescending(c => c.Fecha)
+                .Take(3)
+                .Select(c => new ComentarioResponse
+                {
+                    Id = c.Id,
+                    Texto = c.Texto,
+                    Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
+                    Fecha = c.Fecha
+                }).ToList() ?? new List<ComentarioResponse>()
+        };
+
+        return Ok(recetaResponse);
+    }
+
 }

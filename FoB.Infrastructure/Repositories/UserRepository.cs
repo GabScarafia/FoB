@@ -86,4 +86,15 @@ public class UserRepository : IUserRepository
         return await _context.SeguimientoUsuario
             .AnyAsync(s => s.SeguidorId == followerId && s.SeguidoId == followedId);
     }
+
+    public async Task<Usuario> GetPerfilByIdAsync(int idUsuario)
+    {
+        return await _context.Usuario
+            .Where(u => u.Id == idUsuario)
+            .Include(u => u.UsuarioImagen)
+            .Include(u => u.Receta)
+            .Include(u => u.SeguimientoUsuarioSeguido)
+            .Include(u => u.SeguimientoUsuarioSeguidor)
+            .FirstOrDefaultAsync();
+    }
 }

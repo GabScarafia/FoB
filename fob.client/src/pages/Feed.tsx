@@ -42,17 +42,7 @@ interface FeedProps {
     onDrawerToggle: (isOpen: boolean) => void;
 }
 
-const style = {
-    position: 'absolute' as 'absolute',
-    top: '50%',
-    left: '50%',
-    transform: 'translate(-50%, -50%)',
-    width: 400,
-    bgcolor: 'background.paper',
-    border: '2px solid #000',
-    boxShadow: 24,
-    p: 4,
-};
+
 
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [recetas, setRecetas] = useState<DatosReceta[]>([]);
@@ -136,7 +126,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
     // Manejadores del modal
-    const handleOpenModal = (recetaId: number) => {
+    const handleOpenModal = async (recetaId: number) => {
         setRecetaAEliminarId(recetaId);
         setModalOpen(true);
     };

@@ -1,0 +1,82 @@
+.publicacion-scrollable-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    background-color: white;
+    min-height: 100vh;
+    box-sizing: border-box;
+    padding: 16px 0;
+}
+
+.tarjeta-receta-completa {
+    /* Estilos para las tarjetas de receta individuales */
+    width: 100%;
+    margin-bottom: 24px;
+    border-radius: 8px;
+    background-color: var(--color-background-card, #fff);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Estilos para los mensajes de estado (carga, error) */
+.loading-message,
+.error-message,
+.no-data-message,
+.publicacion-estado-mensaje {
+    width: 100%;
+    text-align: center;
+    padding: 20px;
+    font-size: 1.2rem;
+    color: var(--color-text-secondary, #666);
+}
+
+.error-message {
+    color: var(--color-danger, #d9534f);
+}
+
+/* Estilos para el placeholder de carga  */
+.loading-placeholder {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: var(--color-background-light, #f0f2f5);
+    min-height: 400px;
+    box-sizing: border-box;
+}
+
+    .loading-placeholder img {
+        width: 100%;
+        height: 400px;
+        object-fit: cover;
+        max-width: 500px;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .loading-placeholder p {
+        font-size: 1rem;
+        color: var(--color-text-secondary, #888);
+    }
+
+@media (max-width: 768px) {
+    .publicacion-scrollable-page {
+        padding: 8px 0;
+    }
+
+    .tarjeta-receta-completa {
+        border-radius: 0;
+        box-shadow: none;
+        margin-bottom: 16px;
+    }
+
+    .loading-placeholder img {
+        height: 300px;
+    }
+}

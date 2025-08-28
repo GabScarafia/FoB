@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import './Receta.css';
 
 // Íconos de Material UI
@@ -37,7 +37,7 @@ interface Paso {
     numero: number;
 }
 
-interface PropsReceta {
+export interface PropsReceta {
     receta: {
         id: number;
         autor: Usuario;
@@ -65,6 +65,16 @@ interface PropsReceta {
 }
 
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta }) => {
+
+    console.log("Receta recibida:", receta);
+
+    if (!receta) {
+        console.error("Error: el objeto receta es nulo o indefinido.");
+        return <div>Error: La receta no se pudo cargar.</div>;
+    }
+
+
+
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);

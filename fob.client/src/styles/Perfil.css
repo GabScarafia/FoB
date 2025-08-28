@@ -1,0 +1,161 @@
+.perfil-contenedor {
+    font-family: 'Poppins', sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 15px;
+    background-color: #fff;
+}
+
+.perfil-header {
+    display: flex;
+    align-items: center;
+    padding: 15px 0;
+}
+
+.perfil-imagen-circular {
+    width: 90px;
+    height: 90px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 20px;
+    border: 3px solid #1d3b97;
+    flex-shrink: 0;
+}
+
+.perfil-imagen-circular img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.perfil-info{
+    margin-left: 9%;
+}
+
+.perfil-info-principal {
+    flex-grow: 1;
+}
+
+.perfil-stats {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.perfil-stats span {
+    display: flex;
+    flex-direction: column;
+}
+
+.perfil-stats-numero {
+    font-size: 1rem;
+    font-weight: 500;
+    color: #222;
+}
+
+.perfil-stats-label {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: black;
+}
+
+.perfil-nombre-completo {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #222;
+    margin-top: 5px;
+}
+
+.perfil-bio {
+    font-size: 0.9rem;
+    color: #555;
+}
+
+.perfil-botones {
+    display: flex;
+    gap: 8px;
+    margin-top: 20px;
+    margin-bottom: 15px;
+}
+
+.perfil-boton {
+    flex-grow: 1;
+    padding: 8px 0;
+    border: 2px solid #1d3b97;
+    border-radius: 20px !important;
+    background-color: white;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    color: black;
+    font-weight: 500;
+}
+
+    .perfil-boton:hover {
+        background-color: #ddd;
+    }
+
+.perfil-boton-icono {
+    height: 18px;
+    width: 18px; /* Agrega esta línea para que los iconos de MUI tengan un tamaño fijo */
+}
+
+.perfil-separador {
+    border: 0;
+    height: 1px;
+    background-color: #eee;
+    margin: 15px 0;
+}
+
+.perfil-navegacion {
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.perfil-navegacion-item {
+    cursor: pointer;
+    color: #777;
+    padding-bottom: 5px;
+}
+
+    .perfil-navegacion-item.activo {
+        border-bottom: 2px solid #000;
+        color: #000;
+    }
+
+.perfil-navegacion-icono {
+    height: 24px;
+    width: 24px; /* Agrega esta línea para el tamaño de los iconos de navegación */
+}
+
+.perfil-galeria {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 4px;
+    margin-top: 10px;
+}
+
+.galeria-item {
+    width: 100%;
+    height: 120px;
+    overflow: hidden;
+    background-color: #f9f9f9;
+}
+
+    .galeria-item .placeholder {
+        background-color: #e0e0e0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .galeria-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
