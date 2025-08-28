@@ -16,6 +16,12 @@ import ListItemText from '@mui/material/ListItemText';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import IconButton from '@mui/material/IconButton';
 
+import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
+
 import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
 
 import DrawerComentarios from '../components/DrawerComentarios';
@@ -47,6 +53,8 @@ export interface PropsReceta {
         imagen: string;
         cantidadVotos: number;
         meGusta: boolean;
+        noMeGusta: boolean;
+        esFavorito: boolean;
         cantidadComentarios: number;
         titulo: string;
         descripcion: string;
@@ -75,6 +83,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
 
 
+    const [disliked, setDisliked] = useState(receta.noMeGusta);
+    const [favorite, setFavorito] = useState(receta.esFavorito);
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
@@ -131,13 +141,21 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const handleLikeClick = async () => {
         try {
-            const response = await fetch(`https://localhost:7084/Recetas/LikeOrDislike/${receta.id}`, {
+
+            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData?.token}`,
                     'Content-Type': 'application/json'
-                }
+                },
+                body:JSON.stringify({
+                    idReceta: receta.id,
+                    tipo: 0,
+                    accion: Number(liked)
+                })
+
             });
+
 
             if (response.ok) {
                 if (liked) {
@@ -158,8 +176,72 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    const handleSaveClick = () => {
-        setSaved(prevSaved => !prevSaved);
+    const handleDisLikeClick = async () => {
+        try {
+
+            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authData?.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    idReceta: receta.id,
+                    tipo: 1,
+                    accion: Number(disliked)
+                })
+
+            });
+
+            if (response.ok) {
+                if (disliked) {
+                    setDisliked(false);
+                    } else {
+                    setDisliked(true);
+                }
+            } else {
+                const errorData = await response.json();
+                console.error("Error al dar dislike:", errorData.message);
+                alert("Ocurrió un error. Intenta de nuevo.");
+            }
+        } catch (error) {
+            console.error("Error de red al dar dislike:", error);
+            alert("Ocurrió un error de conexión. Intenta de nuevo.");
+        }
+    };
+
+    const handleFavoritoClick = async () => {
+        try {
+           
+            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${authData?.token}`,
+                    'Content-Type': 'application/json'
+                },
+                body:JSON.stringify({
+                    idReceta: receta.id,
+                    tipo: 2,
+                    accion: (favorite)
+                })
+
+            });
+
+            if (response.ok) {
+                if (favorite) {
+                    setFavorito(false);
+                } else {
+                    setFavorito(true);
+                }
+            } else {
+                const errorData = await response.json();
+                console.error("Error al dar favorito:", errorData.message);
+                alert("Ocurrió un error. Intenta de nuevo.");
+            }
+        } catch (error) {
+            console.error("Error de red al dar favorito:", error);
+            alert("Ocurrió un error de conexión. Intenta de nuevo.");
+        }
     };
 
     const handleToggleDescripcion = () => {
@@ -275,11 +357,16 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             <div className="acciones-receta">
                 <div className="acciones-izquierda">
                     {liked ? (
-                        <FavoriteIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleLikeClick} />
+                        <ThumbUpIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleLikeClick} />
                     ) : (
-                        <FavoriteBorderIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleLikeClick} />
+                        <ThumbUpAltOutlinedIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleLikeClick} />
                     )}
                     <span className="conteo-me-gusta">{likesCount}</span>
+                    {disliked ? (
+                        <ThumbDownIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleDisLikeClick} />
+                    ) : (
+                        <ThumbDownAltOutlinedIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleDisLikeClick} />
+                    )}
                     <ChatBubbleOutlineIcon
                         className="icono-accion icono-comentario azul-borde"
                         onClick={handleOpenDrawer}
@@ -290,10 +377,10 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
                 </div>
                 <div className="acciones-derecha">
-                    {saved ? (
-                        <StarIcon className="icono-accion icono-guardar azul-relleno" onClick={handleSaveClick} />
+                    {favorite ? (
+                        <StarIcon className="icono-accion icono-guardar azul-relleno" onClick={handleFavoritoClick} />
                     ) : (
-                        <StarBorderIcon className="icono-accion icono-guardar azul-borde" onClick={handleSaveClick} />
+                        <StarBorderIcon className="icono-accion icono-guardar azul-borde" onClick={handleFavoritoClick} />
                     )}
                 </div>
             </div>

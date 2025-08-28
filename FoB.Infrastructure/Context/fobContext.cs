@@ -87,6 +87,7 @@ public partial class fobContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Fecha)
+                .HasDefaultValueSql("'0001-01-01 00:00:00'")
                 .HasColumnType("datetime")
                 .HasColumnName("fecha");
             entity.Property(e => e.FechaModificacion)
@@ -348,6 +349,7 @@ public partial class fobContext : DbContext
                 .HasColumnType("enum('Aprobada','Rechazada','Revision','Borrador')")
                 .HasColumnName("estado");
             entity.Property(e => e.FechaCreacion)
+                .HasDefaultValueSql("'0001-01-01 00:00:00'")
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_creacion");
             entity.Property(e => e.FechaModificacion)
@@ -542,6 +544,9 @@ public partial class fobContext : DbContext
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_de_voto");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
+            entity.Property(e => e.Tipo)
+                .HasColumnType("enum('Like','Dislike','Favorito')")
+                .HasColumnName("tipo");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
             entity.Property(e => e.Valor).HasColumnName("valor");
 

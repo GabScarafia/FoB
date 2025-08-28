@@ -17,6 +17,8 @@ public partial class Voto
 
     public int UsuarioId { get; set; }
 
+    public string Tipo { get; set; }
+
     public virtual Receta Receta { get; set; }
 
     public virtual Usuario Usuario { get; set; }

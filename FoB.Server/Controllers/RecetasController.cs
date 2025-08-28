@@ -70,7 +70,13 @@ public class RecetasController : ControllerBase
     {
         return Ok(await _recetaRepository.LikeOrDislike(idReceta));
     }
-
+    
+    [HttpPost("Interaccion")]
+    public async Task<IActionResult> Interaccion([FromBody] InteraccionDto interaccion)
+    {
+        return Ok(await _recetaRepository.Interaccion(interaccion));
+    }
+    
     [HttpDelete("{id}")]
     [ProducesResponseType((int)HttpStatusCode.NoContent)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -188,75 +194,11 @@ public class RecetasController : ControllerBase
     [ProducesResponseType((int)HttpStatusCode.Unauthorized)]
     public async Task<IActionResult> GetRecetaById([FromRoute] int id)
     {
-        // Obtiene el ID del usuario actual para saber si le gusta la receta
-        var userId = _currentUser.User?.Id;
+        var result = await _recetaRepository.GetById(id);
+        if (result == null)
+            return BadRequest("La receta no fue encontrada");
 
-        var receta = await _context.Receta
-            .Include(r => r.Usuario)
-                .ThenInclude(u => u.UsuarioImagen)
-            .Include(r => r.RecetaImagen)
-            .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
-            .Include(r => r.Paso)
-            .Include(r => r.RecetaCategoria).ThenInclude(rc => rc.Categoria)
-            .Include(r => r.Voto)
-            .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
-            .FirstOrDefaultAsync(r => r.Id == id);
-
-        if (receta == null)
-        {
-            return NotFound(new { message = "Receta no encontrada." });
-        }
-
-        var recetaResponse = new RecetaResponse
-        {
-            Id = receta.Id,
-            Titulo = receta.Titulo,
-            Descripcion = receta.Descripcion,
-            Dificultad = receta.Dificultad,
-            TiempoPreparacion = receta.TiempoPreparacion != null
-                ? new TimeSpan(receta.TiempoPreparacion.Value.Hour, receta.TiempoPreparacion.Value.Minute, receta.TiempoPreparacion.Value.Second)
-                : (TimeSpan?)null,
-            FechaCreacion = receta.FechaCreacion,
-            Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
-            Autor = receta.Usuario != null ? new UsuarioResponse
-            {
-                Id = receta.Usuario.Id,
-                Nombre = receta.Usuario.Nombre,
-                NombreUsuario = receta.Usuario.NombreUsuario,
-                Apellido = receta.Usuario.Apellido,
-                Imagen = receta.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen
-            } : null,
-            Ingredientes = receta.IngredienteReceta?.Select(ir => new IngredienteResponse
-            {
-                Id = ir.Ingrediente.Id,
-                Nombre = ir.Ingrediente.Nombre,
-                Cantidad = ir.Cantidad,
-                UnidadDeMedida = ir.UnidadDeMedida
-            }).ToList() ?? new List<IngredienteResponse>(),
-            Pasos = receta.Paso?.Select(p => new PasoResponse
-            {
-                Numero = p.Numero,
-                Titulo = p.Titulo,
-                Descripcion = p.Descripcion
-            }).ToList() ?? new List<PasoResponse>(),
-            Categorias = receta.RecetaCategoria?.Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
-            CantidadVotos = receta.Voto.Count,
-            // Utiliza el ID del usuario para verificar si le gusta la receta
-            MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),
-            CantidadComentarios = receta.Comentario.Count,
-            VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
-                .OrderByDescending(c => c.Fecha)
-                .Take(3)
-                .Select(c => new ComentarioResponse
-                {
-                    Id = c.Id,
-                    Texto = c.Texto,
-                    Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
-                    Fecha = c.Fecha
-                }).ToList() ?? new List<ComentarioResponse>()
-        };
-
-        return Ok(recetaResponse);
+        return Ok(result);
     }
 
 }
