@@ -1,7 +1,5 @@
-﻿// src/pages/Perfil.tsx
-
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom'; // Importamos 'Link'
+﻿import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import '../styles/Perfil.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,7 +10,6 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 // Foto por defecto
 import fotoPerfilDefault from '../assets/images/bicho-arabe.jpg';
 
-// Solo las interfaces necesarias para Perfil.tsx
 interface RecetaDto {
     id: number;
     titulo?: string;
@@ -41,22 +38,34 @@ const Perfil: React.FC = () => {
     const [datosPerfil, setDatosPerfil] = useState<UsuarioPerfilDto | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [fetchAttempted, setFetchAttempted] = useState(false);
 
     useEffect(() => {
+        // Si todavía no tenemos ni el id del route ni el id del usuario autenticado,
+        // esperamos (esto evita mostrar "no hay datos" mientras auth carga).
+        if (id === undefined && currentUserId == null) return;
+
         const perfilId = id ? Number(id) : currentUserId;
 
+        // Si explícitamente no hay perfilId (p.e. usuario no logueado)
         if (!perfilId) {
             setError('Debes iniciar sesión para ver tu perfil.');
+            setDatosPerfil(null);
             setCargando(false);
+            setFetchAttempted(true);
             return;
         }
 
         const controller = new AbortController();
         const signal = controller.signal;
+        let isMounted = true;
 
         const fetchDatosPerfil = async () => {
+            // marcamos que intentamos el fetch y que estamos cargando
+            setFetchAttempted(true);
             setCargando(true);
             setError(null);
+
             try {
                 const headers: Record<string, string> = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -65,6 +74,9 @@ const Perfil: React.FC = () => {
                     headers,
                     signal,
                 });
+
+                // Si el componente ya se desmontó, no intentamos setState
+                if (!isMounted) return;
 
                 if (response.status === 401) {
                     setError('La sesión ha expirado o el token no es válido.');
@@ -75,26 +87,47 @@ const Perfil: React.FC = () => {
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
 
                 const data: UsuarioPerfilDto = await response.json();
+                if (!isMounted) return;
                 setDatosPerfil(data);
             } catch (err: any) {
-                if (err.name === 'AbortError') return;
+                // Si la petición fue abortada, retornamos silenciosamente
+                if (err?.name === 'AbortError') return;
+
                 console.error('Error al cargar el perfil:', err);
+                if (!isMounted) return;
                 setError('Ocurrió un error al cargar tu perfil.');
                 setDatosPerfil(null);
             } finally {
+                if (!isMounted) return;
                 setCargando(false);
             }
         };
 
         fetchDatosPerfil();
-        return () => controller.abort();
+
+        return () => {
+            isMounted = false;
+            controller.abort();
+        };
     }, [id, token, currentUserId]);
 
+    // Renderizado según estado
+    if (cargando) {
+        return <div className="cargando-perfil">Cargando perfil...</div>;
+    }
 
+    if (error) {
+        return <div className="error-perfil">{error}</div>;
+    }
 
-    if (cargando) return <div className="cargando-perfil">Cargando perfil...</div>;
-    if (error) return <div className="error-perfil">{error}</div>;
-    if (!datosPerfil) return <div className="error-perfil">No se encontraron datos de perfil.</div>;
+    // Solo mostramos "No se encontraron..." si ya intentamos hacer el fetch
+    if (!cargando && !datosPerfil && fetchAttempted) {
+        return <div className="error-perfil">No se encontraron datos de perfil.</div>;
+    }
+
+    if (!datosPerfil) {
+        return null;
+    }
 
     const {
         nombreCompleto,
@@ -106,9 +139,29 @@ const Perfil: React.FC = () => {
         publicaciones
     } = datosPerfil;
 
-
     const tienePublicaciones = publicaciones && publicaciones.length > 0;
     const esPerfilPropio = currentUserId === datosPerfil.id;
+
+    const renderGaleria = () => {
+        if (!tienePublicaciones) {
+            // Si es el propio perfil, el texto puede ser diferente; acá dejo el original
+            return <div className="sin-recetas">Aún no has publicado ninguna receta.</div>;
+        }
+        return publicaciones.map((receta) => {
+            const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
+            if (!imagen) return null;
+            return (
+                <div key={receta.id} className="galeria-item">
+                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
+                        <img
+                            src={`data:image/jpeg;base64,${imagen}`}
+                            alt={receta.titulo ?? `Receta-${receta.id}`}
+                        />
+                    </Link>
+                </div>
+            );
+        });
+    };
 
     return (
         <div className="perfil-contenedor">
@@ -124,20 +177,17 @@ const Perfil: React.FC = () => {
                         <span>
                             <span className="perfil-stats-label">Publicaciones</span>
                             <span className="perfil-stats-numero">{cantidadPublicaciones}</span>
-                           
                         </span>
                         <span>
-                            
                             <span className="perfil-stats-label">Seguidores</span>
                             <span className="perfil-stats-numero">{cantidadSeguidores}</span>
                         </span>
                         <span>
-                            
                             <span className="perfil-stats-label">Seguidos</span>
                             <span className="perfil-stats-numero">{cantidadSeguidos}</span>
                         </span>
                     </div>
-                    <div className="perfil-info"> 
+                    <div className="perfil-info">
                         <div className="perfil-nombre-completo">{nombreCompleto}</div>
                         <div className="perfil-bio">{biografia}</div>
                     </div>
@@ -163,25 +213,7 @@ const Perfil: React.FC = () => {
             </nav>
 
             <div className="perfil-galeria">
-                {!tienePublicaciones ? (
-                    <div className="sin-recetas">Aún no has publicado ninguna receta.</div>
-                ) : (
-                    publicaciones.map((receta) => {
-                        const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
-                        if (!imagen) return null;
-                        return (
-                            <div key={receta.id} className="galeria-item">
-                                {/* CAMBIO CLAVE AQUÍ: se usa la ruta completa con los dos parámetros */}
-                                <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
-                                    <img
-                                        src={`data:image/jpeg;base64,${imagen}`}
-                                        alt={receta.titulo ?? `Receta-${receta.id}`}
-                                    />
-                                </Link>
-                            </div>
-                        );
-                    })
-                )}
+                {renderGaleria()}
             </div>
         </div>
     );

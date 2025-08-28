@@ -14,18 +14,49 @@ interface AppRoutesProps {
 }
 
 export default function AppRoutes({ onDrawerToggle }: AppRoutesProps) {
-    const { authData } = useAuth();
-    const isLoggedIn = !!authData;
-    const currentUserId = authData?.id || null;
 
+    const { authData, isLoading } = useAuth();  
+    const isLoggedIn = !!authData; 
+    const currentUserId = authData?.id || null;
 
     const onDeleteReceta = async (recetaId: number) => {
         console.log(`Función de eliminar receta llamada para el ID: ${recetaId}`);
     };
 
+     // Si aún está cargando, muestra un mensaje de carga para evitar el parpadeo
+    if (isLoading) {
+        return <div>Cargando...</div>; 
+    }
     return (
         <Routes>
-            {/* Rutas protegidas */}
+            {/* Rutas públicas que no requieren autenticación */}
+            <Route path="/iniciar-sesion" element={<IniciarSesion />} />
+            <Route path="/registrarse" element={<Registrarse />} />
+            <Route path="/tendencias" element={<Tendencias />} />
+
+            {/*
+                Lógica para la ruta raíz:
+                - Si el usuario está logueado, lo redirige a /feed.
+                - Si no está logueado, lo redirige a /iniciar-sesion.
+            */}
+            <Route
+                path="/"
+                element={isLoggedIn ? <Navigate to="/feed" replace /> : <Navigate to="/iniciar-sesion" replace />}
+            />
+
+            {/*
+                Rutas protegidas que SIEMPRE requieren autenticación.
+                Cualquier intento de acceder a ellas sin estar logueado
+                redirigirá al usuario a la página de inicio de sesión.
+            */}
+            <Route
+                path="/feed"
+                element={
+                    <ProtectedRoute>
+                        <Feed onDrawerToggle={onDrawerToggle} />
+                    </ProtectedRoute>
+                }
+            />
             <Route
                 path="/comentarios/:recetaId"
                 element={
@@ -35,13 +66,14 @@ export default function AppRoutes({ onDrawerToggle }: AppRoutesProps) {
                 }
             />
             <Route
-                path="/"
-                element={isLoggedIn ? <Navigate to="/feed" replace /> : <Navigate to="/iniciar-sesion" replace />}
+                    path="/"
+                    element={isLoggedIn ? <Navigate to="/feed" replace />: <Navigate to="/iniciar-sesion" replace />}
             />
             {/* Rutas públicas */}
             <Route path="/iniciar-sesion" element={<IniciarSesion />} />
             <Route path="/registrarse" element={<Registrarse />} />
             <Route path="/tendencias" element={<Tendencias />} />
+            {/*Pasa la prop onDrawerToggle a la página Feed */}
             <Route path="/feed" element={<Feed onDrawerToggle={onDrawerToggle} />} />
             <Route path="/perfil/:id" element={<Perfil />} />
 
