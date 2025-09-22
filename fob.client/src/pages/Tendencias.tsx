@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTendenciasService } from '../services/tendenciasService';
-import Receta from 'components/Receta'; // ¡Importamos el componente Receta.tsx!
+import Receta from 'components/Receta';
 import RecetaPreview from 'components/RecetaPreview';
-import { useAuth } from '../context/AuthContext'; // Importa el hook para el token
+import { useAuth } from '../context/AuthContext';
 import './Tendencias.css';
+import { useNavigate } from 'react-router-dom';
 
 // Importaciones de Material-UI
 import Dialog from '@mui/material/Dialog';
@@ -51,6 +52,7 @@ const Tendencias = () => {
     const { obtenerTendencias } = useTendenciasService();
     const { authData } = useAuth(); // Obtenemos los datos de autenticación
     const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false);
+    const navigate = useNavigate();
     
     // Estado para el diálogo
     const [openDialog, setOpenDialog] = useState(false);
@@ -106,6 +108,11 @@ const Tendencias = () => {
     const handleCloseDialog = () => {
         setOpenDialog(false);
         setRecetaSeleccionada(null);
+    };
+
+    // Nueva función para navegación al perfil
+    const handleUsuarioClick = (userId: number) => {
+        navigate(`/perfil/${userId}`);
     };
 
     if (cargando) {

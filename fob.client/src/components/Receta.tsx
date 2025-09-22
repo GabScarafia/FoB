@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Receta.css';
+import { useNavigate } from 'react-router-dom';
 
 // Íconos de Material UI
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -70,9 +71,11 @@ export interface PropsReceta {
     currentUserId: number | null;
     // Nueva prop para la función de eliminar receta
     onDeleteReceta: (recetaId: number) => Promise<void>;
+    onUsuarioClick?: (userId: number) => void;
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
+    const navigate = useNavigate();
 
     console.log("Receta recibida:", receta);
 
@@ -297,10 +300,19 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     // Determina si la receta es del usuario actual
     const esRecetaPropia = currentUserId === receta.autor.id;
 
+    const handleUsuarioClick = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (onUsuarioClick) {
+            onUsuarioClick(receta.autor.id);
+        } else {
+            navigate(`/perfil/${receta.autor.id}`);
+        }
+    };
+
     return (
         <div className="tarjeta-receta">
             <div className="encabezado-receta">
-                <div className="info-autor">
+                <div className="info-autor" onClick={handleUsuarioClick} style={{cursor: 'pointer'}}>
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
                         <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>

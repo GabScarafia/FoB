@@ -7,6 +7,7 @@ import type { Comentario } from 'components/DrawerComentarios';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 import { Modal, Box, Button, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
 
 interface DatosReceta {
     id: number;
@@ -54,6 +55,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const { authData } = useAuth();
     const token = authData?.token;
     const currentUserId = authData?.id;
+    const navigate = useNavigate();
 
     // Estados para el modal de confirmación
     const [modalOpen, setModalOpen] = useState(false);
@@ -230,6 +232,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
     };
 
+    // Nueva función para navegación al perfil
+    const handleUsuarioClick = (userId: number) => {
+        navigate(`/perfil/${userId}`);
+    };
+
     if (cargando) {
         return <div className="feed-cargando">Cargando feed...</div>;
     }
@@ -245,6 +252,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 usuarios={usuariosFiltrados}
                 onFollow={manejarSeguirUsuario}
                 currentUserId={currentUserId ?? null}
+                onUsuarioClick={handleUsuarioClick}
             />
             <div className="feed-contenido">
                 {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && mensaje && (
@@ -280,6 +288,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             onDrawerToggle={onDrawerToggle}
                             currentUserId={currentUserId ?? null}
                             onDeleteReceta={handleOpenModal}
+                            onUsuarioClick={handleUsuarioClick}
                         />
                     );
                 })}
