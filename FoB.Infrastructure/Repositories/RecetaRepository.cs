@@ -89,6 +89,16 @@ internal sealed class RecetaRepository : IRecetaRepository
                     Receta = nuevaReceta
                 };
                 nuevaReceta.Paso.Add(paso);
+
+                // Guarda imagen del paso si existe
+                if (!string.IsNullOrEmpty(pasoDto.Imagen))
+                {
+                    byte[] imagenPaso = Convert.FromBase64String(pasoDto.Imagen);
+                    var recetaImagen = new RecetaImagen { Imagen = imagenPaso, Paso = paso };
+                    nuevaReceta.RecetaImagen.Add(recetaImagen);
+                    if (paso.RecetaImagen == null) paso.RecetaImagen = new List<RecetaImagen>();
+                    paso.RecetaImagen.Add(recetaImagen);
+                }
             }
         }
 
@@ -184,7 +194,10 @@ internal sealed class RecetaRepository : IRecetaRepository
             {
                 Numero = p.Numero,
                 Titulo = p.Titulo,
-                Descripcion = p.Descripcion
+                Descripcion = p.Descripcion,
+                Imagen = p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                    ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
+                    : null
             }).ToList()
     })
         .ToListAsync();
@@ -282,12 +295,14 @@ internal sealed class RecetaRepository : IRecetaRepository
                 UnidadDeMedida = i.UnidadDeMedida
             }).ToList(),
             Categorias = x.RecetaCategoria.Select(c => c.Categoria.Nombre).ToList(),
-
             Pasos = x.Paso.Select(p => new PasoResponse
             {
                 Numero = p.Numero,
                 Titulo = p.Titulo,
-                Descripcion = p.Descripcion
+                Descripcion = p.Descripcion,
+                Imagen = p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                    ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
+                    : null
             }).ToList()
         })
     .ToListAsync();
@@ -431,7 +446,10 @@ internal sealed class RecetaRepository : IRecetaRepository
             {
                 Numero = p.Numero,
                 Titulo = p.Titulo,
-                Descripcion = p.Descripcion
+                Descripcion = p.Descripcion,
+                Imagen = p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                    ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
+                    : null
             }).ToList() ?? new List<PasoResponse>(),
             Categorias = receta.RecetaCategoria?.Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
             CantidadVotos = receta.Voto.Count,

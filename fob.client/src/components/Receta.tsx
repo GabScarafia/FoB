@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSwipeable } from 'react-swipeable';
 import './Receta.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -13,7 +14,7 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
-import ListItemText from '@mui/material/ListItemText';
+import ListItemText from '@mui/material/MenuItem';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import IconButton from '@mui/material/IconButton';
 
@@ -30,6 +31,8 @@ import type { Comentario } from '../components/DrawerComentarios';
 import type { Usuario } from '../pages/Feed';
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 
 interface Ingrediente {
     id: number;
@@ -154,7 +157,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 body:JSON.stringify({
                     idReceta: receta.id,
                     tipo: 0,
-                    accion: Number(liked)
+                   accion: Number(liked)
                 })
 
             });
@@ -309,6 +312,34 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
+    // Carrusel de imágenes (receta principal + imágenes de pasos)
+    const imagenesCarrusel = [
+        receta.imagen ? `data:image/jpeg;base64,${receta.imagen}` : null,
+        ...receta.pasos
+            .filter((p: any) => p.imagen && p.imagen !== '')
+            .map((p: any) => {
+                
+                if (p.imagen.startsWith('data:image')) return p.imagen;
+                return `data:image/jpeg;base64,${p.imagen}`;
+            })
+    ].filter(Boolean);
+    const pasosConImagen = receta.pasos.filter((p: any) => p.imagen && p.imagen !== '');
+    const [indiceImagen, setIndiceImagen] = useState(0);
+
+    // Swipe handlers
+    const swipeHandlers = useSwipeable({
+        onSwipedLeft: () => handleNextImagen(),
+        onSwipedRight: () => handlePrevImagen(),
+        trackMouse: true,
+    });
+
+    const handlePrevImagen = () => {
+        setIndiceImagen(prev => prev > 0 ? prev - 1 : prev);
+    };
+    const handleNextImagen = () => {
+        setIndiceImagen(prev => prev < imagenesCarrusel.length - 1 ? prev + 1 : prev);
+    };
+
     return (
         <div className="tarjeta-receta">
             <div className="encabezado-receta">
@@ -362,9 +393,33 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
             </div>
 
-            <div className="contenedor-imagen-receta">
-                <img src={urlReceta} alt="Receta" className="imagen-receta" />
+            {/* Imagen principal del carrusel con swipe */}
+            <div className="carrusel-imagen" {...swipeHandlers}>
+                <img src={imagenesCarrusel[indiceImagen]} alt={`Receta paso ${indiceImagen}`} className="imagen-receta" draggable={false} />
             </div>
+
+            {/* Navegación y puntitos debajo de la imagen */}
+            <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
+                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0}>
+                    <ArrowBackIcon />
+                </IconButton>
+                <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
+                    {imagenesCarrusel.map((_, idx) => (
+                        <span key={idx} className={idx === indiceImagen ? 'punto activo' : 'punto'} style={{ fontSize: 18, color: idx === indiceImagen ? '#1f43aa' : '#bbb' }}>●</span>
+                    ))}
+                </div>
+                <IconButton onClick={handleNextImagen} disabled={indiceImagen === imagenesCarrusel.length - 1}>
+                    <ArrowForwardIcon />
+                </IconButton>
+            </div>
+
+            {/* Info del paso si corresponde */}
+            {indiceImagen > 0 && pasosConImagen[indiceImagen - 1] && (
+                <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
+                    <strong>Paso {pasosConImagen[indiceImagen - 1].numero}:</strong> {pasosConImagen[indiceImagen - 1].titulo}
+                    <div>{pasosConImagen[indiceImagen - 1].descripcion}</div>
+                </div>
+            )}
 
             <div className="acciones-receta">
                 <div className="acciones-izquierda">
