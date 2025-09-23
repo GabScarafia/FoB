@@ -56,8 +56,8 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
     const [categorias, setCategorias] = React.useState<string[]>([]);
     const [nuevaCategoria, setNuevaCategoria] = React.useState('');
 
-    // Estado para los pasos
-    const [pasos, setPasos] = React.useState([{ titulo: '', descripcion: '' }, { titulo: '', descripcion: '' }]);
+    // Estado para los pasos, ahora cada paso tiene imagen
+    const [pasos, setPasos] = React.useState([{ titulo: '', descripcion: '', imagen: null }, { titulo: '', descripcion: '', imagen: null }]);
     const [pasoActualIndex, setPasoActualIndex] = React.useState(0);
 
     const { authData } = useAuth();
@@ -96,7 +96,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
     };
 
     const handleAddPaso = () => {
-        const nuevoPaso = { titulo: '', descripcion: '' };
+        const nuevoPaso = { titulo: '', descripcion: '', imagen: null };
         setPasos([...pasos, nuevoPaso]);
         setPasoActualIndex(pasos.length);
     };
@@ -105,6 +105,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setPasoActualIndex(index);
     };
 
+    // Manejar cambio de campos de paso
     const handlePasoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         const nuevosPasos = [...pasos];
@@ -112,6 +113,26 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             ...nuevosPasos[pasoActualIndex],
             [name]: value
         };
+        setPasos(nuevosPasos);
+    };
+
+    // Manejar imagen de paso
+    const handlePasoImagenChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const nuevosPasos = [...pasos];
+                nuevosPasos[index].imagen = reader.result as string;
+                setPasos(nuevosPasos);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
+    const handleRemovePasoImagen = (index: number) => {
+        const nuevosPasos = [...pasos];
+        nuevosPasos[index].imagen = null;
         setPasos(nuevosPasos);
     };
 
@@ -136,7 +157,10 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             const tituloValido = paso.titulo && paso.titulo.trim() !== '';
             const descripcionValida = paso.descripcion && paso.descripcion.trim() !== '';
             return tituloValido || descripcionValida;
-        });
+        }).map(paso => ({
+            ...paso,
+            imagen: paso.imagen ? paso.imagen.split(',')[1] : null // solo base64
+        }));
 
         let imagenBase64 = null;
         if (previewImage) {
@@ -339,6 +363,36 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                                 value={pasos[pasoActualIndex].descripcion}
                                 onChange={handlePasoChange}
                             />
+                            <Box sx={{ mt: 1, mb: 2 }}>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    style={{ display: 'none' }}
+                                    id={`paso-imagen-input-${pasoActualIndex}`}
+                                    onChange={e => handlePasoImagenChange(e, pasoActualIndex)}
+                                />
+                                <label htmlFor={`paso-imagen-input-${pasoActualIndex}`}>
+                                    <Button variant="outlined" component="span" sx={{ mr: 2 }}>
+                                        {pasos[pasoActualIndex].imagen ? 'Cambiar imagen' : 'Agregar imagen'}
+                                    </Button>
+                                </label>
+                                {pasos[pasoActualIndex].imagen && (
+                                    <Box sx={{ display: 'inline-block', position: 'relative', verticalAlign: 'middle' }}>
+                                        <img
+                                            src={pasos[pasoActualIndex].imagen}
+                                            alt={`Paso ${pasoActualIndex + 1}`}
+                                            style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #ccc' }}
+                                        />
+                                        <IconButton
+                                            size="small"
+                                            sx={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.7)' }}
+                                            onClick={() => handleRemovePasoImagen(pasoActualIndex)}
+                                        >
+                                            <CloseIcon fontSize="small" />
+                                        </IconButton>
+                                    </Box>
+                                )}
+                            </Box>
                         </>
                     )}
                 </Box>
