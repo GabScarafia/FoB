@@ -65,6 +65,17 @@
     font-style: italic;
 }
 
+/* Mensaje de cargando centrado para todas las secciones */
+.cargando-centrado, .feed-cargando, .cargando-perfil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    text-align: center;
+    font-size: 1.1em;
+    color: #555;
+}
+
 /* Estilos para la barra de navegación inferior */
 .barra-inferior-navegacion-placeholder {
     display: flex;

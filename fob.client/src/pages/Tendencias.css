@@ -75,3 +75,17 @@
     display: 'flex';
     align-Items: 'center';
 }
+/* Mensaje de cargando centrado para tendencias */
+.cargando-centrado, .cargando-tendencias {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    text-align: center;
+    font-size: 1.1em;
+    color: #555;
+}
+
+.cargando-tendencias {
+    /* Para tendencias */
+}

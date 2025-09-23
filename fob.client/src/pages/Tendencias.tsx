@@ -116,7 +116,7 @@ const Tendencias = () => {
     };
 
     if (cargando) {
-        return <div className="cargando-container">Cargando...</div>;
+        return <div className="cargando-tendencias">Cargando tendencias...</div>;
     }
 
     if (error) {
