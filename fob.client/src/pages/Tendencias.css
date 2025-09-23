@@ -9,16 +9,16 @@
   padding-left: 0 !important;
   padding-right: 0 !important;
 } */
-
-
-
+.css-l09ud3-MuiPaper-root-MuiDialog-paper {
+    background-color: #f9f9f9 !important;
+}
 .grilla-tendencias {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-  /* Use auto margins to center the grid, and ensure no left-side margin pushes it over */
-  margin: 0 auto; 
-  padding: 0; /* Important: remove any padding on the grid container itself */
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    /* Use auto margins to center the grid, and ensure no left-side margin pushes it over */
+    margin: 0 auto;
+    padding: 0; /* Important: remove any padding on the grid container itself */
 }
 .receta-preview-container {
     /* El contenedor individual de cada imagen */
