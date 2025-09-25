@@ -23,3 +23,11 @@ main.MuiBox-root {
 .css-1fyzp41-MuiPaper-root-MuiAppBar-root {
     background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242) !important;
 }
+
+.css-1xro8j0 {
+    padding-bottom: 0 !important;
+}
+
+.css-apa4wc-MuiPaper-root ,.css-1fyzp41-MuiPaper-root-MuiAppBar-root {
+    bottom: -1px !important;
+}

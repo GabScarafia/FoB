@@ -7,8 +7,11 @@
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
+    background-color: #f9f9f9;
 }
-
+.css-c11htj{
+    background-color: #f9f9f9;
+}
 /* Estilos para el contenedor del mensaje del feed */
 .mensaje-feed {
     text-align: center;
@@ -45,7 +48,7 @@
     flex-grow: 1;
     padding-top: 15px;
     padding-bottom: 80px;
-    background-color: white;
+
 }
 
 .feed-cargando, .feed-error {
@@ -60,6 +63,17 @@
     padding: 20px;
     color: #888;
     font-style: italic;
+}
+
+/* Mensaje de cargando centrado para todas las secciones */
+.cargando-centrado, .feed-cargando, .cargando-perfil {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40vh;
+    text-align: center;
+    font-size: 1.1em;
+    color: #555;
 }
 
 /* Estilos para la barra de navegación inferior */

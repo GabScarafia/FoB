@@ -130,7 +130,6 @@
 /* --- Media Query para pantallas de tabletas y escritorios (a partir de 768px de ancho) --- */
 @media (min-width: 768px) {
     .contenedor-inicio-sesion {
-        justify-content: center;
         align-items: center;
         background: none;
         position: relative;
@@ -153,7 +152,8 @@
         max-width: 450px;
         padding: 40px;
         border-radius: 10px;
-        margin-top: 0;
+        margin-top: 5rem;
+        margin-bottom: 2rem;
         background-color: #1a2a6c;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
     }
