@@ -1,218 +1,237 @@
-// src/components/ui/Comentarios.tsx
-import React, { useEffect, useState } from "react";
-import { Box, Link, ListItem, ListItemAvatar, ListItemText, Typography, Avatar } from '@mui/material';
-import ReplyIcon from '@mui/icons-material/Reply';
+import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Typography,
+  TextField,
+  Button,
+  CircularProgress,
+  IconButton,
+  Modal,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
 
-type UsuarioComentarioDTO = {
-  nombre: string;
-  apellido: string;
-  nombreUsuario: string;
-  imagen: string;
-};
-
-type Comentario = {
+interface Comentario {
   id: number;
   texto: string;
-  fecha: string;
-  usuario: UsuarioComentarioDTO;
-  respuestaAComentarioId: number | null;
+  user_id: string;
+  lead_id: number;
+  parent_id: number | null;
+  created_at: string;
   respuestas: Comentario[];
-};
-
-type ComentarioCreateDTO = {
-  idReceta: number;
-  texto: string;
-  respuestaAComentarioId: number | null;
-};
-
-
-interface ComentariosProps {
-  idReceta: number;
 }
 
-const API_BASE_URL = "https://localhost:62956/api";
+interface ComentariosProps {
+  leadId: number;
+}
 
-const ComentarioItem: React.FC<{ comentario: Comentario; onReply: (id: number) => void }> = ({ comentario, onReply }) => {
-  const handleReplyClick = () => {
-    onReply(comentario.id);
-  };
-
-  return (
-    <>
-      <ListItem alignItems="flex-start" sx={{ marginLeft: comentario.respuestaAComentarioId ? "2rem" : "0" }}>
-        <ListItemAvatar>
-          <Avatar src={comentario.usuario.imagen} alt={comentario.usuario.nombreUsuario} />
-        </ListItemAvatar>
-        <ListItemText
-          primary={
-            <Typography variant="subtitle1" component="span">
-              {comentario.usuario.nombreUsuario}: {comentario.texto}
-            </Typography>
-          }
-          secondary={
-            <React.Fragment>
-              <Typography variant="body2" color="textSecondary" component="span">
-                {new Date(comentario.fecha).toLocaleString()}
-              </Typography>
-              <Box component="span" sx={{ ml: 1 }}>
-                <Link
-                  component="button"
-                  variant="body2"
-                  onClick={handleReplyClick}
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    color: "gray",
-                    textDecoration: "none",
-                    "&:hover": {
-                      textDecoration: "underline",
-                    },
-                  }}
-                >
-                  <ReplyIcon sx={{ fontSize: "1rem", color: "gray" }} />
-                  Responder
-                </Link>
-              </Box>
-            </React.Fragment>
-          }
-        />
-      </ListItem>
-      {comentario.respuestas && comentario.respuestas.length > 0 && (
-        <ul style={{ listStyleType: "none", paddingLeft: 0, marginTop: 0, width: '100%' }}>
-          {comentario.respuestas.map(respuesta => (
-            <ComentarioItem key={respuesta.id} comentario={respuesta} onReply={onReply} />
-          ))}
-        </ul>
-      )}
-    </>
-  );
-};
-
-const Comentarios: React.FC<ComentariosProps> = ({ idReceta }) => {
+const Comentarios: React.FC<ComentariosProps> = ({ leadId }) => {
   const [comentarios, setComentarios] = useState<Comentario[]>([]);
-  const [nuevoTexto, setNuevoTexto] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [idComentarioPadre, setIdComentarioPadre] = useState<number | null>(null);
+  const [nuevoComentario, setNuevoComentario] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState<boolean>(false);
+  const [comentarioAEliminar, setComentarioAEliminar] = useState<number | null>(
+    null
+  );
 
-  const token = JSON.parse(localStorage.getItem("AuthData") || "{}")?.token;
+  useEffect(() => {
+    const storedUserId = localStorage.getItem("userId");
+    setCurrentUserId(storedUserId);
 
-  const fetchComentarios = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(
-        `${API_BASE_URL}/Comentario/receta/${idReceta}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      const data = await response.json();
-      setComentarios(data);
-    } catch (error) {
-      console.error("Error al obtener comentarios:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    const fetchComentarios = async () => {
+      try {
+        const response = await fetch(
+          `http://localhost:8000/api/comentarios/${leadId}/`
+        );
+        if (!response.ok) throw new Error("Error al obtener comentarios");
+        const data = await response.json();
+        setComentarios(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchComentarios();
+  }, [leadId]);
 
-  const crearComentario = async () => {
-    if (!nuevoTexto.trim()) return;
-
-    console.log("ID del comentario padre antes de enviar:", idComentarioPadre);
-
-    // Aquí nos aseguramos de que el ID del comentario padre esté en el payload.
-  const payload: ComentarioCreateDTO = {
-    idReceta,
-    texto: nuevoTexto,
-    respuestaAComentarioId: idComentarioPadre,
-  };
-
-    
-    // Para depurar, agrega un console.log aquí y verifica el valor de idComentarioPadre
-    console.log("ID del comentario padre enviado:", idComentarioPadre);
+  const handleAgregarComentario = async (
+    parentId: number | null = null,
+    textoPersonalizado?: string
+  ) => {
+    if (!nuevoComentario.trim() && !textoPersonalizado) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Comentario`, {
+      const token = localStorage.getItem("token");
+      const response = await fetch("http://localhost:8000/api/comentarios/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+          Authorization: `Token ${token}`,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          texto: textoPersonalizado || nuevoComentario,
+          user_id: currentUserId,
+          lead_id: leadId,
+          parent_id: parentId,
+        }),
       });
 
-      if (!response.ok) throw new Error("Error al crear comentario");
+      if (!response.ok) throw new Error("Error al agregar comentario");
+      const nuevo = await response.json();
 
-      const nuevoComentario: Comentario = await response.json();
-      
-      setComentarios(prev => {
-        const addCommentRecursively = (comments: Comentario[], newComment: Comentario): Comentario[] => {
-          return comments.map(c => {
-            if (c.id === newComment.respuestaAComentarioId) {
-              return {
-                ...c,
-                respuestas: [...(c.respuestas || []), newComment]
-              };
-            }
-            if (c.respuestas && c.respuestas.length > 0) {
-              return {
-                ...c,
-                respuestas: addCommentRecursively(c.respuestas, newComment)
-              };
-            }
-            return c;
-          });
-        };
-
-        if (idComentarioPadre) {
-          return addCommentRecursively(prev, nuevoComentario);
-        } else {
-          return [...prev, nuevoComentario];
-        }
-      });
-      
-      setNuevoTexto("");
-      setIdComentarioPadre(null);
+      setComentarios((prev) =>
+        parentId
+          ? prev.map((comentario) =>
+              comentario.id === parentId
+                ? { ...comentario, respuestas: [...comentario.respuestas, nuevo] }
+                : comentario
+            )
+          : [...prev, nuevo]
+      );
+      setNuevoComentario("");
     } catch (error) {
-      console.error("Error al crear comentario:", error);
+      console.error(error);
     }
   };
 
-  useEffect(() => {
-    fetchComentarios();
-  }, [idReceta, token]);
+  const handleDeleteClick = (comentarioId: number) => {
+    setComentarioAEliminar(comentarioId);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!comentarioAEliminar) return;
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(
+        `http://localhost:8000/api/comentarios/${comentarioAEliminar}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Token ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) throw new Error("Error al eliminar comentario");
+
+      setComentarios((prev) =>
+        prev.map((comentario) =>
+          comentario.id === comentarioAEliminar
+            ? { ...comentario, texto: "Comentario eliminado" }
+            : comentario
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeleteConfirmOpen(false);
+      setComentarioAEliminar(null);
+    }
+  };
+
+  const renderComentarios = (comentarios: Comentario[]) =>
+    comentarios.map((comentario) => (
+      <ComentarioItem
+        key={comentario.id}
+        comentario={comentario}
+        currentUserId={currentUserId}
+        handleDeleteClick={handleDeleteClick}
+      />
+    ));
+
+  if (loading) return <CircularProgress />;
 
   return (
-    <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
-      <Typography variant="h5" sx={{ mb: 2 }}>Comentarios</Typography>
-      {loading ? (
-        <Typography>Cargando comentarios...</Typography>
-      ) : (
-        <ul style={{ listStyleType: "none", padding: 0 }}>
-          {comentarios.length === 0 ? (
-            <Typography>No hay comentarios aún.</Typography>
-          ) : (
-            comentarios.map((c) => (
-              <ComentarioItem key={c.id} comentario={c} onReply={setIdComentarioPadre} />
-            ))
-          )}
-        </ul>
-      )}
-
-      <Box sx={{ mt: 3, border: '1px solid #ccc', p: 2, borderRadius: '4px' }}>
-        <textarea
-          placeholder={idComentarioPadre ? "Escribe tu respuesta..." : "Escribe un comentario..."}
-          value={nuevoTexto}
-          onChange={(e) => setNuevoTexto(e.target.value)}
-          style={{ width: '100%', minHeight: '80px', border: 'none', resize: 'vertical' }}
+    <Box sx={{ padding: 2 }}>
+      <Typography variant="h6">Comentarios</Typography>
+      {renderComentarios(comentarios)}
+      <Box sx={{ display: "flex", gap: 1, marginTop: 2 }}>
+        <TextField
+          label="Escribe un comentario"
+          fullWidth
+          value={nuevoComentario}
+          onChange={(e) => setNuevoComentario(e.target.value)}
         />
-        <br />
-        <button onClick={crearComentario}>
-          {idComentarioPadre ? "Responder" : "Enviar"}
-        </button>
+        <Button
+          variant="contained"
+          onClick={() => handleAgregarComentario()}
+        >
+          Agregar
+        </Button>
       </Box>
+
+      <Modal open={deleteConfirmOpen} onClose={() => setDeleteConfirmOpen(false)}>
+        <Box
+          sx={{
+            backgroundColor: "white",
+            padding: 4,
+            maxWidth: 400,
+            margin: "100px auto",
+            borderRadius: 2,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="h6">
+            ¿Seguro que deseas borrar este comentario?
+          </Typography>
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 2 }}>
+            <Button
+              variant="contained"
+              color="error"
+              onClick={handleConfirmDelete}
+            >
+              Sí, borrar
+            </Button>
+            <Button
+              variant="outlined"
+              sx={{ ml: 2 }}
+              onClick={() => setDeleteConfirmOpen(false)}
+            >
+              Cancelar
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
+    </Box>
+  );
+};
+
+interface ComentarioItemProps {
+  comentario: Comentario;
+  currentUserId: string | null;
+  handleDeleteClick: (id: number) => void;
+}
+
+const ComentarioItem: React.FC<ComentarioItemProps> = ({
+  comentario,
+  currentUserId,
+  handleDeleteClick,
+}) => {
+  return (
+    <Box sx={{ marginLeft: comentario.parent_id ? 4 : 0, marginTop: 2 }}>
+      <Typography variant="body2">
+        {comentario.texto}
+        {String(currentUserId) === String(comentario.user_id) &&
+          comentario.texto !== "Comentario eliminado" && (
+            <IconButton
+              onClick={() => handleDeleteClick(comentario.id)}
+              size="small"
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          )}
+      </Typography>
+      {comentario.respuestas.length > 0 &&
+        comentario.respuestas.map((respuesta) => (
+          <ComentarioItem
+            key={respuesta.id}
+            comentario={respuesta}
+            currentUserId={currentUserId}
+            handleDeleteClick={handleDeleteClick}
+          />
+        ))}
     </Box>
   );
 };

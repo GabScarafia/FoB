@@ -10,5 +10,8 @@ namespace FoB.Application.Interfaces
     {
         Task<IEnumerable<ComentarioDTO>> GetByRecetaAsync(int idReceta);
         Task<ComentarioDTO> AddAsync(ComentarioCreateDTO comentario); // <- Este es el tipo de entrada correcto
+        Task DeleteAsync(int id);
+        Task<ComentarioDTO> GetByIdAsync(int id);
+        Task<ComentarioDTO> UpdateAsync(int id, ComentarioUpdateDTO dto);
     }
 }
