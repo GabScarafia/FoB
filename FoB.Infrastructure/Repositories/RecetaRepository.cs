@@ -202,6 +202,14 @@ internal sealed class RecetaRepository : IRecetaRepository
     })
         .ToListAsync();
 
+        list.ForEach(
+            x =>
+            {
+                var seguido = _context.Set<SeguimientoUsuario>()
+                                .Any(s => s.SeguidorId == _currentUser.User.Id && s.SeguidoId == x.Autor.Id);
+                x.Seguido = seguido;
+            });
+
         return list;
     }
 

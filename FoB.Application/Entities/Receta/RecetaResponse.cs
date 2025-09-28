@@ -24,6 +24,7 @@ public class RecetaResponse
     //public int UsuarioId { get; set; }
     public int CantidadVotos { get; set; }
     public bool MeGusta { get; set; } 
+    public bool Seguido { get; set; } 
     public bool NoMeGusta { get; set; } 
     public bool EsFavorito { get; set; } 
     public int CantidadComentarios { get; set; }

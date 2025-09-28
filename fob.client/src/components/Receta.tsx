@@ -59,6 +59,7 @@ export interface PropsReceta {
         meGusta: boolean;
         noMeGusta: boolean;
         esFavorito: boolean;
+        seguido: boolean;
         cantidadComentarios: number;
         titulo: string;
         descripcion: string;
@@ -182,6 +183,15 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
+    const handleFollowClick = async (usuarioId: number, isCurrentlyFollowing: boolean) => {
+        // await onFollow(usuarioId, isCurrentlyFollowing);
+        // setUsuariosLocal(prevUsuarios =>
+        //     prevUsuarios.map(u =>
+        //         u.id === usuarioId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+        //     )
+        // );
+    };
+    
     const handleDisLikeClick = async () => {
         try {
 
@@ -352,6 +362,18 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
                 {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
+                    { !receta.seguido && (
+                        <button
+                            className={`boton-seguir ${ receta.seguido ? 'siguiendo' : ''}`}
+                            tabIndex={0}
+                            onClick={e => {
+                                e.stopPropagation();
+                                handleFollowClick(receta.autor.id,  receta.seguido || false);
+                            }}
+                        >
+                            { receta.seguido ? 'Siguiendo' : 'Seguir'}
+                        </button>
+                    )}
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
                         <div className="estrellas-calificacion">
