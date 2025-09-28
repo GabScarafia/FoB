@@ -166,7 +166,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             CantidadVotos = x.Voto.Count(),
             CantidadComentarios = x.Comentario.Count(),
             Estado = x.Estado,
-            Imagen = x.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
+            Imagen = x.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen,
             FechaCreacion = x.FechaCreacion,
             MeGusta = x.Voto.Any(x=>x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Like.ToString()),
             NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString()),
@@ -277,7 +277,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             FechaCreacion = x.FechaCreacion,
             FechaModificacion = x.FechaModificacion,
             PuntuacionPromedio = x.PuntuacionPromedio,
-            Imagen = x.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
+            Imagen = x.RecetaImagen.FirstOrDefault(x=>x.PasoId == null).Imagen,
             TiempoPreparacion = x.TiempoPreparacion.HasValue ? x.TiempoPreparacion.Value.ToTimeSpan() : null,
             Autor = new UsuarioResponse
             {

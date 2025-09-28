@@ -60,7 +60,7 @@ const IniciarSesion: React.FC = () => {
 
     } 
     catch (err: any) {
-      setError(err.message || "Ocurrió un error inesperado.");
+      alert(err.message || "Ocurrió un error inesperado.");
     } 
     finally {
       setCargando(false);

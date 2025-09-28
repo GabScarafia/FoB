@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTendenciasService } from '../services/tendenciasService';
 import Receta from 'components/Receta';
-import RecetaPreview from 'components/RecetaPreview';
-import { useAuth } from '../context/AuthContext';
-import './Tendencias.css';
-import { useNavigate } from 'react-router-dom';
+// Importamos Link ya que la galería del perfil lo usaba, pero en Tendencias lo usaremos sin navegación para abrir el Diálogo.
+import { useNavigate } from 'react-router-dom'; 
 
 // Importaciones de Material-UI
 import Dialog from '@mui/material/Dialog';
@@ -13,7 +11,10 @@ import LogoApp from '../assets/images/logo-blanco.png';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
+import { useAuth } from '../context/AuthContext';
+import './Tendencias.css'; // Asegúrate de que los estilos 'galeria-item' y 'grilla-tendencias' estén definidos aquí o en otro CSS global.
 
 // Puedes importar Usuario desde otro archivo si ya la tienes definida
 export interface Usuario {
@@ -33,15 +34,17 @@ interface RecetaType {
     fechaCreacion: string;
     tipoContenido: string;
     dificultad: string;
-    imagen: string;
+    imagen: string; // Este campo se usará como fuente de imagen (como 'imagenPrincipalBase64' o 'imagen' del perfil)
     cantidadVotos: number;
     meGusta: boolean;
     cantidadComentarios: number;
     titulo: string;
     descripcion: string;
+    vistaPreviaComentarios?: Comentario[];
     tiempoPreparacion: string;
     ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
-    categorias: string[]; // Aseguramos que sea un array de strings
+    categorias: Array<any>;
+    pasos: Array<any>;
 }
 
 const Tendencias = () => {
@@ -115,6 +118,37 @@ const Tendencias = () => {
         navigate(`/perfil/${userId}`);
     };
 
+    // FUNCIÓN PARA RENDERIZAR LA GALERÍA (similar a la lógica extraída del Perfil)
+    const renderGaleriaTendencias = () => {
+        if (!tendencias || tendencias.length === 0) {
+            return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
+        }
+
+        return (
+            <div className="grilla-tendencias">
+                {tendencias.map((receta) => {
+                    console.log("Receta en tendencias:", receta);
+                    const imageData = `data:image/jpeg;base64,${receta.imagen}`;
+                    return (
+                        <div 
+                            key={receta.id} 
+                            className="galeria-item" 
+                            onClick={() => handleRecetaClick(receta)}
+                        >
+                            {/* Usamos directamente la etiqueta img dentro del div/item, como en Perfil */}
+                            <img
+                                src={imageData}
+                                alt={receta.titulo ?? `Receta-${receta.id}`}
+                            />
+                            {/* Opcionalmente podrías agregar un overlay o badge de tendencia aquí */}
+                        </div>
+                    );
+                })}
+            </div>
+        );
+    };
+    // FIN DE LA FUNCIÓN DE RENDERIZADO
+
     if (cargando) {
         return <div className="cargando-tendencias">Cargando tendencias...</div>;
     }
@@ -126,11 +160,8 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                <div className="grilla-tendencias">
-                    {tendencias.map(receta => (
-                        <RecetaPreview key={receta.id} receta={receta} onClick={() => handleRecetaClick(receta)} />
-                    ))}
-                </div>
+                {/* INVOCAMOS LA NUEVA FUNCIÓN DE RENDERIZADO DE GALERÍA */}
+                {renderGaleriaTendencias()}
             </div>
 
             {/* Diálogo para mostrar la receta completa */}
@@ -138,18 +169,24 @@ const Tendencias = () => {
                 fullScreen
                 open={openDialog}
                 onClose={handleCloseDialog}
-                // Replace deprecated props with slots and slotProps
                 slots={{ transition: Slide }}
                 slotProps={{
                     transition: {
-                    direction: 'up',
+                        direction: 'up',
+                    },
+                    paper: {
+                        sx: {
+                            display: 'flex',
+                            flexDirection: 'column',
+                        },
                     },
                 }}
             >
 
+                {/* Encabezado fijo */}
                 <Box className="header-contenedor-principal ">
                     <Box className="header-input-seccion ">
-                         <Box
+                           <Box
                             component="img"
                             src={LogoApp}
                             sx={{
@@ -159,17 +196,25 @@ const Tendencias = () => {
                             }}
                             />
                             <span>#Tendencias</span> 
-                    {/* <img src={LogoApp} alt="Logo de la App" className="logo-app" />   */}
                     </Box>
                 </Box>
-                {recetaSeleccionada && (
-                    <Receta receta={recetaSeleccionada} onDrawerToggle={handleCloseDialog} />
-                )}
-                   
-                {/* Use a Box to position the Toolbar at the bottom */}
+
+                {/* Contenido desplazable (scrollable) */}
+                <Box
+                    sx={{
+                        flexGrow: 1, // Ocupa todo el espacio vertical disponible
+                        overflowY: 'auto', // Habilita el scroll vertical
+                        p: 2, // Espaciado interior opcional
+                        backgroundColor: 'background.default', // Color de fondo si es necesario
+                    }}
+                >
+                    {recetaSeleccionada && (
+                        <Receta receta={recetaSeleccionada} onDrawerToggle={handleCloseDialog} />
+                    )}
+                </Box>
+                    
+                {/* Pie de página fijo */}
                 <Box sx={{
-                    position: 'absolute',
-                    bottom: 0,
                     width: '100%',
                     backgroundColor: 'primary.main', // or any color you want
                     display: 'flex',
@@ -185,7 +230,7 @@ const Tendencias = () => {
                     aria-label="close"
                     sx={{ color: '#ff9800' }}
                 >
-                    <ArrowBackIcon /> {/* Use ArrowBackIcon for the left arrow */}
+                    <ArrowBackIcon />
                 </IconButton>
                 
                 <WhatshotIcon sx={{ color: '#ff9800' }}/> 

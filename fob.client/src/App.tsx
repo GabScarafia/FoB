@@ -33,7 +33,7 @@ const MainApp = () => {
   return (
     <Box sx={{ display: "flex", flexDirection: 'column', width: '100%', minHeight: '100vh' }}>
       <CssBaseline />
-      <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> 
+      {/* <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} />  */}
       {/* Barra superior solo si el usuario está logueado y no es página de login/registro */}
       {!isAuthPage && isLoggedIn && <UpperAppBar />}
 
@@ -62,7 +62,7 @@ export default function App() {
   return (
     <AuthProvider>
       <Box sx={{ display: "flex", width: '100%', minHeight: '100vh', flexDirection: 'column' }}>
-        <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} />
+        {/* <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> */}
         <MainApp /> {/* 👈 Renderiza el nuevo componente dentro del Provider */}
       </Box>
     </AuthProvider>

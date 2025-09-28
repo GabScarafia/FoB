@@ -26,6 +26,9 @@ public class AuthenticationController : ControllerBase
         if (request == null || string.IsNullOrWhiteSpace(request.Email) || string.IsNullOrWhiteSpace(request.Password))
             return BadRequest("Error en el cuerpo de la request");
 
-        return Ok(await _authenticationService.Login(request.Email, request.Password));
+        var login = await _authenticationService.Login(request.Email, request.Password);
+        if (login == null)
+            return Unauthorized(new { message = "Email o contraseña incorrectos." });
+        return Ok(login);
     }
 }

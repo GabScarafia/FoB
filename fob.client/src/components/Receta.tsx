@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import './Receta.css';
 import { useNavigate } from 'react-router-dom';
@@ -24,7 +24,7 @@ import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
 
-import fotoPerfilLocal from '../assets/images/bicho-arabe.jpg';
+import fotoPerfilLocal from '../assets/images/avatar.png';
 
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';

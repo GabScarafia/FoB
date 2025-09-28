@@ -8,7 +8,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 
 // Foto por defecto
-import fotoPerfilDefault from '../assets/images/bicho-arabe.jpg';
+import fotoPerfilDefault from '../assets/images/avatar.png';
 
 interface RecetaDto {
     id: number;

@@ -31,7 +31,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import type { Usuario } from "../pages/Feed";
 import { useAuth } from "../context/AuthContext";
-import fotoPerfilLocal from "../assets/images/bicho-arabe.jpg";
+import fotoPerfilLocal from "../assets/images/avatar.png";
 import { formatoTiempoRelativo } from "../utils/formateoDeTiempo";
 import "./DrawerComentarios.css";
 

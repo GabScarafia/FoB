@@ -44,7 +44,7 @@ namespace FoB.Server.Controllers
                 var usuario = await _context.Usuario
                     .Where(u => u.Id == idUsuario)
                     .Include(u => u.UsuarioImagen)
-                    .Include(u => u.Receta)
+                    .Include(u => u.Receta.Where(r => r.Activa == true))
                         .ThenInclude(r => r.RecetaImagen)
                     .Include(u => u.SeguimientoUsuarioSeguidor)
                     .Include(u => u.SeguimientoUsuarioSeguido)
@@ -69,8 +69,8 @@ namespace FoB.Server.Controllers
                     Id = r.Id,
                     Titulo = r.Titulo,
                     // primera imagen es la principal para la galería
-                    ImagenPrincipalBase64 = r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
-                        ? Convert.ToBase64String(r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
+                    ImagenPrincipalBase64 = r.RecetaImagen.FirstOrDefault(x=>x.PasoId == null) != null
+                        ? Convert.ToBase64String(r.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen)
                         : null
                 }).ToList();
 

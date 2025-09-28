@@ -109,7 +109,7 @@ public class RecetasController : ControllerBase
         {
             // Traemos todas las recetas del usuario con toda la información
             var recetasDb = await _context.Receta
-                .Where(r => r.UsuarioId == idUsuario)
+                .Where( r => r.Activa == true && r.UsuarioId == idUsuario )
                 .Include(r => r.Usuario)
                 .Include(r => r.RecetaImagen)
                 .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
