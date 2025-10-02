@@ -6,7 +6,21 @@
     margin: 20px;
     overflow: hidden;
 }
-
+/* Nuevo contenedor de la imagen para el carrusel */
+.carrusel-imagen {
+    width: 100%;
+    /* Define la altura fija que deseas para el carrusel */
+    height: 400px; 
+    display: block;
+    /* Necesitas una forma de centrar la imagen si es más pequeña */
+    display: flex; 
+    justify-content: center;
+    align-items: center;
+    /* Asegúrate de que no haya desbordamiento */
+    overflow: hidden; 
+    /* Opcional: Establece un fondo si hay espacio vacío */
+    background-color: #f0f0f0; 
+}
 /* Encabezado de la receta (info del autor y meta) */
 .encabezado-receta {
     display: flex;
@@ -98,14 +112,18 @@
 .contenedor-imagen-receta {
     width: 100%;
     display: block;
-}
-
-.imagen-receta {
+}.imagen-receta {
+    /* Ocupa el 100% del contenedor fijo */
     width: 100%;
-    height: auto;
+    height: 100%;
     display: block;
-    object-fit: cover;
-    border-radius: 6px;
+    
+    /* ¡CLAVE! Escala la imagen para que quepa completamente dentro del contenedor 
+       fijo sin ser recortada. Dejará espacios vacíos si las proporciones no coinciden. */
+    object-fit: contain; 
+    
+    /* No debe haber bordes para asegurar que la imagen se muestre completa */
+    border-radius: 0;
 }
 
 /* Secci�n de acciones (me gusta, comentarios, guardar) */

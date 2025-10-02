@@ -510,13 +510,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         ))}
                     </div>
                 )}
-                {receta.pasos && receta.pasos.length > 0 && (
-                    <div className="pasos-receta">
-                        <button className="boton-pasos" onClick={handleOpenModalPasos}>
-                            <strong>Ver Pasos</strong>
-                        </button>
-                    </div>
-                )}
+ 
             </div>
 
             <div className="vista-previa-comentarios">

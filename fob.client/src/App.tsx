@@ -61,7 +61,7 @@ const MainApp = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <Box sx={{ display: "flex", width: '100%', minHeight: '100vh', flexDirection: 'column' }}>
+      <Box sx={{ display: "flex", width: '100%', minHeight: '100vh', flexDirection: 'column'}}>
         {/* <ImagenRebotante imageSrc={logoImage} size={70} speed={1.5} /> */}
         <MainApp /> {/* 👈 Renderiza el nuevo componente dentro del Provider */}
       </Box>
