@@ -50,7 +50,7 @@
     left: 50%;
     transform: translateX(-50%);
     width: 120%;
-    height: 130px;
+    height: 110px;
     background-color: white;
     border-bottom-left-radius: 50% 100px;
     border-bottom-right-radius: 50% 100px;
@@ -81,12 +81,12 @@
     
     text-align: center;
     z-index: 4;
-    margin-top: -30px;
+    margin-top: -80px;
     color: #ffffff;
 }
 
 .formulario-registrarse-caja h2 {
-    margin-bottom: 25px;
+    margin-bottom: 8px;
     font-size: 1.8em;
     color: #ffffff;
     text-transform: uppercase;
@@ -124,7 +124,6 @@
     text-transform: uppercase;
     cursor: pointer;
     transition: all 0.3s ease;
-    margin-top: 15px;
 }
 
 .boton-atras-a-inicio-sesion:hover {
@@ -160,5 +159,9 @@
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
         background-color: #1a2a6c;
         margin-top: 1rem;
+    }
+
+    body {
+        overflow: hidden;
     }
 }
