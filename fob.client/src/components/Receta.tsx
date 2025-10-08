@@ -362,18 +362,19 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
                 {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
-                    { !receta.seguido && (
+                    {!esRecetaPropia && (
                         <button
-                            className={`boton-seguir ${ receta.seguido ? 'siguiendo' : ''}`}
+                            className={`boton-seguir ${receta.seguido ? 'siguiendo' : ''}`}
                             tabIndex={0}
                             onClick={e => {
                                 e.stopPropagation();
-                                handleFollowClick(receta.autor.id,  receta.seguido || false);
+                                handleFollowClick(receta.autor.id, receta.seguido || false);
                             }}
                         >
-                            { receta.seguido ? 'Siguiendo' : 'Seguir'}
+                            {receta.seguido ? 'Siguiendo' : 'Seguir'}
                         </button>
                     )}
+
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
                         <div className="estrellas-calificacion">
