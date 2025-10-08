@@ -17,35 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import './Tendencias.css'; // Asegúrate de que los estilos 'galeria-item' y 'grilla-tendencias' estén definidos aquí o en otro CSS global.
 
 // Puedes importar Usuario desde otro archivo si ya la tienes definida
-export interface Usuario {
-    id: number;
-    nombre: string;
-    apellido: string;
-    nombreUsuario: string;
-    texto?: string;
-    tiempo?: string;
-    imagen?: string;
-    isFollowing: boolean;
-}
-
-interface RecetaType {
-    id: number;
-    autor: Usuario;
-    fechaCreacion: string;
-    tipoContenido: string;
-    dificultad: string;
-    imagen: string; // Este campo se usará como fuente de imagen (como 'imagenPrincipalBase64' o 'imagen' del perfil)
-    cantidadVotos: number;
-    meGusta: boolean;
-    cantidadComentarios: number;
-    titulo: string;
-    descripcion: string;
-    vistaPreviaComentarios?: Comentario[];
-    tiempoPreparacion: string;
-    ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
-    categorias: Array<any>;
-    pasos: Array<any>;
-}
+import type  { RecetaType, Usuario } from '../types/Receta';
 
 const Tendencias = () => {
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
@@ -209,7 +181,18 @@ const Tendencias = () => {
                     }}
                 >
                     {recetaSeleccionada && (
-                        <Receta receta={recetaSeleccionada} onDrawerToggle={handleCloseDialog} />
+                        <Receta
+                            receta={{
+                                ...recetaSeleccionada,
+                                noMeGusta: recetaSeleccionada.noMeGusta ?? false,
+                                esFavorito: recetaSeleccionada.esFavorito ?? false,
+                                seguido: recetaSeleccionada.autor?.isFollowing ?? false,
+                            }}
+                            onDrawerToggle={() => {}} // No cerrar el diálogo
+                            currentUserId={authData?.id ?? null}
+                            onDeleteReceta={async () => {}} // Sin acción de borrado
+                            onUsuarioClick={handleUsuarioClick}
+                        />
                     )}
                 </Box>
                     

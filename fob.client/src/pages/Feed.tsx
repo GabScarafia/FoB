@@ -9,35 +9,8 @@ import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 import { Modal, Box, Button, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
-interface DatosReceta {
-    id: number;
-    autor: Usuario;
-    fechaCreacion: string;
-    tipoContenido: string;
-    dificultad: string;
-    imagen: string;
-    cantidadVotos: number;
-    meGusta: boolean;
-    cantidadComentarios: number;
-    titulo: string;
-    descripcion: string;
-    vistaPreviaComentarios?: Comentario[];
-    tiempoPreparacion: string;
-    ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
-    categorias: Array<any>;
-    pasos: Array<any>;
-}
+import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 
-export interface Usuario {
-    id: number;
-    nombre: string;
-    apellido: string;
-    nombreUsuario: string;
-    texto?: string;
-    tiempo?: string;
-    imagen?: string;
-    isFollowing: boolean;
-}
 
 interface FeedProps {
     onDrawerToggle: (isOpen: boolean) => void;

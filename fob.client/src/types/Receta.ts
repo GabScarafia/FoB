@@ -1,0 +1,34 @@
+import type { Comentario } from 'components/DrawerComentarios';
+
+export interface Usuario {
+  id: number;
+  nombre: string;
+  apellido: string;
+  nombreUsuario: string;
+  texto?: string;
+  tiempo?: string;
+  imagen?: string;
+  isFollowing: boolean;
+}
+
+export interface RecetaType {
+  id: number;
+  autor: Usuario;
+  fechaCreacion: string;
+  tipoContenido: string;
+  dificultad: string;
+  imagen: string;
+  cantidadVotos: number;
+  meGusta: boolean;
+  noMeGusta: boolean;
+  esFavorito: boolean;
+  seguido: boolean;
+  cantidadComentarios: number;
+  titulo: string;
+  descripcion: string;
+  vistaPreviaComentarios?: Comentario[];
+  tiempoPreparacion: string;
+  ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
+  categorias: Array<any>;
+  pasos: Array<any>;
+}

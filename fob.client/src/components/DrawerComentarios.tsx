@@ -429,7 +429,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   // (Eliminado handleSaveEdit porque no se usa y causaba el error de retorno)
 
   return (
-    <Drawer anchor="bottom" open={open} onClose={onClose}>
+    <Drawer anchor="bottom" open={open} onClose={onClose} sx={{ zIndex: (theme) => theme.zIndex.modal + 3 }}>
       <Box sx={{ width: "100%", maxHeight: "60vh", display: "flex", flexDirection: "column" }}>
         {/* Header */}
         <Box
