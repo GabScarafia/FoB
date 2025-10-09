@@ -199,7 +199,7 @@ const Tendencias = () => {
                 {/* Pie de página fijo */}
                 <Box sx={{
                     width: '100%',
-                    backgroundColor: 'primary.main', // or any color you want
+                    background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
@@ -211,12 +211,12 @@ const Tendencias = () => {
                     color="inherit"
                     onClick={handleCloseDialog}
                     aria-label="close"
-                    sx={{ color: '#ff9800' }}
+                    sx={{ color: '#ffffffff' }}
                 >
                     <ArrowBackIcon />
                 </IconButton>
                 
-                <WhatshotIcon sx={{ color: '#ff9800' }}/> 
+                <WhatshotIcon sx={{ color: '#ffffffff' }}/> 
                 
                 <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
                     <ArrowBackIcon />

@@ -162,3 +162,10 @@
     }
 
 }
+
+@media (max-width: 767px) {
+    .contenedor-registrarse {
+        overflow: hidden;
+        height: 100vh;
+    }
+}
