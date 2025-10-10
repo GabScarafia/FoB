@@ -147,9 +147,16 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setCategorias(categorias.filter(cat => cat !== categoriaToRemove));
     };
 
+    const [isPublicando, setIsPublicando] = React.useState(false);
+
     const handleSubmit = async () => {
+
+        if (isPublicando) return; // Prevenir múltiples envíos
+        setIsPublicando(true);
+
         if (!authData?.token) {
             console.error("No hay token de autenticación. El usuario no está logueado.");
+            setIsPublicando(false);
             return;
         }
 
@@ -205,7 +212,9 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             onClose();
         } catch (error) {
             console.error('Error al crear la receta:', error);
-        }
+        } finally {
+            setIsPublicando(false);
+        }  
     };
 
     return (
@@ -551,8 +560,9 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                     size="large"
                     sx={{ mt: 2, bgcolor: 'red' }}
                     onClick={handleSubmit}
+                    disabled={isPublicando} // Deshabilitar mientras se publica
                 >
-                    PUBLICAR
+                    {isPublicando ? 'Publicando...' : 'PUBLICAR'}
                 </Button>
             </DialogContent>
 
