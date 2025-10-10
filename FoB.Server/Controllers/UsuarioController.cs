@@ -72,7 +72,9 @@ namespace FoB.Server.Controllers
                     ImagenPrincipalBase64 = r.RecetaImagen.FirstOrDefault(x=>x.PasoId == null) != null
                         ? Convert.ToBase64String(r.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen)
                         : null
-                }).ToList();
+                })
+                .OrderByDescending(x=>x.Id)
+                .ToList();
 
                 // Crea el DTO final con toda la información consolidada
                 var perfilDto = new UsuarioPerfilDto

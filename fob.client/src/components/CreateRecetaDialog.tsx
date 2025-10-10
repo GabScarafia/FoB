@@ -41,7 +41,6 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [dificultad, setDificultad] = React.useState('');
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    const [hours, setHours] = React.useState<string>('');
     const [minutes, setMinutes] = React.useState<string>('');
     const [titulo, setTitulo] = React.useState('');
     const [descripcion, setDescripcion] = React.useState('');
@@ -53,15 +52,15 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         unidad: ''
     });
 
-    const [categorias, setCategorias] = React.useState<string[]>([]);
-    const [nuevaCategoria, setNuevaCategoria] = React.useState('');
+    // 🏷 Etiquetas
+    const [etiquetas, setEtiquetas] = React.useState<string[]>([]);
+    const [nuevaEtiqueta, setNuevaEtiqueta] = React.useState('');
 
-    // Estado para los pasos, ahora cada paso tiene imagen
-    const [pasos, setPasos] = React.useState([{ titulo: '', descripcion: '', imagen: null }, { titulo: '', descripcion: '', imagen: null }]);
+    // Estado para los pasos
+    const [pasos, setPasos] = React.useState([{ titulo: '', descripcion: '', imagen: null }]);
     const [pasoActualIndex, setPasoActualIndex] = React.useState(0);
 
     const { authData } = useAuth();
-    const token = authData?.token;
 
     const handleBoxClick = () => {
         fileInputRef.current?.click();
@@ -95,17 +94,24 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setIngredientes(ingredientes.filter((_, i) => i !== index));
     };
 
+    // 🆕 Agregar paso
     const handleAddPaso = () => {
         const nuevoPaso = { titulo: '', descripcion: '', imagen: null };
         setPasos([...pasos, nuevoPaso]);
         setPasoActualIndex(pasos.length);
     };
 
+    const handleRemovePaso = (index: number) => {
+        if (pasos.length <= 1) return;
+        const nuevosPasos = pasos.filter((_, i) => i !== index);
+        setPasos(nuevosPasos);
+        setPasoActualIndex(Math.max(0, pasoActualIndex - 1));
+    };
+
     const handlePasoClick = (index: number) => {
         setPasoActualIndex(index);
     };
 
-    // Manejar cambio de campos de paso
     const handlePasoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         const nuevosPasos = [...pasos];
@@ -116,7 +122,6 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setPasos(nuevosPasos);
     };
 
-    // Manejar imagen de paso
     const handlePasoImagenChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -136,26 +141,27 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setPasos(nuevosPasos);
     };
 
-    const handleAddCategoria = () => {
-        if (nuevaCategoria.trim() !== '' && !categorias.includes(nuevaCategoria.trim())) {
-            setCategorias([...categorias, nuevaCategoria.trim()]);
-            setNuevaCategoria('');
+    // 🏷 Etiquetas
+    const handleAddEtiqueta = () => {
+        if (nuevaEtiqueta.trim() !== '' && !etiquetas.includes(nuevaEtiqueta.trim())) {
+            setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
+            setNuevaEtiqueta('');
         }
     };
 
-    const handleRemoveCategoria = (categoriaToRemove: string) => {
-        setCategorias(categorias.filter(cat => cat !== categoriaToRemove));
+    const handleRemoveEtiqueta = (etiquetaToRemove: string) => {
+        setEtiquetas(etiquetas.filter(et => et !== etiquetaToRemove));
     };
 
     const [isPublicando, setIsPublicando] = React.useState(false);
 
     const handleSubmit = async () => {
 
-        if (isPublicando) return; // Prevenir múltiples envíos
+        if (isPublicando) return;
         setIsPublicando(true);
 
         if (!authData?.token) {
-            console.error("No hay token de autenticación. El usuario no está logueado.");
+            console.error("No hay token de autenticación.");
             setIsPublicando(false);
             return;
         }
@@ -166,16 +172,15 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             return tituloValido || descripcionValida;
         }).map(paso => ({
             ...paso,
-            imagen: paso.imagen ? paso.imagen.split(',')[1] : null // solo base64
+            imagen: paso.imagen ? paso.imagen.split(',')[1] : null
         }));
 
         let imagenBase64 = null;
         if (previewImage) {
             imagenBase64 = previewImage.split(',')[1];
         }
-        const totalHours = parseInt(hours);
         const totalMinutes = parseInt(minutes);
-        const tiempoEnMinutos = (isNaN(totalHours) ? 0 : totalHours * 60) + (isNaN(totalMinutes) ? 0 : totalMinutes);
+        const tiempoEnMinutos = isNaN(totalMinutes) ? 0 : totalMinutes;
 
         const data = {
             titulo,
@@ -188,7 +193,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 id: 0,
                 descripcion: ''
             })),
-            categorias: categorias.map(cat => ({ nombre: cat })),
+            categorias: etiquetas.map(et => ({ nombre: et })),
             pasos: pasosValidos
         };
 
@@ -214,7 +219,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             console.error('Error al crear la receta:', error);
         } finally {
             setIsPublicando(false);
-        }  
+        }
     };
 
     return (
@@ -261,14 +266,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 />
 
                 {previewImage && (
-                    <Box
-                        sx={{
-                            width: '100%',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            mb: 2,
-                        }}
-                    >
+                    <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
                         <img src={previewImage} alt="Vista previa" style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain' }} />
                     </Box>
                 )}
@@ -319,9 +317,9 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                         Pasos de preparación
                     </Typography>
 
-                    {/* Círculos de navegación */}
+                    {/* Navegación de pasos */}
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        {pasos.map((paso, index) => (
+                        {pasos.map((_, index) => (
                             <Box
                                 key={index}
                                 onClick={() => handlePasoClick(index)}
@@ -341,21 +339,19 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                                 {index + 1}
                             </Box>
                         ))}
-                        <Box sx={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }} onClick={handleAddPaso}>
-                            <IconButton color="primary">
-                                <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
-                            </IconButton>
-                            <Typography variant="body1" sx={{ color: '#1f43aa', fontWeight: 'bold' }}>
-                                Próximo Paso
-                            </Typography>
-                        </Box>
+                        <IconButton color="primary" onClick={handleAddPaso}>
+                            <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
+                        </IconButton>
+                        <IconButton color="primary" onClick={() => handleRemovePaso(pasoActualIndex)}>
+                            <CloseIcon sx={{ fontSize: 30 }} /> 
+                        </IconButton>
                     </Box>
 
-                    {/* Campos de Título y Descripción del Paso */}
+                    {/* Campos de paso */}
                     {pasos.length > 0 && (
                         <>
                             <TextField
-                                label={`Título del paso ${pasoActualIndex + 1}`}
+                                label={`Título del paso ${pasoActualIndex + 1} (opcional)`}
                                 variant="outlined"
                                 fullWidth
                                 name="titulo"
@@ -388,7 +384,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                                 {pasos[pasoActualIndex].imagen && (
                                     <Box sx={{ display: 'inline-block', position: 'relative', verticalAlign: 'middle' }}>
                                         <img
-                                            src={pasos[pasoActualIndex].imagen}
+                                            src={pasos[pasoActualIndex].imagen as string}
                                             alt={`Paso ${pasoActualIndex + 1}`}
                                             style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #ccc' }}
                                         />
@@ -405,36 +401,35 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                         </>
                     )}
                 </Box>
-                {/* Fin de la Sección de Pasos */}
 
-                {/* Sección de Categorías */}
+                {/* 🏷 Sección de Etiquetas */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'black' }}>
-                        Categorías
+                        Etiquetas
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
                         <TextField
-                            label="Agregar categoría..."
+                            label="Agregar etiqueta..."
                             variant="outlined"
                             size="small"
-                            value={nuevaCategoria}
-                            onChange={(e) => setNuevaCategoria(e.target.value)}
+                            value={nuevaEtiqueta}
+                            onChange={(e) => setNuevaEtiqueta(e.target.value)}
                             onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
-                                    handleAddCategoria();
+                                    handleAddEtiqueta();
                                     e.preventDefault();
                                 }
                             }}
                             sx={{ flex: 1, minWidth: '150px' }}
                         />
-                        <IconButton onClick={handleAddCategoria} color="primary" sx={{ p: 0 }}>
+                        <IconButton onClick={handleAddEtiqueta} color="primary" sx={{ p: 0 }}>
                             <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
                         </IconButton>
                     </Box>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                        {categorias.map((categoria) => (
+                        {etiquetas.map((etiqueta) => (
                             <Box
-                                key={categoria}
+                                key={etiqueta}
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -448,10 +443,10 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                                     fontWeight: 'bold',
                                 }}
                             >
-                                {categoria}
+                                {etiqueta}
                                 <IconButton
                                     size="small"
-                                    onClick={() => handleRemoveCategoria(categoria)}
+                                    onClick={() => handleRemoveEtiqueta(etiqueta)}
                                     sx={{ color: 'white' }}
                                 >
                                     <CloseIcon sx={{ fontSize: '1rem' }} />
@@ -460,14 +455,14 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                         ))}
                     </Box>
                 </Box>
-                {/* Fin de la Sección de Categorías */}
 
+                {/* Dificultad y minutos */}
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField
+                    <TextField 
+                        sx={{ flexGrow: 5 }}
                         label="Dificultad"
                         variant="outlined"
                         select
-                        fullWidth
                         value={dificultad}
                         onChange={(e) => setDificultad(e.target.value)}
                         SelectProps={{
@@ -483,27 +478,18 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                     <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexGrow: 1 }}>
                         <AccessTimeIcon sx={{ color: 'text.secondary' }} />
                         <TextField
-                            label="Horas"
-                            variant="outlined"
-                            type="number"
-                            value={hours}
-                            onChange={(e) => setHours(e.target.value)}
-                            inputProps={{ min: 0 }}
-                            sx={{ width: '50%' }}
-                        />
-                        <TextField
                             label="Minutos"
                             variant="outlined"
                             type="number"
                             value={minutes}
                             onChange={(e) => setMinutes(e.target.value)}
                             inputProps={{ min: 0, max: 59 }}
-                            sx={{ width: '50%' }}
+                            sx={{ width: '100%' }}
                         />
                     </Box>
                 </Box>
 
-                {/* Sección de Ingredientes */}
+                {/* Ingredientes */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                         Ingredientes
@@ -525,28 +511,44 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                             value={nuevoIngrediente.cantidad}
                             onChange={(e) => setNuevoIngrediente({ ...nuevoIngrediente, cantidad: e.target.value })}
                             inputProps={{ min: 0 }}
-                            sx={{ flex: 1 }}
+                            sx={{ flex: 0.7 }}
                         />
                         <TextField
-                            label="Unidad..."
+                            label="Unidad"
                             variant="outlined"
                             size="small"
                             value={nuevoIngrediente.unidad}
                             onChange={(e) => setNuevoIngrediente({ ...nuevoIngrediente, unidad: e.target.value })}
-                            sx={{ flex: 1 }}
+                            sx={{ flex: 0.8 }}
                         />
-                        <IconButton onClick={handleAddIngrediente} color="primary">
-                            <AddCircleIcon sx={{ color: '#1f43aa' }} />
+                        <IconButton onClick={handleAddIngrediente} color="primary" sx={{ p: 0 }}>
+                            <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
                         </IconButton>
                     </Box>
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {ingredientes.map((ing, index) => (
-                            <Box key={index} sx={{ display: 'flex', alignItems: 'center', mb: 1, gap: 1 }}>
-                                <Typography variant="body1" sx={{ flexGrow: 1 }}>
-                                    {ing.cantidad} {ing.unidadDeMedida} de {ing.nombre}
-                                </Typography>
-                                <IconButton size="small" onClick={() => handleRemoveIngrediente(index)}>
-                                    <CloseIcon fontSize="small" />
+                            <Box
+                                key={index}
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    bgcolor: '#1f43aa',
+                                    color: 'white',
+                                    borderRadius: '16px',
+                                    pr: 1,
+                                    pl: 2,
+                                    py: 0.5,
+                                    fontSize: '0.875rem',
+                                    fontWeight: 'bold',
+                                }}
+                            >
+                                {`${ing.nombre} ${ing.cantidad} ${ing.unidadDeMedida}`}
+                                <IconButton
+                                    size="small"
+                                    onClick={() => handleRemoveIngrediente(index)}
+                                    sx={{ color: 'white' }}
+                                >
+                                    <CloseIcon sx={{ fontSize: '1rem' }} />
                                 </IconButton>
                             </Box>
                         ))}
@@ -556,42 +558,13 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 <Button
                     variant="contained"
                     color="primary"
-                    fullWidth
-                    size="large"
-                    sx={{ mt: 2, bgcolor: 'red' }}
                     onClick={handleSubmit}
-                    disabled={isPublicando} // Deshabilitar mientras se publica
+                    disabled={isPublicando}
+                    sx={{ mt: 3 }}
                 >
-                    {isPublicando ? 'Publicando...' : 'PUBLICAR'}
+                    {isPublicando ? "Publicando..." : "Publicar Receta"}
                 </Button>
             </DialogContent>
-
-            {/* Barra de navegación inferior centrada con posición absoluta */}
-            <AppBar position="fixed" sx={{ top: 'auto', bottom: 0, bgcolor: "primary.main" }}>
-                <Toolbar sx={{ justifyContent: 'space-between', px: 2, position: 'relative' }}>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={onClose}
-                        aria-label="back"
-                    >
-                        <ArrowBackIcon />
-                    </IconButton>
-                    <Box
-                        sx={{
-                            position: 'absolute',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                        }}
-                    >
-            <AddCircleIcon sx={{ fontSize: 40, color: 'white' }} />
-                    </Box>
-                    <Box sx={{ width: '48px' }} /> {/* Espaciador invisible para mantener la consistencia */}
-                </Toolbar>
-            </AppBar>
         </Dialog>
     );
 }
