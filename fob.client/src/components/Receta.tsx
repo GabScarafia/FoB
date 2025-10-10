@@ -146,7 +146,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return estrellas;
     };
 
+    const [isProcessingLike, setIsProcessingLike] = useState(false);
+
     const handleLikeClick = async () => {
+        if (isProcessingLike) return; // Evita múltiples clics rápidos
+        setIsProcessingLike(true);
         try {
 
             const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
@@ -180,6 +184,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         } catch (error) {
             console.error("Error de red al dar like/dislike:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
+        } finally {
+            setIsProcessingLike(false);
         }
     };
 
