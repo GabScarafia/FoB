@@ -8,6 +8,7 @@ import Perfil from "../pages/Perfil";
 import PublicacionScrollablePage from '../pages/PublicacionScrollablePage';
 import ComentariosPage from "../pages/Comentarios";
 import { useAuth } from "../context/AuthContext";
+import EditarPerfil from "../pages/EditarPerfil"; 
 
 interface AppRoutesProps {
     onDrawerToggle: (isOpen: boolean) => void;
@@ -49,6 +50,16 @@ export default function AppRoutes({ onDrawerToggle }: AppRoutesProps) {
                 Cualquier intento de acceder a ellas sin estar logueado
                 redirigirá al usuario a la página de inicio de sesión.
             */}
+
+            <Route
+                path="/editar-perfil" 
+                element={
+                    <ProtectedRoute>
+                        <EditarPerfil />
+                    </ProtectedRoute>
+                }
+            />
+
             <Route
                 path="/feed"
                 element={

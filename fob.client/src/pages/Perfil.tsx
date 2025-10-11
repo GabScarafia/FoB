@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import '../styles/Perfil.css';
 import { useAuth } from '../context/AuthContext';
 
@@ -19,8 +19,10 @@ interface RecetaDto {
 
 interface UsuarioPerfilDto {
     id: number;
+    nombre: string | null;
+    apellido: string | null;
+    email: string | null;
     nombreUsuario: string | null;
-    nombreCompleto: string | null;
     biografia: string | null;
     fotoPerfilBase64: string | null;
     cantidadPublicaciones: number;
@@ -39,15 +41,13 @@ const Perfil: React.FC = () => {
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [fetchAttempted, setFetchAttempted] = useState(false);
+    const navigate = useNavigate();
 
     useEffect(() => {
-        // Si todavía no tenemos ni el id del route ni el id del usuario autenticado,
-        // esperamos (esto evita mostrar "no hay datos" mientras auth carga).
         if (id === undefined && currentUserId == null) return;
 
         const perfilId = id ? Number(id) : currentUserId;
 
-        // Si explícitamente no hay perfilId (p.e. usuario no logueado)
         if (!perfilId) {
             setError('Debes iniciar sesión para ver tu perfil.');
             setDatosPerfil(null);
@@ -61,7 +61,6 @@ const Perfil: React.FC = () => {
         let isMounted = true;
 
         const fetchDatosPerfil = async () => {
-            // marcamos que intentamos el fetch y que estamos cargando
             setFetchAttempted(true);
             setCargando(true);
             setError(null);
@@ -75,7 +74,6 @@ const Perfil: React.FC = () => {
                     signal,
                 });
 
-                // Si el componente ya se desmontó, no intentamos setState
                 if (!isMounted) return;
 
                 if (response.status === 401) {
@@ -90,7 +88,6 @@ const Perfil: React.FC = () => {
                 if (!isMounted) return;
                 setDatosPerfil(data);
             } catch (err: any) {
-                // Si la petición fue abortada, retornamos silenciosamente
                 if (err?.name === 'AbortError') return;
 
                 console.error('Error al cargar el perfil:', err);
@@ -130,7 +127,9 @@ const Perfil: React.FC = () => {
     }
 
     const {
-        nombreCompleto,
+        nombre,
+        apellido,
+        nombreUsuario,
         biografia,
         fotoPerfilBase64,
         cantidadPublicaciones,
@@ -139,12 +138,18 @@ const Perfil: React.FC = () => {
         publicaciones
     } = datosPerfil;
 
+    const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
+    
     const tienePublicaciones = publicaciones && publicaciones.length > 0;
     const esPerfilPropio = currentUserId === datosPerfil.id;
 
+    const handleEditarPerfilClick = () => {
+        navigate('/editar-perfil');
+    };
+
+
     const renderGaleria = () => {
         if (!tienePublicaciones) {
-            // Si es el propio perfil, el texto puede ser diferente; acá dejo el original
             return <div className="sin-recetas">Aún no has publicado ninguna receta.</div>;
         }
         return publicaciones.map((receta) => {
@@ -152,7 +157,7 @@ const Perfil: React.FC = () => {
             if (!imagen) return null;
             return (
                 <div key={receta.id} className="galeria-item">
-                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
+                    <Link to={`/receta/${receta.id}`}>
                         <img
                             src={`data:image/jpeg;base64,${imagen}`}
                             alt={receta.titulo ?? `Receta-${receta.id}`}
@@ -188,7 +193,10 @@ const Perfil: React.FC = () => {
                         </span>
                     </div>
                     <div className="perfil-info">
-                        <div className="perfil-nombre-completo">{nombreCompleto}</div>
+                        <div className="perfil-nombre-usuario">@{nombreUsuario}</div>
+                        
+                        <div className="perfil-nombre-completo">{nombreCompletoDisplay}</div>
+                        
                         <div className="perfil-bio">{biografia}</div>
                     </div>
                 </div>
@@ -196,7 +204,7 @@ const Perfil: React.FC = () => {
 
             {esPerfilPropio && (
                 <div className="perfil-botones">
-                    <button className="perfil-boton">Editar perfil</button>
+                    <button className="perfil-boton" onClick={handleEditarPerfilClick}>Editar Perfil</button>
                     <button className="perfil-boton">Compartir perfil</button>
                 </div>
             )}

@@ -1,73 +1,88 @@
-// src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import type { ReactNode } from "react";
 
 interface AuthData {
-  id: number | null | undefined;
-  token: string;
-  expDate: string;
-  nombre: string;
-  email: string;
-  roles: string[];
+  id: number | null | undefined;
+  token: string;
+  expDate: string;
+  nombre: string;
+  email: string;
+  roles: string[];
 }
 
+// Tipos para el contexto
 interface AuthContextType {
-  authData: AuthData | null;
-  login: (authData: AuthData) => void;
-  clearAuthData: () => void;
-  isLoading: boolean; // <-- Nuevo: Indica si la app está cargando el estado
+  authData: AuthData | null;
+  login: (authData: AuthData) => void;
+  updateAuthData: (updates: Partial<AuthData>) => void;
+  clearAuthData: () => void;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 interface AuthProviderProps {
-  children: ReactNode;
+  children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-  const [authData, setAuthData] = useState<AuthData | null>(null);
-  const [isLoading, setIsLoading] = useState(true); // <-- Estado de carga inicial en true
+  const [authData, setAuthData] = useState<AuthData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const authDataString = localStorage.getItem("authData");
-    if (authDataString) {
-      try {
-        const storedAuthData: AuthData = JSON.parse(authDataString);
-        // Aquí podrías agregar la lógica de validación del token si no la tienes
-        setAuthData(storedAuthData);
-      } catch (error) {
-        console.error("Error parsing authData:", error);
-        setAuthData(null);
-      }
-    } else {
-      setAuthData(null);
-    }
-    setIsLoading(false); // <-- Se pone en false cuando termina la carga
-  }, []);
+  // Efecto para cargar los datos de autenticación desde localStorage al inicio
+  useEffect(() => {
+    const authDataString = localStorage.getItem("authData");
+    if (authDataString) {
+      try {
+        const storedAuthData: AuthData = JSON.parse(authDataString);
+        setAuthData(storedAuthData);
+      } catch (error) {
+        console.error("Error parsing authData:", error);
+        setAuthData(null);
+      }
+    } else {
+      setAuthData(null);
+    }
+    setIsLoading(false);
+  }, []);
 
-  const login = (newAuthData: AuthData) => {
-    localStorage.setItem("authData", JSON.stringify(newAuthData));
-    setAuthData(newAuthData);
-  };
+  // Función para iniciar sesión (guardar datos y persistir)
+  const login = (newAuthData: AuthData) => {
+    localStorage.setItem("authData", JSON.stringify(newAuthData));
+    setAuthData(newAuthData);
+  };
 
-  const clearAuthData = () => {
-    localStorage.removeItem("authData");
-    setAuthData(null);
-  };
+  // Función para actualizar parcialmente los datos (ej: nombre, foto)
+  const updateAuthData = (updates: Partial<AuthData>) => {
+    setAuthData(prev => {
+      if (!prev) return null;
+        
+      // Fusiona los datos anteriores con las actualizaciones, manteniendo el token si no se actualiza.
+      const newAuthData = { ...prev, ...updates };
+      localStorage.setItem("authData", JSON.stringify(newAuthData));
+      return newAuthData;
+    });
+  };
 
-  const value = { authData, login, clearAuthData, isLoading }; // <-- Se agrega isLoading aquí
+  // Función para cerrar sesión
+  const clearAuthData = () => {
+    localStorage.removeItem("authData");
+    setAuthData(null);
+  };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = { authData, login, updateAuthData, clearAuthData, isLoading };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth debe usarse dentro de un AuthProvider");
-  }
-  return context;
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth debe usarse dentro de un AuthProvider");
+  }
+  return context;
 };

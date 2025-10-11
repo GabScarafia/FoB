@@ -1,0 +1,199 @@
+.editar-perfil-contenedor {
+    max-width: 600px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.editar-perfil-contenedor h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+    border-bottom: 2px solid #f0f0f0;
+    padding-bottom: 10px;
+}
+
+/* Estilos para la Foto de Perfil  */
+
+.form-foto-perfil {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    position: relative;
+}
+
+.imagen-preview {
+    position: relative;
+    width: 120px;
+    height: 120px;
+}
+
+.foto-perfil-circular {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #1a2a6d;
+}
+
+.boton-cambiar-foto {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    background-color: #182969;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s;
+}
+
+.boton-cambiar-foto:hover {
+    background-color: #2A488C;
+}
+
+.boton-cambiar-foto svg {
+    color: white;
+    font-size: 18px;
+}
+
+/* Estilos del Formulario */
+
+.form-grupo {
+    margin-bottom: 20px;
+}
+
+.form-grupo label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
+}
+
+.form-grupo input[type="text"],
+.form-grupo input[type="email"],
+.form-grupo input[type="password"],
+.form-grupo textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.form-grupo input:focus,
+.form-grupo textarea:focus {
+    border-color: #182969;
+    outline: none;
+}
+
+.form-grupo textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+
+
+/* Estilo para el contenedor de botones de acción */
+.form-botones-accion {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
+}
+
+
+/* Botón Guardar */
+.boton-guardar {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background-color: #1d3b98;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s, opacity 0.3s;
+}
+
+.boton-guardar:hover:not(:disabled) {
+    background-color: #182969;
+}
+
+.boton-guardar:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+
+.boton-volver-inline {
+    background-color: transparent;
+    color: #333;
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.boton-volver-inline:hover:not(:disabled) {
+    background-color: #e9e9e9;
+}
+
+/* Mensajes de Estado y Carga */
+
+/* Mensaje de Éxito */
+.mensaje-exito {
+    background-color: #e6ffed;
+    color: #1a7a2a;
+    border: 1px solid #7bc67b;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(0, 128, 0, 0.1);
+}
+
+/* Mensaje de Error */
+.mensaje-error {
+    background-color: #fceceb;
+    color: #c93737;
+    border: 1px solid #d99a9a;
+    padding: 12px 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    text-align: center;
+    font-weight: 600;
+    box-shadow: 0 2px 4px rgba(204, 0, 0, 0.1);
+}
+
+
+
+.cargando-perfil {
+    text-align: center;
+    padding: 50px;
+    font-size: 18px;
+    color: #888;
+}
+
+
+
+
+
+

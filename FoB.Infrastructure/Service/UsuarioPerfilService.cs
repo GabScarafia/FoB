@@ -27,8 +27,10 @@ namespace FoB.Infrastructure.Services
             var perfilDto = new UsuarioPerfilDto
             {
                 Id = usuario.Id,
+                Nombre = usuario.Nombre,
+                Apellido = usuario.Apellido,
+                Email = usuario.Email,
                 NombreUsuario = usuario.NombreUsuario,
-                NombreCompleto = $"{usuario.Nombre} {usuario.Apellido}",
                 Biografia = usuario.Biografia,
                 // Lógica para la imagen como Base64
                 FotoPerfilBase64 = usuario.UsuarioImagen?.FirstOrDefault()?.Imagen != null
