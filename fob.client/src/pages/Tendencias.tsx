@@ -186,7 +186,7 @@ const Tendencias = () => {
                                 ...recetaSeleccionada,
                                 noMeGusta: recetaSeleccionada.noMeGusta ?? false,
                                 esFavorito: recetaSeleccionada.esFavorito ?? false,
-                                seguido: recetaSeleccionada.autor?.isFollowing ?? false,
+                                seguido: recetaSeleccionada.seguido ?? false,
                             }}
                             onDrawerToggle={() => {}} // No cerrar el diálogo
                             currentUserId={authData?.id ?? null}

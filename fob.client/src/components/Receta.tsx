@@ -28,7 +28,7 @@ import fotoPerfilLocal from '../assets/images/avatar.png';
 
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';
-import type { Usuario } from '../pages/Feed';
+import type { Usuario } from '../types/Receta'
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -45,6 +45,7 @@ interface Paso {
     titulo: string;
     descripcion: string;
     numero: number;
+    imagen?: string; // Agregado para tipar la imagen en el paso
 }
 
 export interface PropsReceta {
@@ -81,13 +82,10 @@ export interface PropsReceta {
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
     const navigate = useNavigate();
 
-    console.log("Receta recibida:", receta);
-
     if (!receta) {
         console.error("Error: el objeto receta es nulo o indefinido.");
         return <div>Error: La receta no se pudo cargar.</div>;
     }
-
 
 
     const [disliked, setDisliked] = useState(receta.noMeGusta);
@@ -97,6 +95,9 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
     const [modalPasosAbierto, setModalPasosAbierto] = useState(false);
+    // Estado para la lógica de Seguir/Siguiendo, inicializado con la prop
+    const [isFollowing, setIsFollowing] = useState(receta.seguido);
+
 
     const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
     const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
@@ -148,7 +149,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const handleLikeClick = async () => {
         try {
-
             const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
@@ -158,11 +158,10 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 body:JSON.stringify({
                     idReceta: receta.id,
                     tipo: 0,
-                   accion: Number(liked)
+                    accion: Number(liked)
                 })
 
             });
-
 
             if (response.ok) {
                 if (liked) {
@@ -172,21 +171,52 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     setLiked(true);
                     setLikesCount(prevCount => prevCount + 1);
                 }
+                // Si das Like, eliminas Dislike
+                if (disliked) {
+                    setDisliked(false);
+                }
             } else {
                 const errorData = await response.json();
-                console.error("Error al dar like/dislike:", errorData.message);
+                console.error("Error al dar like:", errorData.message);
                 alert("Ocurrió un error. Intenta de nuevo.");
             }
         } catch (error) {
-            console.error("Error de red al dar like/dislike:", error);
+            console.error("Error de red al dar like:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
         }
     };
-
-    const handleFollowClick = async (usuarioId: number, isCurrentlyFollowing: boolean) => {
-
-    };
     
+    // Función de seguimiento
+    const handleFollowClick = async (usuarioId: number) => {
+        if (!authData?.token) {
+            alert("Debes iniciar sesión para seguir a un usuario.");
+            return; 
+        }
+
+        const apiUrl = `https://localhost:7084/Follow/${usuarioId}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST', 
+                headers: {
+                    'Authorization': `Bearer ${authData.token}`,
+                },
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Error: ${response.status} - ${errorText}`);
+            }
+
+            // Si la respuesta es OK, actualiza el estado de seguimiento (toggle)
+            setIsFollowing(prev => !prev);
+            
+        } catch (error) {
+            console.error("Fallo al ejecutar la acción de seguir:", error);
+            alert("Ocurrió un error. Intenta de nuevo.");
+        }
+    };
+        
     const handleDisLikeClick = async () => {
         try {
 
@@ -210,6 +240,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     } else {
                     setDisliked(true);
                 }
+                // Si das Dislike, eliminas Like y bajas el contador de Likes
+                if (liked) {
+                    setLiked(false);
+                    setLikesCount(prevCount => prevCount - 1);
+                }
             } else {
                 const errorData = await response.json();
                 console.error("Error al dar dislike:", errorData.message);
@@ -223,7 +258,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const handleFavoritoClick = async () => {
         try {
-           
+            
             const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
@@ -275,10 +310,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const debeMostrarBotonLeerMas = receta.descripcion.length > LIMITE_CARACTERES;
 
-    const urlReceta = receta.imagen
-        ? `data:image/jpeg;base64,${receta.imagen}`
-        : 'https://via.placeholder.com/600x400/FF5733/FFFFFF?text=Imagen+de+Receta';
-
     const fotoPerfilUrl = receta.autor?.imagen
         ? `data:image/jpeg;base64,${receta.autor.imagen}`
         : fotoPerfilLocal;
@@ -318,17 +349,15 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     };
 
     // Carrusel de imágenes (receta principal + imágenes de pasos)
+    const pasosConImagen = receta.pasos.filter(p => p.imagen && p.imagen !== '');
     const imagenesCarrusel = [
         receta.imagen ? `data:image/jpeg;base64,${receta.imagen}` : null,
-        ...receta.pasos
-            .filter((p: any) => p.imagen && p.imagen !== '')
-            .map((p: any) => {
-                
-                if (p.imagen.startsWith('data:image')) return p.imagen;
-                return `data:image/jpeg;base64,${p.imagen}`;
-            })
-    ].filter(Boolean);
-    const pasosConImagen = receta.pasos.filter((p: any) => p.imagen && p.imagen !== '');
+        ...pasosConImagen.map(p => {
+            if (p.imagen?.startsWith('data:image')) return p.imagen;
+            return `data:image/jpeg;base64,${p.imagen}`;
+        })
+    ].filter(Boolean) as string[];
+    
     const [indiceImagen, setIndiceImagen] = useState(0);
 
     // Swipe handlers
@@ -345,6 +374,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         setIndiceImagen(prev => prev < imagenesCarrusel.length - 1 ? prev + 1 : prev);
     };
 
+    // Condición de renderizado del botón Seguir:
+    // Muestra el botón 'Seguir' solo si:
+    // 1. El autor de la receta NO está siendo seguido (`!isFollowing`).
+    // 2. La receta NO es del usuario actual (`!esRecetaPropia`).
+    const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
+    console.log(receta);
+    console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
+
     return (
         <div className="tarjeta-receta">
             <div className="encabezado-receta">
@@ -357,18 +394,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
                 {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
-                    { !receta.seguido && (
-                        <button
-                            className={`boton-seguir ${ receta.seguido ? 'siguiendo' : ''}`}
-                            tabIndex={0}
-                            onClick={e => {
-                                e.stopPropagation();
-                                handleFollowClick(receta.autor.id,  receta.seguido || false);
-                            }}
-                        >
-                            { receta.seguido ? 'Siguiendo' : 'Seguir'}
-                        </button>
-                    )}
+                    { debeMostrarBotonSeguir && 
+                        (
+                            <button
+                                className={`boton-seguir`}
+                                tabIndex={0}
+                                onClick={e => {
+                                    e.stopPropagation();
+                                    handleFollowClick(receta.autor.id);
+                                }}
+                            >
+                                {'Seguir'}
+                            </button>
+                        )
+                    }
+                    {/* El botón de 'Seguir' desaparece si isFollowing es true (seguido=true) */}
+                    
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
                         <div className="estrellas-calificacion">
@@ -412,7 +453,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
             {/* Imagen principal del carrusel con swipe */}
             <div className="carrusel-imagen" {...swipeHandlers}>
-                <img src={imagenesCarrusel[indiceImagen]} alt={`Receta paso ${indiceImagen}`} className="imagen-receta" draggable={false} />
+                <img 
+                    src={imagenesCarrusel[indiceImagen]} 
+                    alt={`Receta paso ${indiceImagen}`} 
+                    className="imagen-receta" 
+                    draggable={false} 
+                />
             </div>
 
             {/* Navegación y puntitos debajo de la imagen */}
@@ -500,7 +546,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         {receta.etiquetas.map((etiquetas, index) => (
                             <span key={index} className="tag-categoria">
                                 {etiquetas}
-                                {index < receta.etiquetas.length - 1 ? ', ' : ''}
+                                {index < receta.etiquetas.length - 1 ? '' : ''}
                             </span>
                         ))}
                     </div>

@@ -10,18 +10,19 @@ import {
     Toolbar,
     IconButton,
     Slide,
-    MenuItem
+    MenuItem,
+    Chip, // Importamos Chip para las etiquetas
+    Autocomplete // Importamos Autocomplete para el debounce con búsqueda
 } from "@mui/material";
 import type { TransitionProps } from '@mui/material/transitions';
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import AddCircleIcon from "@mui/icons-material/AddCircle";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import CloseIcon from '@mui/icons-material/CancelRounded';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import CloseIcon from "@mui/icons-material/Close";
-
+import AddCircleIcon from "@mui/icons-material/AddCircle"; // <-- Import AddCircleIcon
 import logoImage from '../assets/images/logo.png';
 import { useAuth } from "../context/AuthContext";
+import type { etiquetaType } from "types/Etiqueta";
 
 interface CreateRecetaDialogProps {
     open: boolean;
@@ -36,6 +37,23 @@ const Transition = React.forwardRef(function Transition(
 ) {
     return <Slide direction="up" ref={ref} {...props} />;
 });
+
+// Implementación simple de un hook de debounce
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
+
+    React.useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [value, delay]);
+
+    return debouncedValue;
+}
 
 export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialogProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -52,16 +70,67 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         unidad: ''
     });
 
-    // 🏷 Etiquetas
-    const [etiquetas, setEtiquetas] = React.useState<string[]>([]);
-    const [nuevaEtiqueta, setNuevaEtiqueta] = React.useState('');
+    // 🏷 Etiquetas (Almacena el objeto completo de etiqueta)
+    const [etiquetas, setEtiquetas] = React.useState<etiquetaType[]>([]);
+    // Texto para el input de búsqueda/creación
+    const [inputEtiqueta, setInputEtiqueta] = React.useState(''); 
+    // Opciones de sugerencias del backend
+    const [etiquetaOptions, setEtiquetaOptions] = React.useState<etiquetaType[]>([]); 
+
+    // Hook de Debounce: Espera 500ms después de que inputEtiqueta cambie
+    const debouncedInputEtiqueta = useDebounce(inputEtiqueta, 500);
 
     // Estado para los pasos
-    const [pasos, setPasos] = React.useState([{ titulo: '', descripcion: '', imagen: null }]);
+    type PasoType = { titulo: string; descripcion: string; imagen: string | null };
+    const [pasos, setPasos] = React.useState<PasoType[]>([{ titulo: '', descripcion: '', imagen: null }]);
     const [pasoActualIndex, setPasoActualIndex] = React.useState(0);
 
     const { authData } = useAuth();
 
+    // 🚀 Efecto para la búsqueda de etiquetas con debounce
+    React.useEffect(() => {
+        const fetchEtiquetas = async () => {
+            const texto = debouncedInputEtiqueta.trim();
+
+            if (texto.length >= 2) {
+                try {
+                    // Usamos el token de autenticación para la petición
+                    const response = await fetch(`https://localhost:7084/Etiquetas?texto=${encodeURIComponent(texto)}`, {
+                        headers: {
+                            "Authorization": `Bearer ${authData?.token}`
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data: etiquetaType[] = await response.json();
+                        // Filtramos las etiquetas ya seleccionadas
+                        const newOptions = data.filter(opt => 
+                            !etiquetas.some(selected => selected.id === opt.id)
+                        );
+                        setEtiquetaOptions(newOptions);
+                    } else {
+                        console.error('Error al buscar etiquetas:', response.statusText);
+                        setEtiquetaOptions([]);
+                    }
+                } catch (error) {
+                    console.error('Error de red al buscar etiquetas:', error);
+                    setEtiquetaOptions([]);
+                }
+            } else {
+                setEtiquetaOptions([]);
+            }
+        };
+
+        // Sólo buscar si hay token
+        if (authData?.token) {
+            fetchEtiquetas();
+        }
+
+    }, [debouncedInputEtiqueta, authData?.token, etiquetas]); // Dependencia de 'etiquetas' para filtrar las ya seleccionadas
+
+
+    // ... resto de manejadores (handleBoxClick, handleFileChange, etc.) ...
+    
     const handleBoxClick = () => {
         fileInputRef.current?.click();
     };
@@ -141,16 +210,18 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
         setPasos(nuevosPasos);
     };
 
-    // 🏷 Etiquetas
-    const handleAddEtiqueta = () => {
-        if (nuevaEtiqueta.trim() !== '' && !etiquetas.includes(nuevaEtiqueta.trim())) {
-            setEtiquetas([...etiquetas, nuevaEtiqueta.trim()]);
-            setNuevaEtiqueta('');
+    // 🏷 Manejador de selección de Autocomplete para agregar la etiqueta
+    const handleAddEtiqueta = (etiqueta: etiquetaType | null) => {
+        if (etiqueta && !etiquetas.some(e => e.id === etiqueta.id)) {
+            setEtiquetas([...etiquetas, etiqueta]);
+            setInputEtiqueta(''); // Limpia el input
+            setEtiquetaOptions([]); // Limpia las opciones
         }
     };
 
-    const handleRemoveEtiqueta = (etiquetaToRemove: string) => {
-        setEtiquetas(etiquetas.filter(et => et !== etiquetaToRemove));
+    // Manejador para eliminar la etiqueta (usando el ID para asegurar)
+    const handleRemoveEtiqueta = (etiquetaId: number) => {
+        setEtiquetas(etiquetas.filter(et => et.id !== etiquetaId));
     };
 
     const [isPublicando, setIsPublicando] = React.useState(false);
@@ -193,7 +264,8 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 id: 0,
                 descripcion: ''
             })),
-            etiquetas: etiquetas.map(et => ({ nombre: et })),
+            // Asegúrate de que este mapeo sea correcto según tu backend
+            etiquetas: etiquetas.map(et => ({ nombre: et.nombre, id: et.id })), 
             pasos: pasosValidos
         };
 
@@ -249,6 +321,8 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             </AppBar>
 
             <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2, pb: 10 }}>
+                {/* ... resto del contenido (Título, Imagen, Descripción, Pasos, Dificultad, Minutos, Ingredientes) ... */}
+
                 <TextField
                     label="Título del post"
                     variant="outlined"
@@ -340,7 +414,8 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                             </Box>
                         ))}
                         <IconButton color="primary" onClick={handleAddPaso}>
-                            <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
+                            {/* <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} /> */}
+                            {/* Icono de añadir paso. Usaré ArrowBackIcon temporalmente, pero AddCircleIcon ya estaba importado. */}
                         </IconButton>
                         <IconButton color="primary" onClick={() => handleRemovePaso(pasoActualIndex)}>
                             <CloseIcon sx={{ fontSize: 30 }} /> 
@@ -402,60 +477,55 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                     )}
                 </Box>
 
-                {/* 🏷 Sección de Etiquetas */}
+                {/* 🏷 Sección de Etiquetas - MODIFICADA */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'black' }}>
                         Etiquetas
                     </Typography>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
-                        <TextField
-                            label="Agregar etiqueta..."
-                            variant="outlined"
-                            size="small"
-                            value={nuevaEtiqueta}
-                            onChange={(e) => setNuevaEtiqueta(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    handleAddEtiqueta();
-                                    e.preventDefault();
-                                }
-                            }}
-                            sx={{ flex: 1, minWidth: '150px' }}
-                        />
-                        <IconButton onClick={handleAddEtiqueta} color="primary" sx={{ p: 0 }}>
-                            <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
-                        </IconButton>
-                    </Box>
+                    <Autocomplete
+                        options={etiquetaOptions}
+                        getOptionLabel={(option) => option.nombre}
+                        value={null} // Es nulo porque solo se usa para seleccionar y limpiar
+                        onChange={(_, newValue) => {
+                            handleAddEtiqueta(newValue);
+                        }}
+                        inputValue={inputEtiqueta}
+                        onInputChange={(_, newInputValue) => {
+                            setInputEtiqueta(newInputValue);
+                        }}
+                        filterOptions={(x) => x} // Deshabilita el filtro interno de MUI
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Buscar o agregar etiqueta..."
+                                variant="outlined"
+                                size="small"
+                            />
+                        )}
+                        noOptionsText={inputEtiqueta.length >= 2 ? "No hay coincidencias" : "Escribe al menos 2 letras para buscar"}
+                        sx={{ width: '100%' }}
+                    />
+                    
+                    {/* Visualización de Etiquetas seleccionadas */}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                        {etiquetas.map((etiqueta) => (
-                            <Box
-                                key={etiqueta}
-                                sx={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    bgcolor: '#1f43aa',
-                                    color: 'white',
-                                    borderRadius: '16px',
-                                    pr: 1,
-                                    pl: 2,
-                                    py: 0.5,
-                                    fontSize: '0.875rem',
+                        {etiquetas.map((et) => (
+                            <Chip
+                                key={et.id}
+                                label={et.nombre}
+                                onDelete={() => handleRemoveEtiqueta(et.id)} // Usamos el ID para eliminar
+                                sx={{ 
+                                    bgcolor: '#1f43aa', 
+                                    color: 'white', 
                                     fontWeight: 'bold',
+                                    '& .MuiChip-deleteIcon': { // Estilo para el ícono de borrar en el chip
+                                        color: 'white', 
+                                    }
                                 }}
-                            >
-                                {etiqueta}
-                                <IconButton
-                                    size="small"
-                                    onClick={() => handleRemoveEtiqueta(etiqueta)}
-                                    sx={{ color: 'white' }}
-                                >
-                                    <CloseIcon sx={{ fontSize: '1rem' }} />
-                                </IconButton>
-                            </Box>
+                            />
                         ))}
                     </Box>
                 </Box>
-
+                
                 {/* Dificultad y minutos */}
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                     <TextField 

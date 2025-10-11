@@ -30,6 +30,7 @@ public static class ServiceExtensions
         services.AddTransient<IAuthenticationService, AuthenticationService>();
         services.AddTransient<IRegisterService, RegisterService>();
         services.AddTransient<IUserRepository, UserRepository>();
+        services.AddTransient<IEtiquetasService, EtiquetasRepository>();
         services.AddTransient<IRecetaRepository, RecetaRepository>();
     }
 }
