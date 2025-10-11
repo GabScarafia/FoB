@@ -4,7 +4,7 @@
    "ContextNamespace": "Context",
    "FilterSchemas": false,
    "IncludeConnectionString": false,
-   "MinimumProductVersion": "2.6.1080",
+   "MinimumProductVersion": "2.6.1093",
    "ModelNamespace": null,
    "OutputContextPath": "Context",
    "OutputPath": "Models",
@@ -16,15 +16,15 @@
    "T4TemplatePath": null,
    "Tables": [
       {
-         "Name": "categoria",
-         "ObjectType": 0
-      },
-      {
          "Name": "comentario",
          "ObjectType": 0
       },
       {
          "Name": "desafio",
+         "ObjectType": 0
+      },
+      {
+         "Name": "etiquetas",
          "ObjectType": 0
       },
       {
@@ -60,7 +60,7 @@
          "ObjectType": 0
       },
       {
-         "Name": "receta_categoria",
+         "Name": "receta_etiquetas",
          "ObjectType": 0
       },
       {

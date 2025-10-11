@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace FoB.Infrastructure.Models;
 
-public partial class Categoria
+public partial class Etiquetas
 {
     public int Id { get; set; }
 
@@ -13,5 +13,5 @@ public partial class Categoria
 
     public string Nombre { get; set; }
 
-    public virtual ICollection<RecetaCategoria> RecetaCategoria { get; set; } = new List<RecetaCategoria>();
+    public virtual ICollection<RecetaEtiquetas> RecetaEtiquetas { get; set; } = new List<RecetaEtiquetas>();
 }

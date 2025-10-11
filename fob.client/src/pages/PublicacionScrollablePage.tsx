@@ -40,7 +40,7 @@ interface RecetaCompleta extends RecetaDto {
     isSavedInitially?: boolean;
     tiempoPreparacion: string;
     ingredientes: any[];
-    categorias: string[];
+    etiquetas: string[];
     pasos: any[];
 }
 

@@ -244,7 +244,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 )}
 
                 {recetasFiltradas.map(receta => {
-                    const categoriasFormateadas = (receta.categorias || []).map(cat => {
+                    const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
                         if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
                             return cat.nombre;
                         }
@@ -256,7 +256,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             key={receta.id}
                             receta={{
                                 ...receta,
-                                categorias: categoriasFormateadas
+                                etiquetas: etiquetasFormateadas
                             }}
                             onDrawerToggle={onDrawerToggle}
                             currentUserId={currentUserId ?? null}

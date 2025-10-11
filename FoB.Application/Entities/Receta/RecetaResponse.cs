@@ -33,7 +33,7 @@ public class RecetaResponse
 
     public virtual List<IngredienteResponse> Ingredientes { get; set; } = new List<IngredienteResponse>();
 
-    public virtual List<string> Categorias { get; set; } = new List<string>();
+    public virtual List<string> Etiquetas { get; set; } = new List<string>();
 
     //public virtual List<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 

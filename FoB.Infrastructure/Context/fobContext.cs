@@ -14,11 +14,11 @@ public partial class fobContext : DbContext
     {
     }
 
-    public virtual DbSet<Categoria> Categoria { get; set; }
-
     public virtual DbSet<Comentario> Comentario { get; set; }
 
     public virtual DbSet<Desafio> Desafio { get; set; }
+
+    public virtual DbSet<Etiquetas> Etiquetas { get; set; }
 
     public virtual DbSet<Ingrediente> Ingrediente { get; set; }
 
@@ -36,7 +36,7 @@ public partial class fobContext : DbContext
 
     public virtual DbSet<Receta> Receta { get; set; }
 
-    public virtual DbSet<RecetaCategoria> RecetaCategoria { get; set; }
+    public virtual DbSet<RecetaEtiquetas> RecetaEtiquetas { get; set; }
 
     public virtual DbSet<RecetaImagen> RecetaImagen { get; set; }
 
@@ -57,21 +57,6 @@ public partial class fobContext : DbContext
         modelBuilder
             .UseCollation("utf8mb4_0900_ai_ci")
             .HasCharSet("utf8mb4");
-
-        modelBuilder.Entity<Categoria>(entity =>
-        {
-            entity.HasKey(e => e.Id).HasName("PRIMARY");
-
-            entity.ToTable("categoria");
-
-            entity.HasIndex(e => e.Nombre, "nombre").IsUnique();
-
-            entity.Property(e => e.Id).HasColumnName("id");
-            entity.Property(e => e.Descripcion)
-                .HasMaxLength(255)
-                .HasColumnName("descripcion");
-            entity.Property(e => e.Nombre).HasColumnName("nombre");
-        });
 
         modelBuilder.Entity<Comentario>(entity =>
         {
@@ -134,6 +119,21 @@ public partial class fobContext : DbContext
             entity.Property(e => e.Nombre)
                 .HasMaxLength(255)
                 .HasColumnName("nombre");
+        });
+
+        modelBuilder.Entity<Etiquetas>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("etiquetas");
+
+            entity.HasIndex(e => e.Nombre, "nombre").IsUnique();
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(255)
+                .HasColumnName("descripcion");
+            entity.Property(e => e.Nombre).HasColumnName("nombre");
         });
 
         modelBuilder.Entity<Ingrediente>(entity =>
@@ -369,26 +369,26 @@ public partial class fobContext : DbContext
                 .HasConstraintName("receta_ibfk_1");
         });
 
-        modelBuilder.Entity<RecetaCategoria>(entity =>
+        modelBuilder.Entity<RecetaEtiquetas>(entity =>
         {
-            entity.HasKey(e => new { e.RecetaId, e.CategoriaId })
+            entity.HasKey(e => new { e.RecetaId, e.EtiquetasId })
                 .HasName("PRIMARY")
                 .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
 
-            entity.ToTable("receta_categoria");
+            entity.ToTable("receta_etiquetas");
 
-            entity.HasIndex(e => e.CategoriaId, "categoria_id");
+            entity.HasIndex(e => e.EtiquetasId, "categoria_id");
 
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
-            entity.Property(e => e.CategoriaId).HasColumnName("categoria_id");
+            entity.Property(e => e.EtiquetasId).HasColumnName("etiquetas_id");
 
-            entity.HasOne(d => d.Categoria).WithMany(p => p.RecetaCategoria)
-                .HasForeignKey(d => d.CategoriaId)
-                .HasConstraintName("receta_categoria_ibfk_2");
+            entity.HasOne(d => d.Etiquetas).WithMany(p => p.RecetaEtiquetas)
+                .HasForeignKey(d => d.EtiquetasId)
+                .HasConstraintName("receta_etiquetas_ibfk_2");
 
-            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaCategoria)
+            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaEtiquetas)
                 .HasForeignKey(d => d.RecetaId)
-                .HasConstraintName("receta_categoria_ibfk_1");
+                .HasConstraintName("receta_etiquetas_ibfk_1");
         });
 
         modelBuilder.Entity<RecetaImagen>(entity =>

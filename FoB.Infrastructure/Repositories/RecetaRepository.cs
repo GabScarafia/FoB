@@ -31,7 +31,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             FechaCreacion = DateTime.Now,
             RecetaImagen = new List<RecetaImagen>(),
             IngredienteReceta = new List<IngredienteReceta>(),
-            RecetaCategoria = new List<RecetaCategoria>(),
+            RecetaEtiquetas = new List<RecetaEtiquetas>(),
             Paso = new List<Paso>()
         };
 
@@ -61,17 +61,17 @@ internal sealed class RecetaRepository : IRecetaRepository
         }
 
         // Lógica para procesar categorías
-        if (receta.Categorias != null && receta.Categorias.Count > 0)
+        if (receta.Etiquetas != null && receta.Etiquetas.Count > 0)
         {
-            foreach (var item in receta.Categorias)
+            foreach (var item in receta.Etiquetas)
             {
-                var categoria = await CategoriaCreateIfNotExist(item);
-                RecetaCategoria categoriaReceta = new()
+                var Etiquetas = await EtiquetasCreateIfNotExist(item);
+                RecetaEtiquetas EtiquetasReceta = new()
                 {
-                    Categoria = categoria,
+                    Etiquetas = Etiquetas,
                     Receta = nuevaReceta
                 };
-                nuevaReceta.RecetaCategoria.Add(categoriaReceta);
+                nuevaReceta.RecetaEtiquetas.Add(EtiquetasReceta);
             }
         }
 
@@ -121,17 +121,17 @@ internal sealed class RecetaRepository : IRecetaRepository
             return ig;
         }    
     }
-    private async Task<Categoria> CategoriaCreateIfNotExist(CategoriaRequest categoriaRequest)
+    private async Task<Etiquetas> EtiquetasCreateIfNotExist(EtiquetaRequest EtiquetasRequest)
     {
-        var categoria = await _context.Set<Categoria>().FirstOrDefaultAsync(x => x.Id == categoriaRequest.Id || x.Nombre == categoriaRequest.Nombre);
-        if (categoria != null)
-            return categoria;
+        var Etiquetas = await _context.Set<Etiquetas>().FirstOrDefaultAsync(x => x.Id == EtiquetasRequest.Id || x.Nombre == EtiquetasRequest.Nombre);
+        if (Etiquetas != null)
+            return Etiquetas;
         else
         {
-            categoria = new Categoria() { Nombre = categoriaRequest.Nombre, Descripcion = categoriaRequest.Descripcion };
-            await _context.Set<Categoria>().AddAsync(categoria);
+            Etiquetas = new Etiquetas() { Nombre = EtiquetasRequest.Nombre, Descripcion = EtiquetasRequest.Descripcion };
+            await _context.Set<Etiquetas>().AddAsync(Etiquetas);
             await _context.SaveChangesAsync();
-            return categoria;
+            return Etiquetas;
         }
     }
 
@@ -146,8 +146,8 @@ internal sealed class RecetaRepository : IRecetaRepository
             .Include(x => x.Comentario)
             .Include(x => x.IngredienteReceta)
                 .ThenInclude(x => x.Ingrediente)
-            .Include(x => x.RecetaCategoria)
-                .ThenInclude(x => x.Categoria)
+            .Include(x => x.RecetaEtiquetas)
+                .ThenInclude(x => x.Etiquetas)
             .Where(x => x.Activa == true  && x.UsuarioId != _currentUser.User.Id);
 
         // Sort by creation date (desc) and then by average rating (desc)
@@ -189,7 +189,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Cantidad = i.Cantidad,
                 UnidadDeMedida = i.UnidadDeMedida
             }).ToList(),
-            Categorias = x.RecetaCategoria.Select(c => c.Categoria.Nombre).ToList(),
+            Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
             {
                 Numero = p.Numero,
@@ -242,8 +242,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                              .ThenInclude(x => x.Usuario)
                         .Include(x => x.IngredienteReceta)
                              .ThenInclude(x => x.Ingrediente)
-                        .Include(x => x.RecetaCategoria)
-                             .ThenInclude(x => x.Categoria)
+                        .Include(x => x.RecetaEtiquetas)
+                             .ThenInclude(x => x.Etiquetas)
                         .Include(x => x.Paso)
                         .Where(x => x.Activa == true && followedUserIds.Contains(x.UsuarioId));
 
@@ -302,7 +302,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Cantidad = i.Cantidad,
                 UnidadDeMedida = i.UnidadDeMedida
             }).ToList(),
-            Categorias = x.RecetaCategoria.Select(c => c.Categoria.Nombre).ToList(),
+            Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
             {
                 Numero = p.Numero,
@@ -414,7 +414,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             .Include(r => r.RecetaImagen)
             .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
             .Include(r => r.Paso)
-            .Include(r => r.RecetaCategoria).ThenInclude(rc => rc.Categoria)
+            .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
             .Include(r => r.Voto)
             .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
             .FirstOrDefaultAsync(r => r.Id == idReceta);
@@ -459,7 +459,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                     ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
                     : null
             }).ToList() ?? new List<PasoResponse>(),
-            Categorias = receta.RecetaCategoria?.Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
+            Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
             CantidadVotos = receta.Voto.Count,
             // Utiliza el ID del usuario para verificar si le gusta la receta
             MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),

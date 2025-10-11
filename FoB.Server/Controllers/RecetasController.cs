@@ -114,7 +114,7 @@ public class RecetasController : ControllerBase
                 .Include(r => r.RecetaImagen)
                 .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
                 .Include(r => r.Paso)
-                .Include(r => r.RecetaCategoria).ThenInclude(rc => rc.Categoria)
+                .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
                 .Include(r => r.Voto)
                 .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
                 .ToListAsync();
@@ -161,8 +161,8 @@ public class RecetasController : ControllerBase
                             Titulo = p.Titulo,
                             Descripcion = p.Descripcion
                         }).ToList() ?? new List<PasoResponse>(),
-                    Categorias = receta.RecetaCategoria?
-                        .Select(rc => rc.Categoria.Nombre).ToList() ?? new List<string>(),
+                    Etiquetas = receta.RecetaEtiquetas?
+                        .Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
                     CantidadVotos = receta.Voto.Count,
                     MeGusta = receta.Voto.Any(v => v.UsuarioId == idUsuario),
                     CantidadComentarios = receta.Comentario.Count,

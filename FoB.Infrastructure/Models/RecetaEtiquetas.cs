@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace FoB.Infrastructure.Models;
 
-public partial class RecetaCategoria
+public partial class RecetaEtiquetas
 {
     public int RecetaId { get; set; }
 
-    public int CategoriaId { get; set; }
+    public int EtiquetasId { get; set; }
 
-    public virtual Categoria Categoria { get; set; }
+    public virtual Etiquetas Etiquetas { get; set; }
 
     public virtual Receta Receta { get; set; }
 }
