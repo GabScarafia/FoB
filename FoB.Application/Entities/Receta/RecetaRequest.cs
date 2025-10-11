@@ -12,7 +12,7 @@ public class RecetaRequest
     public int? TiempoPreparacion { get; set; }
 
     public List<IngredienteRecetaRequest> Ingredientes { get; set; }
-    public List<CategoriaRequest> Categorias { get; set; }
+    public List<EtiquetaRequest> Etiquetas { get; set; }
     public List<PasoRequest> Pasos { get; set; }
 
 }
@@ -38,7 +38,7 @@ public class IngredienteRecetaRequest
 
 }
 
-public class CategoriaRequest
+public class EtiquetaRequest
 {
     public int? Id { get; set; }
     public string Nombre { get; set; }

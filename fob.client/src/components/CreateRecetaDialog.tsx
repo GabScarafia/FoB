@@ -193,7 +193,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 id: 0,
                 descripcion: ''
             })),
-            categorias: etiquetas.map(et => ({ nombre: et })),
+            etiquetas: etiquetas.map(et => ({ nombre: et })),
             pasos: pasosValidos
         };
 

@@ -29,6 +29,6 @@ export interface RecetaType {
   vistaPreviaComentarios?: Comentario[];
   tiempoPreparacion: string;
   ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
-  categorias: Array<any>;
+  etiquetas: Array<any>;
   pasos: Array<any>;
 }

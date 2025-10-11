@@ -67,7 +67,7 @@ export interface PropsReceta {
         isSavedInitially?: boolean;
         tiempoPreparacion: string;
         ingredientes: Ingrediente[];
-        categorias: string[];
+        etiquetas: string[];
         pasos: Paso[];
     };
     onDrawerToggle: (open: boolean) => void;
@@ -146,11 +146,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return estrellas;
     };
 
-    const [isProcessingLike, setIsProcessingLike] = useState(false);
-
     const handleLikeClick = async () => {
-        if (isProcessingLike) return; // Evita múltiples clics rápidos
-        setIsProcessingLike(true);
         try {
 
             const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
@@ -184,18 +180,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         } catch (error) {
             console.error("Error de red al dar like/dislike:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
-        } finally {
-            setIsProcessingLike(false);
         }
     };
 
     const handleFollowClick = async (usuarioId: number, isCurrentlyFollowing: boolean) => {
-        // await onFollow(usuarioId, isCurrentlyFollowing);
-        // setUsuariosLocal(prevUsuarios =>
-        //     prevUsuarios.map(u =>
-        //         u.id === usuarioId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
-        //     )
-        // );
+
     };
     
     const handleDisLikeClick = async () => {
@@ -368,19 +357,18 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
                 {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
-                    {!esRecetaPropia && (
+                    { !receta.seguido && (
                         <button
-                            className={`boton-seguir ${receta.seguido ? 'siguiendo' : ''}`}
+                            className={`boton-seguir ${ receta.seguido ? 'siguiendo' : ''}`}
                             tabIndex={0}
                             onClick={e => {
                                 e.stopPropagation();
-                                handleFollowClick(receta.autor.id, receta.seguido || false);
+                                handleFollowClick(receta.autor.id,  receta.seguido || false);
                             }}
                         >
-                            {receta.seguido ? 'Siguiendo' : 'Seguir'}
+                            { receta.seguido ? 'Siguiendo' : 'Seguir'}
                         </button>
                     )}
-
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
                         <div className="estrellas-calificacion">
@@ -506,18 +494,24 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         ))}
                     </div>
                 )}
-                {receta.categorias && receta.categorias.length > 0 && (
-                    <div className="categorias-receta">
-                        <strong>Categoría:</strong>
-                        {receta.categorias.map((categoria, index) => (
+                {receta.etiquetas && receta.etiquetas.length > 0 && (
+                    <div className="etiquetas-receta">
+                        <strong>Etiquetas:</strong>
+                        {receta.etiquetas.map((etiquetas, index) => (
                             <span key={index} className="tag-categoria">
-                                {categoria}
-                                {index < receta.categorias.length - 1 ? ', ' : ''}
+                                {etiquetas}
+                                {index < receta.etiquetas.length - 1 ? ', ' : ''}
                             </span>
                         ))}
                     </div>
                 )}
- 
+                {receta.pasos && receta.pasos.length > 0 && (
+                    <div className="pasos-receta">
+                        <button className="boton-pasos" onClick={handleOpenModalPasos}>
+                            <strong>Ver Pasos</strong>
+                        </button>
+                    </div>
+                )}
             </div>
 
             <div className="vista-previa-comentarios">

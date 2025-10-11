@@ -37,7 +37,7 @@ public partial class Receta
 
     public virtual ICollection<Paso> Paso { get; set; } = new List<Paso>();
 
-    public virtual ICollection<RecetaCategoria> RecetaCategoria { get; set; } = new List<RecetaCategoria>();
+    public virtual ICollection<RecetaEtiquetas> RecetaEtiquetas { get; set; } = new List<RecetaEtiquetas>();
 
     public virtual ICollection<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 
