@@ -105,6 +105,22 @@ internal sealed class RecetaRepository : IRecetaRepository
         await _context.Receta.AddAsync(nuevaReceta);
         await _context.SaveChangesAsync();
 
+        // Creo registro de participación si viene un desafío asociado
+        if (receta.DesafioId.HasValue)
+        {
+            ParticipacionDesafio participacion = new()
+            {
+                FechaParticipacion = DateTime.Now,
+                DesafioId = receta.DesafioId.Value,
+                UsuarioId = _currentUser.User.Id,
+                RecetaId = nuevaReceta.Id,
+                Puntos = 50 // Puntos fijos por participar
+            };
+
+            await _context.ParticipacionDesafio.AddAsync(participacion);
+            await _context.SaveChangesAsync();
+        }
+
         return true;
     }
 
@@ -384,7 +400,6 @@ internal sealed class RecetaRepository : IRecetaRepository
         return true;
     }
 
-    // método para eliminar una receta
     public async Task<bool> DeleteAsync(int recetaId)
     {
         var currentUserId = _currentUser.User.Id;
@@ -477,4 +492,48 @@ internal sealed class RecetaRepository : IRecetaRepository
         };
         return recetaResponse;
     }
+
+    /// <summary>
+    /// Obtiene las estadísticas de interacciones asociadas a una receta hasta una fecha de corte especificada.
+    /// Calcula los Likes históricamente utilizando 'fecha_de_voto'. Favorites y Visits se mantienen en 0.
+    /// </summary>
+    /// <param name="recetaId">El ID de la receta.</param>
+    /// <param name="asOfDate">La fecha máxima para incluir Votos/Likes (la fecha de fin del desafío).</param>
+    public async Task<RecetaStatsDto> GetRecetaStatsAsync(int recetaId, DateTime asOfDate)
+    {
+        // 1. Obtener la información básica de la receta y el Usuario
+        var recetaBase = await _context.Receta
+            .Where(r => r.Id == recetaId)
+            .Select(r => new
+            {
+                r.Id,
+                NombreUsuario = r.Usuario.NombreUsuario
+            })
+            .FirstOrDefaultAsync();
+
+        if (recetaBase == null)
+        {
+            return new RecetaStatsDto { NombreUsuario = "N/A", Likes = 0, Favorites = 0, Visits = 0 };
+        }
+
+        var fechaCorteUtc = DateTime.SpecifyKind(asOfDate, DateTimeKind.Utc);
+
+        // 2. Contar Likes/Votos HASTA la fecha de corte (asOfDate)
+        var likesHistoricos = await _context.Voto
+            // Usamos la variable con el Kind especificado
+            .CountAsync(v => v.RecetaId == recetaId && v.FechaDeVoto <= fechaCorteUtc);
+
+        // 3. Devolver el DTO con los datos calculados
+        return new RecetaStatsDto
+        {
+            NombreUsuario = recetaBase.NombreUsuario,
+            Likes = likesHistoricos,
+
+            Favorites = 0,
+            Visits = 0
+        };
+    }
+
+
+
 }

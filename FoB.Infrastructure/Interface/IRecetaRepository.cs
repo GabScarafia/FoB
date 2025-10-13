@@ -16,4 +16,11 @@ public interface IRecetaRepository
     public Task<RecetaResponse> GetById(int idReceta);
 
 
+    /// <summary>
+    /// Obtiene las estadísticas de interacciones y datos clave del usuario 
+    /// asociados a una receta de una fecha específica para el cálculo de puntos.
+    /// </summary>
+    Task<RecetaStatsDto> GetRecetaStatsAsync(int recetaId, DateTime asOfDate);
+
+
 }

@@ -11,5 +11,7 @@ namespace FoB.Application.Dtos
         public int Id { get; set; }
         public string Titulo { get; set; }
         public string ImagenPrincipalBase64 { get; set; }
+
+        public int? DesafioId { get; set; }
     }
 }

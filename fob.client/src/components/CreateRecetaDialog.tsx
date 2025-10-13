@@ -27,6 +27,8 @@ import type { etiquetaType } from "types/Etiqueta";
 interface CreateRecetaDialogProps {
     open: boolean;
     onClose: () => void;
+    ingrediente?: string;
+    desafioId?: number;
 }
 
 const Transition = React.forwardRef(function Transition(
@@ -55,7 +57,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialogProps) {
+export default function CreateRecetaDialog({ open, onClose, ingrediente, desafioId }: CreateRecetaDialogProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [dificultad, setDificultad] = React.useState('');
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -73,9 +75,9 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
     // 🏷 Etiquetas (Almacena el objeto completo de etiqueta)
     const [etiquetas, setEtiquetas] = React.useState<etiquetaType[]>([]);
     // Texto para el input de búsqueda/creación
-    const [inputEtiqueta, setInputEtiqueta] = React.useState(''); 
+    const [inputEtiqueta, setInputEtiqueta] = React.useState('');
     // Opciones de sugerencias del backend
-    const [etiquetaOptions, setEtiquetaOptions] = React.useState<etiquetaType[]>([]); 
+    const [etiquetaOptions, setEtiquetaOptions] = React.useState<etiquetaType[]>([]);
 
     // Hook de Debounce: Espera 500ms después de que inputEtiqueta cambie
     const debouncedInputEtiqueta = useDebounce(inputEtiqueta, 500);
@@ -87,7 +89,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
 
     const { authData } = useAuth();
 
-    // 🚀 Efecto para la búsqueda de etiquetas con debounce
+    // 🚀 Efecto para la búsqueda de etiquetas con debounce (manteniendo exactamente tu lógica)
     React.useEffect(() => {
         const fetchEtiquetas = async () => {
             const texto = debouncedInputEtiqueta.trim();
@@ -104,7 +106,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                     if (response.ok) {
                         const data: etiquetaType[] = await response.json();
                         // Filtramos las etiquetas ya seleccionadas
-                        const newOptions = data.filter(opt => 
+                        const newOptions = data.filter(opt =>
                             !etiquetas.some(selected => selected.id === opt.id)
                         );
                         setEtiquetaOptions(newOptions);
@@ -129,8 +131,77 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
     }, [debouncedInputEtiqueta, authData?.token, etiquetas]); // Dependencia de 'etiquetas' para filtrar las ya seleccionadas
 
 
-    // ... resto de manejadores (handleBoxClick, handleFileChange, etc.) ...
-    
+    React.useEffect(() => {
+        // Reglas:
+        // - solo si viene ingrediente, dialog está abierto y no existe ya en etiquetas
+        const autoAgregarIngredienteComoEtiqueta = async () => {
+            if (!ingrediente) return;
+            const texto = ingrediente.trim();
+            if (texto.length < 2) return; //  mínimo de 2 caracteres
+            if (!authData?.token) return;
+            // Evitar duplicados por nombre
+            if (etiquetas.some(e => e.nombre.toLowerCase() === texto.toLowerCase())) return;
+
+            try {
+                const response = await fetch(`https://localhost:7084/Etiquetas?texto=${encodeURIComponent(texto)}`, {
+                    headers: {
+                        "Authorization": `Bearer ${authData?.token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    // Si falla no rompemos nada, solo log
+                    console.error('Error al buscar etiqueta por ingrediente:', response.statusText);
+                } else {
+                    const data: etiquetaType[] = await response.json();
+                    // Buscamos coincidencia exacta por nombre (case-insensitive)
+                    const match = data.find(opt => opt.nombre.toLowerCase() === texto.toLowerCase());
+                    if (match && !etiquetas.some(e => e.id === match.id)) {
+                        setEtiquetas(prev => [...prev, match]);
+                        // limpiamos input y opciones para que no interfiera con la UI
+                        setInputEtiqueta('');
+                        setEtiquetaOptions([]);
+                    }
+                }
+
+            } catch (err) {
+                console.error('Error de red al autocompletar etiqueta desde ingrediente:', err);
+            }
+
+            // ---- Ahora intentamos agregar también la etiqueta "desafio" ----
+            // Solo si no está ya presente
+            try {
+                const desafioTexto = 'desafio';
+                if (!etiquetas.some(e => e.nombre.toLowerCase() === desafioTexto)) {
+                    const respDesafio = await fetch(`https://localhost:7084/Etiquetas?texto=${encodeURIComponent(desafioTexto)}`, {
+                        headers: {
+                            "Authorization": `Bearer ${authData?.token}`
+                        }
+                    });
+                    if (respDesafio.ok) {
+                        const dataDesafio: etiquetaType[] = await respDesafio.json();
+                        const matchDesafio = dataDesafio.find(opt => opt.nombre.toLowerCase() === desafioTexto);
+                        if (matchDesafio && !etiquetas.some(e => e.id === matchDesafio.id)) {
+                            setEtiquetas(prev => [...prev, matchDesafio]);
+                        }
+                    } else {
+                        // no hacemos nada si no existe / no se puede obtener
+                        // console.info('Etiqueta "desafio" no encontrada o error al buscarla:', respDesafio.statusText);
+                    }
+                }
+            } catch (err) {
+                console.error('Error de red al intentar agregar etiqueta "desafio":', err);
+            }
+        };
+
+        // Ejecutar solo cuando el diálogo está abierto (evita llamadas cuando componente está montado pero diálogo cerrado)
+        if (open) {
+            autoAgregarIngredienteComoEtiqueta();
+        }
+    }, [ingrediente, authData?.token, etiquetas, open]);
+
+
+
     const handleBoxClick = () => {
         fileInputRef.current?.click();
     };
@@ -264,9 +335,9 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 id: 0,
                 descripcion: ''
             })),
-            // Asegúrate de que este mapeo sea correcto según tu backend
-            etiquetas: etiquetas.map(et => ({ nombre: et.nombre, id: et.id })), 
-            pasos: pasosValidos
+            etiquetas: etiquetas.map(et => ({ nombre: et.nombre, id: et.id })),
+            pasos: pasosValidos,
+            ...(desafioId && { desafioId })
         };
 
         try {
@@ -279,13 +350,20 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                 body: JSON.stringify(data),
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(`Error en la solicitud: ${response.statusText} - ${JSON.stringify(errorData)}`);
+            // Lógica para leer el cuerpo de la respuesta y manejar errores
+            let responseBody: any;
+            const text = await response.text();
+            try {
+                responseBody = JSON.parse(text);
+            } catch {
+                responseBody = text; // Si no es JSON, lo dejamos como texto
             }
 
-            const result = await response.json();
-            console.log('Receta creada:', result);
+            if (!response.ok) {
+                throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} - ${JSON.stringify(responseBody)}`);
+            }
+
+            console.log('Receta creada:', responseBody);
             onClose();
         } catch (error) {
             console.error('Error al crear la receta:', error);
@@ -321,7 +399,6 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
             </AppBar>
 
             <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2, pb: 10 }}>
-                {/* ... resto del contenido (Título, Imagen, Descripción, Pasos, Dificultad, Minutos, Ingredientes) ... */}
 
                 <TextField
                     label="Título del post"
@@ -414,11 +491,10 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                             </Box>
                         ))}
                         <IconButton color="primary" onClick={handleAddPaso}>
-                            {/* <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} /> */}
-                            {/* Icono de añadir paso. Usaré ArrowBackIcon temporalmente, pero AddCircleIcon ya estaba importado. */}
+                          
                         </IconButton>
                         <IconButton color="primary" onClick={() => handleRemovePaso(pasoActualIndex)}>
-                            <CloseIcon sx={{ fontSize: 30 }} /> 
+                            <CloseIcon sx={{ fontSize: 30 }} />
                         </IconButton>
                     </Box>
 
@@ -477,7 +553,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                     )}
                 </Box>
 
-                {/* 🏷 Sección de Etiquetas - MODIFICADA */}
+
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'black' }}>
                         Etiquetas
@@ -505,7 +581,7 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                         noOptionsText={inputEtiqueta.length >= 2 ? "No hay coincidencias" : "Escribe al menos 2 letras para buscar"}
                         sx={{ width: '100%' }}
                     />
-                    
+
                     {/* Visualización de Etiquetas seleccionadas */}
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
                         {etiquetas.map((et) => (
@@ -513,22 +589,22 @@ export default function CreateRecetaDialog({ open, onClose }: CreateRecetaDialog
                                 key={et.id}
                                 label={et.nombre}
                                 onDelete={() => handleRemoveEtiqueta(et.id)} // Usamos el ID para eliminar
-                                sx={{ 
-                                    bgcolor: '#1f43aa', 
-                                    color: 'white', 
+                                sx={{
+                                    bgcolor: '#1f43aa',
+                                    color: 'white',
                                     fontWeight: 'bold',
-                                    '& .MuiChip-deleteIcon': { // Estilo para el ícono de borrar en el chip
-                                        color: 'white', 
+                                    '& .MuiChip-deleteIcon': {
+                                        color: 'white',
                                     }
                                 }}
                             />
                         ))}
                     </Box>
                 </Box>
-                
+
                 {/* Dificultad y minutos */}
                 <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField 
+                    <TextField
                         sx={{ flexGrow: 5 }}
                         label="Dificultad"
                         variant="outlined"

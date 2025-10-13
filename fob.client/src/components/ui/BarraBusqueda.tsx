@@ -11,6 +11,7 @@ interface BarraBusquedaProps {
     usuarios?: Usuario[];
     onFollow: (userId: number, isFollowing: boolean) => Promise<void>;
     currentUserId: number | null | undefined;  // ID del usuario actual para no mostrar el botón de seguir a sí mismo
+    onUsuarioClick: (userId: number) => void;
 }
 
 const BarraBusqueda: React.FC<BarraBusquedaProps> = ({ onSearch, usuarios, onFollow, currentUserId }) => {

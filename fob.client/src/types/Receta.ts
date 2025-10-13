@@ -31,4 +31,5 @@ export interface RecetaType {
   ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
   etiquetas: Array<any>;
   pasos: Array<any>;
+  desafioId?: number;
 }

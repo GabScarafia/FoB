@@ -379,8 +379,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     // 1. El autor de la receta NO está siendo seguido (`!isFollowing`).
     // 2. La receta NO es del usuario actual (`!esRecetaPropia`).
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
-    console.log(receta);
-    console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
+    //console.log(receta);
+    //console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
 
     return (
         <div className="tarjeta-receta">

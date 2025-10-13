@@ -6,16 +6,41 @@ import '../styles/Feed.css';
 import type { Comentario } from 'components/DrawerComentarios';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
-import { Modal, Box, Button, Typography } from '@mui/material';
+import SportsScoreIcon from '@mui/icons-material/SportsScore';
+import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import KitchenIcon from '@mui/icons-material/Kitchen'
+import EventNoteIcon from '@mui/icons-material/EventNote';
+import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
-
+import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
+import CreateRecetaDialog from 'components/CreateRecetaDialog';
+
+
+interface DesafioDto {
+    id: number;
+    nombre: string;
+    ingrediente: string;
+    descripcion: string;
+    fechaInicio: string;
+    fechaFin: string;
+}
+
+interface RankingItemDto {
+    posicion?: number; // Opcional, ya que el backend lo calcula, pero lo usaremos para el renderizado
+    usuarioId: number;
+    puntos: number;
+}
+
+interface DesafioSemanalDto {
+    desafioActual: DesafioDto;
+    rankingAnterior: RankingItemDto[];
+}
 
 
 interface FeedProps {
     onDrawerToggle: (isOpen: boolean) => void;
 }
-
 
 
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
@@ -30,10 +55,106 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const currentUserId = authData?.id;
     const navigate = useNavigate();
 
-    // Estados para el modal de confirmación
+    const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+    const [ingredienteDesafio, setIngredienteDesafio] = useState<string | undefined>(undefined);
+
+    const [desafioIdActivo, setDesafioIdActivo] = useState<number | undefined>(undefined);
+
+    // ESTADOS PARA EL RANKING
+    const [currentRanking, setCurrentRanking] = useState<RankingItemDto[]>([]);
+    const [modalRankingOpen, setModalRankingOpen] = useState(false);
+    const [rankingCargando, setRankingCargando] = useState(false);
+
+
+    // Función para abrir el diálogo de creación de receta
+    const handleOpenCreateDialog = () => {
+        setIsCreateDialogOpen(true);
+    };
+    // Función para cerrar el diálogo de creación de receta
+    const handleCloseCreateDialog = () => {
+        setIsCreateDialogOpen(false);
+        setIngredienteDesafio(undefined);
+        setDesafioIdActivo(undefined);
+    };
+
+
+    // ESTADOS PARA LA LÓGICA DE DESAFÍO
+    const [desafioSemanal, setDesafioSemanal] = useState<DesafioSemanalDto | null>(null);
+    const [modalDesafioOpen, setModalDesafioOpen] = useState(false);
+
+    // Estados para el modal de confirmación de eliminación
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
 
+    // =========================================================================
+    // 1. LÓGICA DE RANKING SEMANAL ACTIVO
+    // =========================================================================
+
+    const fetchCurrentRanking = async () => {
+        if (!token) return;
+        setRankingCargando(true);
+        try {
+            //  Endpoint real para obtener el ranking ACTIVO
+            const response = await fetch('https://localhost:7084/Desafios/Ranking', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                // Si no hay desafío activo, devuelve lista vacía
+                setCurrentRanking([]);
+                return;
+            }
+
+            const data: RankingItemDto[] = await response.json();
+            setCurrentRanking(data);
+            setModalRankingOpen(true); // Abre el modal de ranking
+            handleCloseDesafioModal(); // Cierra el modal principal del desafío
+        } catch (err) {
+            console.error("Error al obtener el ranking semanal:", err);
+            setCurrentRanking([]);
+        } finally {
+            setRankingCargando(false);
+        }
+    };
+
+
+    // EFECTO 1: Obtener el Desafío Semanal y mostrar el modal
+    useEffect(() => {
+        if (!token) return;
+
+        const obtenerDesafio = async () => {
+            try {
+                // Endpoint simulado para obtener el desafío y el ranking anterior
+                const response = await fetch('https://localhost:7084/Desafios/Actual', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const data: DesafioSemanalDto = await response.json();
+                setDesafioSemanal(data);
+
+                // Mostrar siempre el modal del desafío al abrir la app/feed
+                setModalDesafioOpen(true);
+
+            } catch (err) {
+                console.error("Error al obtener el desafío semanal:", err);
+            }
+        };
+
+        obtenerDesafio();
+
+    }, [token]);
+
+    // EFECTO 2: Obtener las recetas 
     useEffect(() => {
         if (!token) {
             setCargando(false);
@@ -70,7 +191,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         obtenerRecetas();
     }, [token]);
 
-    // función para manejar la eliminación de recetas
+    // Lógica de eliminación
     const handleDeleteReceta = async (recetaId: number) => {
         if (!token) {
             console.error("No hay token de autenticación para eliminar la receta.");
@@ -94,13 +215,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             }
         } catch (error) {
             console.error('Error al eliminar la receta:', error);
-            alert('Error al eliminar la receta. Por favor, inténtelo de nuevo.');
+            console.error('Error al eliminar la receta. Por favor, inténtelo de nuevo.');
         } finally {
             handleCloseModal();
         }
     };
 
-    // Manejadores del modal
+    // Manejadores del modal de eliminación
     const handleOpenModal = async (recetaId: number) => {
         setRecetaAEliminarId(recetaId);
         setModalOpen(true);
@@ -117,98 +238,45 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
     };
 
-    const manejarBusqueda = async (termino: string) => {
-        if (!token) {
-            console.error("No hay token de autenticación para la búsqueda.");
-            return;
-        }
-
-        if (termino.trim() === '') {
-            setRecetasFiltradas(recetas);
-            setUsuariosFiltrados([]);
-            return;
-        }
-
-        const resultadosRecetas = recetas.filter(receta =>
-            receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.titulo.toLowerCase().includes(termino.toLowerCase())
-        );
-        setRecetasFiltradas(resultadosRecetas);
-
-        try {
-            const response = await fetch(`https://localhost:7084/Busqueda/usuarios?termino=${termino}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                let usuariosObtenidos: Usuario[] = await response.json();
-                setUsuariosFiltrados(usuariosObtenidos);
-            } else {
-                try {
-                    const errorData = await response.json();
-                    console.error("Error al buscar usuarios:", errorData.message);
-                } catch {
-                    const errorText = await response.text();
-                    console.error("Error al buscar usuarios:", errorText);
-                }
-                setUsuariosFiltrados([]);
-            }
-        } catch (error) {
-            setUsuariosFiltrados([]);
-            console.error("Error de red al buscar usuarios:", error);
+    // Manejadores del modal de Desafío (Actualización para ranking)
+    const handleOpenDesafioModal = () => {
+        if (desafioSemanal) {
+            setModalDesafioOpen(true);
         }
     };
 
-    const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {
-        if (!token) {
-            console.error("No hay token de autenticación.");
-            return;
-        }
-
-        const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
-        try {
-            const response = await fetch(`https://localhost:7084/Follow/${followedId}`, {
-                method: method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (response.ok) {
-                try {
-                    const successData = await response.json();
-                    console.log(successData.message);
-                } catch {
-                    console.log(`Usuario ${isCurrentlyFollowing ? 'dejado de seguir' : 'seguido'} exitosamente.`);
-                }
-                setUsuariosFiltrados(prevUsuarios =>
-                    prevUsuarios.map(u =>
-                        u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
-                    )
-                );
-            } else {
-                try {
-                    const errorData = await response.json();
-                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorData.message);
-                } catch {
-                    const errorText = await response.text();
-                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorText);
-                }
-            }
-        } catch (error) {
-            console.error('Error de red al seguir/dejar de seguir:', error);
-        }
+    const handleCloseDesafioModal = () => {
+        setModalDesafioOpen(false);
     };
 
-    // Nueva función para navegación al perfil
-    const handleUsuarioClick = (userId: number) => {
-        navigate(`/perfil/${userId}`);
+    // Manejadores del modal de Ranking
+    const handleCloseRankingModal = () => {
+        setModalRankingOpen(false);
+        setCurrentRanking([]); // Limpiar ranking al cerrar
     };
+
+
+    // Lógica para el botón Participar Ahora
+    const handleCargarRecetaDesafio = () => {
+        handleCloseDesafioModal();
+        const ingrediente = desafioSemanal?.desafioActual?.ingrediente;
+        const idDesafio = desafioSemanal?.desafioActual?.id;
+
+        if (ingrediente) {
+            setIngredienteDesafio(ingrediente);
+        }
+        if (idDesafio) {
+            setDesafioIdActivo(idDesafio);
+        }
+
+        setIsCreateDialogOpen(true);
+    };
+
+
+    const manejarBusqueda = async (termino: string) => {};
+    const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {};
+    const handleUsuarioClick = (userId: number) => { navigate(`/perfil/${userId}`); };
+
 
     if (cargando) {
         return <div className="feed-cargando">Cargando feed...</div>;
@@ -218,8 +286,469 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         return <div className="feed-error">{error}</div>;
     }
 
+    // ----------------------------------------------------------------------
+    // Funciones de renderizado para el Modal de Desafío y Ranking
+    // ----------------------------------------------------------------------
+
+    const getMedalIcon = (index: number) => {
+        switch (index) {
+            case 0:
+                return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; // Oro
+            case 1:
+                return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; // Plata
+            case 2:
+                return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; // Bronce
+            default:
+                return <SportsScoreIcon sx={{ color: '#666' }} />;
+        }
+    };
+
+    const renderRankingAnterior = () => {
+        if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
+            return (
+                <Typography variant="body2" sx={{ mt: 1, color: '#666', textAlign: 'center' }}>
+                    Aún no hay datos de ranking de la semana pasada. ¡Sé el primero!
+                </Typography>
+            );
+        }
+
+        return (
+            <List sx={{ p: 0 }}>
+                {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
+                    <ListItem
+                        key={item.usuarioId}
+                        sx={{
+                            p: 1,
+                            mb: 0.5,
+                            borderRadius: '6px',
+                            bgcolor: index === 0 ? '#fff8e1' : index === 1 ? '#f5f5f5' : index === 2 ? '#fbe9e7' : 'white',
+                            borderLeft: `4px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}`,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        }}
+                    >
+                        <ListItemIcon sx={{ minWidth: 35 }}>
+                            {getMedalIcon(index)}
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={`@${item.nombreUsuario}`}
+                            secondary={`${item.puntos} Puntos`}
+                            primaryTypographyProps={{ fontWeight: index < 3 ? 'bold' : 'normal', color: index === 0 ? '#b79100' : 'text.primary' }}
+                        />
+                    </ListItem>
+                ))}
+            </List>
+        );
+    };
+
+    const renderDesafioActual = () => {
+        if (!desafioSemanal) return null;
+        const desafio = desafioSemanal.desafioActual;
+
+        // Formatea fechas
+        const inicio = new Date(desafio.fechaInicio).toLocaleDateString();
+        const fin = new Date(desafio.fechaFin).toLocaleDateString();
+
+        return (
+            <Box
+                sx={{
+                    mt: 4,
+                    p: 4,
+                    borderRadius: "20px",
+                    background: "linear-gradient(135deg, #fff, #f3f6ff)",
+                    boxShadow: "0 8px 30px rgba(24, 41, 105, 0.15)",
+                    position: "relative",
+                    overflow: "hidden",
+                    "&::before": {
+                        content: '""',
+                        position: "absolute",
+                        top: 0,
+                        left: 0,
+                        width: "100%",
+                        height: "8px",
+                        background: "linear-gradient(90deg, #FF5722, #FF9800)",
+                    },
+                    animation: "fadeIn 0.6s ease-out",
+                    "@keyframes fadeIn": {
+                        from: { opacity: 0, transform: "translateY(10px)" },
+                        to: { opacity: 1, transform: "translateY(0)" },
+                    },
+                }}
+            >
+                {/* Ingrediente Clave */}
+                <Box
+                    sx={{
+                        textAlign: "center",
+                        background:
+                            "linear-gradient(135deg, #ff7e5f 10%, #feb47b 90%)",
+                        borderRadius: "12px",
+                        p: 2,
+                        mb: 3,
+                        color: "white",
+                        boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                    }}
+                >
+                    <Typography
+                        variant="h6"
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 1,
+                            fontWeight: 700,
+                            letterSpacing: "0.5px",
+                        }}
+                    >
+                        <KitchenIcon sx={{ fontSize: 26 }} />
+                        Ingrediente Clave
+                    </Typography>
+                    <Typography
+                        variant="h4"
+                        sx={{
+                            fontWeight: 900,
+                            letterSpacing: 1,
+                            textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        }}
+                    >
+                        “{desafio.ingrediente?.toUpperCase() ?? desafio.nombre}”
+                    </Typography>
+                </Box>
+
+                {/* Descripción */}
+                <Typography
+                    variant="body1"
+                    sx={{
+                        mb: 3,
+                        color: "#1e293b",
+                        textAlign: "justify",
+                        lineHeight: 1.6,
+                    }}
+                >
+                    {desafio.descripcion}
+                </Typography>
+
+                {/* Fechas destacadas */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        gap: 1.2,
+                        backgroundColor: "#e8f0ff",
+                        borderRadius: "10px",
+                        px: 2,
+                        py: 1.5,
+                        mb: 3,
+                        boxShadow: "inset 0 0 6px rgba(24, 41, 105, 0.1)",
+                    }}
+                >
+                    <EventNoteIcon sx={{ color: "#182969", fontSize: 26 }} />
+                    <Typography
+                        variant="body1"
+                        sx={{
+                            color: "#000",
+                            fontWeight: 600,
+                            fontSize: "1rem",
+                        }}
+                    >
+                        Duración:&nbsp;
+                        <span style={{ fontWeight: "500" }}>
+                            del {inicio} al {fin}
+                        </span>
+                    </Typography>
+                </Box>
+
+                {/* Reglas */}
+                <Box
+                    sx={{
+                        backgroundColor: "#ff572210",
+                        borderLeft: "4px solid #FF9800",
+                        borderRadius: "8px",
+                        p: 2,
+                    }}
+                >
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: "#d84315",
+                            fontWeight: 600,
+                            mb: 0.5,
+                        }}
+                    >
+                        ⚠️ Importante:
+                    </Typography>
+                    <Typography variant="body2" sx={{ color: "#4b5563" }}>
+                        Tu receta debe llevar la etiqueta{" "}
+                        <strong>Desafío</strong> y solo puedes participar con una
+                        receta por semana.
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    };
+
+
+
+
+    const renderModalDesafio = () => {
+        return (
+            <Modal
+                open={modalDesafioOpen}
+                onClose={handleCloseDesafioModal}
+                aria-labelledby="modal-desafio-titulo"
+                closeAfterTransition
+            >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: { xs: '90%', sm: 550 },
+                    bgcolor: 'background.paper',
+                    borderRadius: '16px',
+                    boxShadow: 24,
+                    p: 4,
+                    outline: 'none',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    border: '3px solid #182969',
+                    background: '#f8f9fa'
+                }}>
+                    <Typography id="modal-desafio-titulo" variant="h4" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: '#182969', textAlign: 'center' }}>
+                        Desafío de Coctelería Semanal
+                    </Typography>
+                    <Divider sx={{ mb: 3 }} />
+
+                    {/* Top 3 de la Semana Pasada */}
+                    <Typography variant="subtitle1" sx={{ mt: 1, pb: 1, fontWeight: '700', color: '#333' }}>
+                        <EmojiEventsIcon sx={{ verticalAlign: 'bottom', mr: 0.5 }} /> Top 3 de la Semana Anterior
+                    </Typography>
+                    <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: '8px', border: '1px solid #f8f9fa' }}>
+                        {renderRankingAnterior()}
+                    </Box>
+
+                    {/* Botón para ver el ranking completo */}
+                    {desafioSemanal?.desafioActual && ( // Solo si hay un desafío activo, mostramos el botón
+                        <Box sx={{ mt: 2, textAlign: 'center' }}>
+                            <Button
+                                onClick={fetchCurrentRanking}
+                                variant="text"
+                                size="small"
+                                disabled={rankingCargando}
+                                sx={{ color: '#182969', fontWeight: 'bold' }}
+                            >
+                                {rankingCargando ? <CircularProgress size={20} /> : "Ver Ranking Actual Completo"}
+                            </Button>
+                        </Box>
+                    )}
+
+
+                    <Typography
+                        variant="h5"
+                        sx={{
+                            mt: 4,
+                            pb: 1,
+                            fontWeight: 800,
+                            textAlign: "center",
+                            textTransform: "uppercase",
+                            letterSpacing: "0.8px",
+                            background: "linear-gradient(90deg, #FF5722, #FF9800)",
+                            WebkitBackgroundClip: "text",
+                            WebkitTextFillColor: "transparent",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            gap: 1,
+                        }}
+                    >
+                        <LocalBarIcon
+                            sx={{
+                                color: "#FF7043",
+                                fontSize: 30,
+                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
+                            }}
+                        />
+                        ¡A Mezclar! Desafío Actual
+                    </Typography>
+                    {renderDesafioActual()}
+
+                    <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
+                        <Button
+                            onClick={handleCloseDesafioModal}
+                            variant="outlined"
+                            size="large"
+                            sx={{
+                                flexGrow: 1,
+                                borderColor: '#ccc',
+                                color: '#333',
+                                borderRadius: '8px',
+                                '&:hover': { borderColor: '#182969' }
+                            }}
+                        >
+                            Ver Feed
+                        </Button>
+                        <Button
+                            onClick={handleCargarRecetaDesafio}
+                            variant="contained"
+                            size="large"
+                            color="primary"
+                            sx={{
+                                flexGrow: 1,
+                                bgcolor: '#FF5722',
+                                borderRadius: '8px',
+                                '&:hover': { bgcolor: '#E64A19' }
+                            }}
+                            startIcon={<LocalBarIcon />}
+                        >
+                            Participar
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+        );
+    };
+
+    // =========================================================================
+    // MODAL DE RANKING SEMANAL
+    // =========================================================================
+
+    const renderModalRanking = () => {
+        const hasRanking = currentRanking.length > 0;
+        const nombreDesafio = desafioSemanal?.desafioActual?.nombre || "Desafío Semanal";
+
+        return (
+            <Modal
+                open={modalRankingOpen}
+                onClose={handleCloseRankingModal}
+                aria-labelledby="modal-ranking-titulo"
+                closeAfterTransition
+            >
+                <Box sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: { xs: '90%', sm: 400 },
+                    bgcolor: 'background.paper',
+                    borderRadius: '16px',
+                    boxShadow: 24,
+                    p: 4,
+                    outline: 'none',
+                    maxHeight: '90vh',
+                    overflowY: 'auto',
+                    border: '3px solid #FF9800',
+                    background: '#fcfcfc'
+                }}>
+                    <Typography id="modal-ranking-titulo" variant="h5" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: '#FF5722', textAlign: 'center' }}>
+                        🏆 Ranking Actual
+                    </Typography>
+                    <Typography variant="subtitle2" sx={{ mb: 3, color: '#666', textAlign: 'center', fontStyle: 'italic' }}>
+                        {nombreDesafio}
+                    </Typography>
+                    <Divider sx={{ mb: 3 }} />
+
+                    {rankingCargando && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
+                            <CircularProgress />
+                        </Box>
+                    )}
+
+                    {!hasRanking && !rankingCargando && (
+                        <Typography variant="body1" sx={{ textAlign: 'center', color: '#999' }}>
+                            Aún no hay participantes registrados en el ranking de este desafío.
+                        </Typography>
+                    )}
+
+                    {hasRanking && (
+                        <List sx={{ p: 0 }}>
+                            {currentRanking.map((item, index) => (
+                                <ListItem
+                                    key={item.usuarioId}
+                                    sx={{
+                                        p: 1.5,
+                                        mb: 1,
+                                        borderRadius: '8px',
+                                        bgcolor: index < 3 ? '#ffe0b2' : 'white', // Fondo para Top 3
+                                        borderLeft: `5px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#eee'}`,
+                                        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                                    }}
+                                >
+                                    <ListItemIcon sx={{ minWidth: 40 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? '#FF5722' : '#333' }}>
+                                            {index + 1}°
+                                        </Typography>
+                                    </ListItemIcon>
+                                    <ListItemText
+                                        primary={`@${item.nombreUsuario}`}
+                                        secondary={`${item.puntos} Puntos`}
+                                        primaryTypographyProps={{ fontWeight: index < 3 ? '900' : '600', color: 'text.primary' }}
+                                    />
+                                    {index < 3 && getMedalIcon(index)}
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+
+                    <Box sx={{ mt: 4, textAlign: 'center' }}>
+                        <Button
+                            onClick={handleCloseRankingModal}
+                            variant="contained"
+                            color="primary"
+                            sx={{
+                                bgcolor: '#182969',
+                                borderRadius: '8px',
+                                '&:hover': { bgcolor: '#0b2553' }
+                            }}
+                        >
+                            Cerrar Ranking
+                        </Button>
+                    </Box>
+                </Box>
+            </Modal>
+        );
+    };
+
     return (
         <div className="feed-contenedor-principal">
+            {/* Botón Flotante para el Desafío */}
+            {desafioSemanal && (
+                <button
+                    className="boton-desafio-flotante"
+                    onClick={handleOpenDesafioModal}
+                    style={{
+                        position: 'fixed',
+                        bottom: '70px',
+                        right: '20px',
+                        zIndex: 1000,
+                        backgroundColor: '#FF5722',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '56px',
+                        height: '56px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 10px rgba(255, 87, 34, 0.6)',
+                        cursor: 'pointer',
+                        transition: 'background-color 0.3s, transform 0.2s',
+                        transform: modalDesafioOpen || modalRankingOpen ? 'scale(0)' : 'scale(1)'
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E64A19'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#FF5722'}
+                >
+                    <SportsScoreIcon style={{ fontSize: 30 }} />
+                </button>
+            )}
+
+            {renderModalDesafio()}
+            {renderModalRanking()}
+            <CreateRecetaDialog
+                open={isCreateDialogOpen}
+                onClose={handleCloseCreateDialog}
+                // Pasar el ingrediente para que el componente lo use
+                ingrediente={ingredienteDesafio}
+                desafioId={desafioIdActivo}
+            />
             <BarraBusqueda
                 onSearch={manejarBusqueda}
                 usuarios={usuariosFiltrados}
@@ -251,12 +780,19 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         return cat;
                     });
 
+                    const finalEtiquetas = [...etiquetasFormateadas];
+
+                    if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) {
+                        finalEtiquetas.push('DESAFIO');
+                    }
+
+
                     return (
                         <Receta
                             key={receta.id}
                             receta={{
                                 ...receta,
-                                etiquetas: etiquetasFormateadas
+                                etiquetas: finalEtiquetas
                             }}
                             onDrawerToggle={onDrawerToggle}
                             currentUserId={currentUserId ?? null}
@@ -273,10 +809,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 onClose={handleCloseModal}
                 aria-labelledby="modal-eliminar-receta"
             >
-                <Box className="modal-contenedor">   
+                <Box className="modal-contenedor">
                     <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
                         Confirmar eliminación
-                    </Typography>  
+                    </Typography>
                     <Typography className="modal-descripcion" sx={{ mt: 2 }}>
                         ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
                     </Typography>

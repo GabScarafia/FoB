@@ -9,6 +9,8 @@ public class RecetaRequest
 
     //public EstadoEnum Estado { get; set; }
 
+    public int ? DesafioId { get; set; }
+
     public int? TiempoPreparacion { get; set; }
 
     public List<IngredienteRecetaRequest> Ingredientes { get; set; }

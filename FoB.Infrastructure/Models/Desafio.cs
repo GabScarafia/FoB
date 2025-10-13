@@ -13,11 +13,13 @@ public partial class Desafio
 
     public string Descripcion { get; set; }
 
-    public DateTime? FechaFin { get; set; }
+    public DateTime FechaFin { get; set; }
 
-    public DateTime? FechaInicio { get; set; }
+    public DateTime FechaInicio { get; set; }
 
     public string Nombre { get; set; }
+
+    public string Ingrediente { get; set; }
 
     public virtual ICollection<ParticipacionDesafio> ParticipacionDesafio { get; set; } = new List<ParticipacionDesafio>();
 }

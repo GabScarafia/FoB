@@ -101,7 +101,12 @@ try
     builder.Services.AddScoped<IComentarioRepository, ComentarioRepository>();
     builder.Services.AddScoped<IBusquedaRepository, BusquedaRepository>();
     builder.Services.AddScoped<IUserRepository, UserRepository>();
+    builder.Services.AddScoped<IDesafioRepository, DesafioRepository>();
+
     builder.Services.AddScoped<BusquedaService>();
+    builder.Services.AddScoped<IDesafioService, DesafioService>();
+
+    builder.Services.AddScoped<IDesafioParticipacionRepository, DesafioParticipacionRepository>();
 
 
     var app = builder.Build();

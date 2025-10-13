@@ -15,11 +15,13 @@ public partial class ParticipacionDesafio
 
     public int UsuarioId { get; set; }
 
-    public int? RecetaId { get; set; }
+    public int RecetaId { get; set; }
 
     public virtual Desafio Desafio { get; set; }
 
     public virtual Receta Receta { get; set; }
 
     public virtual Usuario Usuario { get; set; }
+
+    public double Puntos { get; set; }
 }
