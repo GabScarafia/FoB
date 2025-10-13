@@ -273,10 +273,97 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
 
-    const manejarBusqueda = async (termino: string) => {};
-    const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {};
-    const handleUsuarioClick = (userId: number) => { navigate(`/perfil/${userId}`); };
+    const manejarBusqueda = async (termino: string) => {
+        if (!token) {
+            console.error("No hay token de autenticación para la búsqueda.");
+            return;
+        }
 
+        if (termino.trim() === '') {
+            setRecetasFiltradas(recetas);
+            setUsuariosFiltrados([]);
+            return;
+        }
+
+        const resultadosRecetas = recetas.filter(receta =>
+            receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
+            receta.titulo.toLowerCase().includes(termino.toLowerCase())
+        );
+        setRecetasFiltradas(resultadosRecetas);
+
+        try {
+            const response = await fetch(`https://localhost:7084/Busqueda/usuarios?termino=${termino}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                let usuariosObtenidos: Usuario[] = await response.json();
+                setUsuariosFiltrados(usuariosObtenidos);
+            } else {
+                try {
+                    const errorData = await response.json();
+                    console.error("Error al buscar usuarios:", errorData.message);
+                } catch {
+                    const errorText = await response.text();
+                    console.error("Error al buscar usuarios:", errorText);
+                }
+                setUsuariosFiltrados([]);
+            }
+        } catch (error) {
+            setUsuariosFiltrados([]);
+            console.error("Error de red al buscar usuarios:", error);
+        }
+    };
+
+    const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {
+        if (!token) {
+            console.error("No hay token de autenticación.");
+            return;
+        }
+
+        const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
+        try {
+            const response = await fetch(`https://localhost:7084/Follow/${followedId}`, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                try {
+                    const successData = await response.json();
+                    console.log(successData.message);
+                } catch {
+                    console.log(`Usuario ${isCurrentlyFollowing ? 'dejado de seguir' : 'seguido'} exitosamente.`);
+                }
+                setUsuariosFiltrados(prevUsuarios =>
+                    prevUsuarios.map(u =>
+                        u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
+                    )
+                );
+            } else {
+                try {
+                    const errorData = await response.json();
+                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorData.message);
+                } catch {
+                    const errorText = await response.text();
+                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorText);
+                }
+            }
+        } catch (error) {
+            console.error('Error de red al seguir/dejar de seguir:', error);
+        }
+    };
+
+    const handleUsuarioClick = (userId: number) => {
+        navigate(`/perfil/${userId}`);
+    };
 
     if (cargando) {
         return <div className="feed-cargando">Cargando feed...</div>;
