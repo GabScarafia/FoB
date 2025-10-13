@@ -131,7 +131,7 @@ const Tendencias = () => {
 
     return (
         <>
-            <div className="tendencias-container">
+            <div className="tendencias-conteiner">
                 {/* INVOCAMOS LA NUEVA FUNCIÓN DE RENDERIZADO DE GALERÍA */}
                 {renderGaleriaTendencias()}
             </div>
@@ -150,6 +150,11 @@ const Tendencias = () => {
                         sx: {
                             display: 'flex',
                             flexDirection: 'column',
+                            alignItems: 'center', '& .receta-container': {
+                                width: '100%',
+                                maxWidth: 500, // Limita el ancho máximo para pantallas grandes
+                                margin: '0 auto', // Centra horizontalmente
+                            },
                         },
                     },
                 }}
@@ -181,24 +186,28 @@ const Tendencias = () => {
                     }}
                 >
                     {recetaSeleccionada && (
+                    <div className="receta-contenido">
                         <Receta
-                            receta={{
-                                ...recetaSeleccionada,
-                                noMeGusta: recetaSeleccionada.noMeGusta ?? false,
-                                esFavorito: recetaSeleccionada.esFavorito ?? false,
-                                seguido: recetaSeleccionada.seguido ?? false,
-                            }}
-                            onDrawerToggle={() => {}} // No cerrar el diálogo
-                            currentUserId={authData?.id ?? null}
-                            onDeleteReceta={async () => {}} // Sin acción de borrado
-                            onUsuarioClick={handleUsuarioClick}
+                        receta={{
+                            ...recetaSeleccionada,
+                            noMeGusta: recetaSeleccionada.noMeGusta ?? false,
+                            esFavorito: recetaSeleccionada.esFavorito ?? false,
+                            seguido: recetaSeleccionada.seguido ?? false,
+                        }}
+                        onDrawerToggle={() => {}}
+                        currentUserId={authData?.id ?? null}
+                        onDeleteReceta={async () => {}}
+                        onUsuarioClick={handleUsuarioClick}
                         />
+                    </div>
                     )}
+
                 </Box>
                     
                 {/* Pie de página fijo */}
                 <Box sx={{
                     width: '100%',
+                    height: 55,
                     background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
                     display: 'flex',
                     justifyContent: 'space-between',
