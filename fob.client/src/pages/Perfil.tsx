@@ -140,16 +140,18 @@ const Perfil: React.FC = () => {
 
     const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
     
-    const tienePublicaciones = publicaciones && publicaciones.length > 0;
-    const esPerfilPropio = currentUserId === datosPerfil.id;
 
     const handleEditarPerfilClick = () => {
         navigate('/editar-perfil');
     };
 
 
+    const tienePublicaciones = publicaciones && publicaciones.length > 0;
+    const esPerfilPropio = currentUserId === datosPerfil.id;
+
     const renderGaleria = () => {
         if (!tienePublicaciones) {
+            // Si es el propio perfil, el texto puede ser diferente; acá dejo el original
             return <div className="sin-recetas">Aún no has publicado ninguna receta.</div>;
         }
         return publicaciones.map((receta) => {
@@ -157,7 +159,7 @@ const Perfil: React.FC = () => {
             if (!imagen) return null;
             return (
                 <div key={receta.id} className="galeria-item">
-                    <Link to={`/receta/${receta.id}`}>
+                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
                         <img
                             src={`data:image/jpeg;base64,${imagen}`}
                             alt={receta.titulo ?? `Receta-${receta.id}`}
