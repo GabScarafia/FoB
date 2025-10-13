@@ -20,7 +20,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CloseIcon from '@mui/icons-material/CancelRounded';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddCircleIcon from "@mui/icons-material/AddCircle"; // <-- Import AddCircleIcon
-import logoImage from '../assets/images/logo.png';
+import logoImage from '../assets/images/logo-blanco.png';
 import { useAuth } from "../context/AuthContext";
 import type { etiquetaType } from "types/Etiqueta";
 
