@@ -40,6 +40,5 @@ public partial class Receta
 
     public virtual ICollection<Voto> Voto { get; set; } = new List<Voto>();
 
-    public int? DesafioId { get; set; }
-    public virtual Desafio Desafio { get; set; }
+
 }

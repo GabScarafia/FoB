@@ -343,14 +343,6 @@ public partial class fobContext : DbContext
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Activa).HasColumnName("activa");
 
-            entity.Property(r => r.DesafioId)
-                  .HasColumnName("desafio_id");
-
-            entity.HasOne(r => r.Desafio)
-                  .WithMany()
-                  .HasForeignKey(r => r.DesafioId)
-                  .HasConstraintName("receta_ibfk_2");
-
             entity.Property(e => e.Descripcion)
         .HasColumnType("text")
         .HasColumnName("descripcion");
