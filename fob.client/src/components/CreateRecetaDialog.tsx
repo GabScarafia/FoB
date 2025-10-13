@@ -20,7 +20,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CloseIcon from '@mui/icons-material/CancelRounded';
 import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import AddCircleIcon from "@mui/icons-material/AddCircle"; // <-- Import AddCircleIcon
-import logoImage from '../assets/images/logo.png';
+import logoImage from '../assets/images/logo-blanco.png';
 import { useAuth } from "../context/AuthContext";
 import type { etiquetaType } from "types/Etiqueta";
 
@@ -439,8 +439,8 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                 >
                     {!previewImage && (
                         <>
-                            <AddPhotoAlternateIcon sx={{ fontSize: 60, color: '#1f46b2' }} />
-                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#1f46b2' }}>
+                            <AddPhotoAlternateIcon sx={{ fontSize: 60, color: '#182969' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#182969' }}>
                                 SUBIR FOTO/VIDEO
                             </Typography>
                         </>
@@ -482,7 +482,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     cursor: 'pointer',
-                                    bgcolor: pasoActualIndex === index ? '#1f43aa' : 'grey.400',
+                                    bgcolor: pasoActualIndex === index ? '#182969' : 'grey.400',
                                     color: 'white',
                                     fontWeight: 'bold',
                                 }}
@@ -490,10 +490,10 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                 {index + 1}
                             </Box>
                         ))}
-                        <IconButton color="primary" onClick={handleAddPaso}>
+                        <IconButton color="primary" onClick={handleAddPaso} sx={{ color: "#182969" }}>
                           
                         </IconButton>
-                        <IconButton color="primary" onClick={() => handleRemovePaso(pasoActualIndex)}>
+                        <IconButton color="primary" sx={{ color: "#182969" }} onClick={() => handleRemovePaso(pasoActualIndex)}>
                             <CloseIcon sx={{ fontSize: 30 }} />
                         </IconButton>
                     </Box>
@@ -590,7 +590,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                 label={et.nombre}
                                 onDelete={() => handleRemoveEtiqueta(et.id)} // Usamos el ID para eliminar
                                 sx={{
-                                    bgcolor: '#1f43aa',
+                                    bgcolor: '#182969',
                                     color: 'white',
                                     fontWeight: 'bold',
                                     '& .MuiChip-deleteIcon': {
@@ -668,7 +668,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                             sx={{ flex: 0.8 }}
                         />
                         <IconButton onClick={handleAddIngrediente} color="primary" sx={{ p: 0 }}>
-                            <AddCircleIcon sx={{ fontSize: 40, color: '#1f43aa' }} />
+                            <AddCircleIcon sx={{ fontSize: 40, color: '#182969' }} />
                         </IconButton>
                     </Box>
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
@@ -678,7 +678,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                 sx={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    bgcolor: '#1f43aa',
+                                    bgcolor: '#182969',
                                     color: 'white',
                                     borderRadius: '16px',
                                     pr: 1,
@@ -706,7 +706,14 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                     color="primary"
                     onClick={handleSubmit}
                     disabled={isPublicando}
-                    sx={{ mt: 3 }}
+                    sx={{
+                        mt: 3,
+                        background: "linear-gradient(to right, #1f46b2, #1a2a6c, #002242)",
+                        color: "white",
+                        '&:hover': {
+                            background: "linear-gradient(to right, #1a2a6c, #1f46b2, #002242)"
+                        }
+                    }}
                 >
                     {isPublicando ? "Publicando..." : "Publicar Receta"}
                 </Button>

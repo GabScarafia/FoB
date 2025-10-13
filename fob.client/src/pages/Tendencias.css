@@ -9,9 +9,11 @@
   padding-left: 0 !important;
   padding-right: 0 !important;
 } */
-.css-l09ud3-MuiPaper-root-MuiDialog-paper {
-    background-color: #f9f9f9 !important;
+
+.css-c11htj {
+    background-color: #f9f9f9;
 }
+
 .grilla-tendencias {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -128,4 +130,11 @@
     */
     object-fit: cover; 
     display: block; /* Elimina espacio extra que algunos navegadores agregan por defecto */
+}
+
+.receta-contenido {
+  width: 100%;
+  max-width: 500px; /* mismo ancho que el feed */
+  margin: 0 auto; /* centrado */
+  background-color: white;
 }
