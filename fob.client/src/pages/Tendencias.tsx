@@ -131,7 +131,7 @@ const Tendencias = () => {
 
     return (
         <>
-            <div className="tendencias-conteiner">
+            <div className="tendencias-container">
                 {/* INVOCAMOS LA NUEVA FUNCIÓN DE RENDERIZADO DE GALERÍA */}
                 {renderGaleriaTendencias()}
             </div>
