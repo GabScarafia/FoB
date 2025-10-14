@@ -146,8 +146,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
         return estrellas;
     };
+    
+    const [isProcessingLike, setIsProcessingLike] = useState(false);
 
     const handleLikeClick = async () => {
+        if (isProcessingLike) return; // Evita múltiples clics rápidos
+        setIsProcessingLike(true);
         try {
             const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
                 method: 'POST',
@@ -394,22 +398,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
                 {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
-                    { debeMostrarBotonSeguir && 
-                        (
-                            <button
-                                className={`boton-seguir`}
-                                tabIndex={0}
-                                onClick={e => {
-                                    e.stopPropagation();
-                                    handleFollowClick(receta.autor.id);
-                                }}
-                            >
-                                {'Seguir'}
-                            </button>
-                        )
-                    }
-                    {/* El botón de 'Seguir' desaparece si isFollowing es true (seguido=true) */}
-                    
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
                         <div className="estrellas-calificacion">
