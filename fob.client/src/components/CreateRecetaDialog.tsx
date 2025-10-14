@@ -23,6 +23,8 @@ import AddCircleIcon from "@mui/icons-material/AddCircle"; // <-- Import AddCirc
 import logoImage from '../assets/images/logo-blanco.png';
 import { useAuth } from "../context/AuthContext";
 import type { etiquetaType } from "types/Etiqueta";
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+
 
 interface CreateRecetaDialogProps {
     open: boolean;
@@ -387,14 +389,6 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                         alt="Logo"
                         sx={{ height: 40, width: 'auto' }}
                     />
-                    <IconButton
-                        edge="end"
-                        color="inherit"
-                        onClick={onClose}
-                        aria-label="close"
-                    >
-                        <CloseIcon />
-                    </IconButton>
                 </Toolbar>
             </AppBar>
 
@@ -718,6 +712,39 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                     {isPublicando ? "Publicando..." : "Publicar Receta"}
                 </Button>
             </DialogContent>
+
+            {/* Pie de página para estandarizar el estilo */}
+            <Box sx={{
+                width: '100%',
+                height: 55,
+                background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                p: 2,
+                position: 'fixed',
+                bottom: 0,
+                left: 0,
+                zIndex: 1201 // encima del contenido
+            }}>
+                <IconButton
+                    edge="start"
+                    color="inherit"
+                    onClick={onClose}
+                    aria-label="close"
+                    sx={{ color: '#ffffffff' }}
+                >
+                    <ArrowBackIcon />
+                </IconButton>
+
+                {/* Podés poner cualquier ícono o texto central aquí */}
+                <AddCircleIcon sx={{ color: '#ffffffff' }} />
+
+                {/* Ícono invisible para equilibrar el layout */}
+                <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
+                    <ArrowBackIcon />
+                </IconButton>
+            </Box>
         </Dialog>
     );
 }
