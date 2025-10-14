@@ -457,7 +457,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                 />
 
                 {/* Sección de Pasos */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 3 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 0.5 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                         Pasos de preparación
                     </Typography>
@@ -484,9 +484,33 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                 {index + 1}
                             </Box>
                         ))}
-                        <IconButton color="primary" onClick={handleAddPaso} sx={{ color: "#182969" }}>
-                          
-                        </IconButton>
+                    {/* Círculo del siguiente paso (agregar nuevo) */}
+                    <Box
+                    onClick={() => {
+                        const nuevoPaso: PasoType = { titulo: '', descripcion: '', imagen: null };
+                        setPasos((prev) => [...prev, nuevoPaso]);
+                        setPasoActualIndex(pasos.length); // mover foco al nuevo paso
+                    }}
+                    sx={{
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        bgcolor: 'grey.300',
+                        color: 'white',
+                        fontWeight: 'bold',
+                        transition: '0.2s',
+                        '&:hover': {
+                        bgcolor: 'grey.400',
+                        transform: 'scale(1.1)',
+                        },
+                    }}
+                    >
+                    {pasos.length + 1}
+                    </Box>
                         <IconButton color="primary" sx={{ color: "#182969" }} onClick={() => handleRemovePaso(pasoActualIndex)}>
                             <CloseIcon sx={{ fontSize: 30 }} />
                         </IconButton>
