@@ -11,13 +11,15 @@ public partial class IngredienteReceta
 
     public float? Cantidad { get; set; }
 
-    public string UnidadDeMedida { get; set; }
-
     public int RecetaId { get; set; }
 
     public int IngredienteId { get; set; }
 
+    public int UnidadId { get; set; }
+
     public virtual Ingrediente Ingrediente { get; set; }
 
     public virtual Receta Receta { get; set; }
+
+    public virtual Unidades Unidad { get; set; }
 }

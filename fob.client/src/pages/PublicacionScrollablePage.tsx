@@ -10,6 +10,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
+import { BASE_URL } from 'apiConfig';
 
 
 interface RecetaDto {
@@ -42,6 +43,11 @@ interface RecetaCompleta extends RecetaDto {
     ingredientes: any[];
     etiquetas: string[];
     pasos: any[];
+    id: number;
+    noMeGusta: boolean;
+    esFavorito: boolean;
+    seguido: boolean;
+    desafioId?: number;
 }
 
 interface PublicacionScrollablePageProps {
@@ -94,7 +100,7 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
         }
 
         try {
-            const response = await fetch(`https://localhost:7084/Recetas/${recetaIdAEliminar}`, {
+            const response = await fetch(`${BASE_URL}/Recetas/${recetaIdAEliminar}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -132,7 +138,7 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            const res = await fetch(`https://localhost:7084/Recetas/${recetaId}`, { headers });
+            const res = await fetch(`${BASE_URL}/Recetas/${recetaId}`, { headers });
             if (!res.ok) {
                 console.error(`Error al cargar receta ${recetaId}: ${res.statusText}`);
                 return null;
@@ -168,7 +174,7 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
             try {
                 const headers: Record<string, string> = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
-                const response = await fetch(`https://localhost:7084/Usuario/${perfilId}`, { headers });
+                const response = await fetch(`${BASE_URL}/Usuario/${perfilId}`, { headers });
 
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
                 const data = await response.json();

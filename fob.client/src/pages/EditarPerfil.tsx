@@ -6,8 +6,9 @@ import CameraAltIcon from '@mui/icons-material/CameraAlt'; 
 import '../styles/EditarPerfil.css';
 
 import fotoPerfilDefault from '../assets/images/avatar.png'; 
+import { BASE_URL } from 'apiConfig';
 
-const API_URL = 'https://localhost:7084';
+const API_URL = BASE_URL;
 
 interface UsuarioUpdateDto {
     id: number;

@@ -113,6 +113,7 @@ public class RecetasController : ControllerBase
                 .Include(r => r.Usuario)
                 .Include(r => r.RecetaImagen)
                 .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
                 .Include(r => r.Paso)
                 .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
                 .Include(r => r.Voto)
@@ -152,7 +153,7 @@ public class RecetasController : ControllerBase
                             Id = ir.Ingrediente.Id,
                             Nombre = ir.Ingrediente.Nombre,
                             Cantidad = ir.Cantidad,
-                            UnidadDeMedida = ir.UnidadDeMedida
+                            UnidadDeMedida = ir.Unidad.Nombre
                         }).ToList() ?? new List<IngredienteResponse>(),
                     Pasos = receta.Paso?
                         .Select(p => new PasoResponse

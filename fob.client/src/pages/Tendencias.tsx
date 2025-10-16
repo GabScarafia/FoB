@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useTendenciasService } from '../services/tendenciasService';
 import Receta from 'components/Receta';
-// Importamos Link ya que la galería del perfil lo usaba, pero en Tendencias lo usaremos sin navegación para abrir el Diálogo.
 import { useNavigate } from 'react-router-dom'; 
 
 // Importaciones de Material-UI
@@ -11,13 +10,13 @@ import LogoApp from '../assets/images/logo-blanco.png';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import CircularProgress from '@mui/material/CircularProgress'; // Agregué el import de CircularProgress para la carga
 import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
-import './Tendencias.css'; // Asegúrate de que los estilos 'galeria-item' y 'grilla-tendencias' estén definidos aquí o en otro CSS global.
+import './Tendencias.css'; 
 
-// Puedes importar Usuario desde otro archivo si ya la tienes definida
-import type  { RecetaType, Usuario } from '../types/Receta';
+import type { RecetaType, Usuario } from '../types/Receta';
 
 const Tendencias = () => {
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
@@ -25,7 +24,7 @@ const Tendencias = () => {
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const { obtenerTendencias } = useTendenciasService();
-    const { authData } = useAuth(); // Obtenemos los datos de autenticación
+    const { authData } = useAuth(); 
     const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false);
     const navigate = useNavigate();
     
@@ -85,12 +84,11 @@ const Tendencias = () => {
         setRecetaSeleccionada(null);
     };
 
-    // Nueva función para navegación al perfil
     const handleUsuarioClick = (userId: number) => {
         navigate(`/perfil/${userId}`);
     };
 
-    // FUNCIÓN PARA RENDERIZAR LA GALERÍA (similar a la lógica extraída del Perfil)
+    // FUNCIÓN PARA RENDERIZAR LA GALERÍA (se mantiene la cuadrícula)
     const renderGaleriaTendencias = () => {
         if (!tendencias || tendencias.length === 0) {
             return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
@@ -99,7 +97,7 @@ const Tendencias = () => {
         return (
             <div className="grilla-tendencias">
                 {tendencias.map((receta) => {
-                    console.log("Receta en tendencias:", receta);
+                    // console.log("Receta en tendencias:", receta);
                     const imageData = `data:image/jpeg;base64,${receta.imagen}`;
                     return (
                         <div 
@@ -107,12 +105,10 @@ const Tendencias = () => {
                             className="galeria-item" 
                             onClick={() => handleRecetaClick(receta)}
                         >
-                            {/* Usamos directamente la etiqueta img dentro del div/item, como en Perfil */}
                             <img
                                 src={imageData}
                                 alt={receta.titulo ?? `Receta-${receta.id}`}
                             />
-                            {/* Opcionalmente podrías agregar un overlay o badge de tendencia aquí */}
                         </div>
                     );
                 })}
@@ -122,7 +118,12 @@ const Tendencias = () => {
     // FIN DE LA FUNCIÓN DE RENDERIZADO
 
     if (cargando) {
-        return <div className="cargando-tendencias">Cargando tendencias...</div>;
+        return (
+            <div className="cargando-tendencias">
+                <CircularProgress color="primary" />
+                <div>Cargando tendencias...</div>
+            </div>
+        );
     }
 
     if (error) {
@@ -132,7 +133,7 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {/* INVOCAMOS LA NUEVA FUNCIÓN DE RENDERIZADO DE GALERÍA */}
+                {/* La vista principal sigue siendo la cuadrícula */}
                 {renderGaleriaTendencias()}
             </div>
 
@@ -150,10 +151,12 @@ const Tendencias = () => {
                         sx: {
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'center', '& .receta-container': {
+                            alignItems: 'center', 
+                            // Esta clase en el paper controla el ancho máximo del Dialog
+                            '& .receta-container': { 
                                 width: '100%',
-                                maxWidth: 500, // Limita el ancho máximo para pantallas grandes
-                                margin: '0 auto', // Centra horizontalmente
+                                maxWidth: 500, 
+                                margin: '0 auto', 
                             },
                         },
                     },
@@ -163,26 +166,26 @@ const Tendencias = () => {
                 {/* Encabezado fijo */}
                 <Box className="header-contenedor-principal ">
                     <Box className="header-input-seccion ">
-                           <Box
+                        <Box
                             component="img"
                             src={LogoApp}
                             sx={{
                                 width: 50,
                                 height: 'auto',
-                                mr: 1, // Margin to the right of the image
+                                mr: 1, 
                             }}
-                            />
-                            <span>#Tendencias</span> 
+                        />
+                        <span>#Tendencias</span> 
                     </Box>
                 </Box>
 
                 {/* Contenido desplazable (scrollable) */}
                 <Box
                     sx={{
-                        flexGrow: 1, // Ocupa todo el espacio vertical disponible
-                        overflowY: 'auto', // Habilita el scroll vertical
-                        p: 2, // Espaciado interior opcional
-                        backgroundColor: 'background.default', // Color de fondo si es necesario
+                        flexGrow: 1, 
+                        overflowY: 'auto', 
+                        p: 0, // ⬅️ CAMBIO CLAVE: Quitamos el padding para que la receta ocupe el 100% del ancho
+                        backgroundColor: 'background.default', 
                     }}
                 >
                     {recetaSeleccionada && (
@@ -190,6 +193,7 @@ const Tendencias = () => {
                         <Receta
                         receta={{
                             ...recetaSeleccionada,
+                            // Aseguramos que los booleanos tengan valores por defecto para el componente Receta
                             noMeGusta: recetaSeleccionada.noMeGusta ?? false,
                             esFavorito: recetaSeleccionada.esFavorito ?? false,
                             seguido: recetaSeleccionada.seguido ?? false,
@@ -212,9 +216,8 @@ const Tendencias = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    p: 2, // padding
+                    p: 2, 
                 }}>
-                {/* Iconos de la imagen */}
                 <IconButton
                     edge="start"
                     color="inherit"

@@ -14,45 +14,48 @@
     background-color: #f9f9f9;
 }
 
+/* Grilla de Tendencias (se mantiene para la vista previa) */
 .grilla-tendencias {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-    /* Use auto margins to center the grid, and ensure no left-side margin pushes it over */
-    margin: 0 auto;
-    padding: 0; /* Important: remove any padding on the grid container itself */
-}
-.receta-preview-container {
-    /* El contenedor individual de cada imagen */
-    width: 100%;
-    overflow: hidden; /* Oculta cualquier parte de la imagen que se desborde */
-    border-radius: 8px; /* Un poco de estilo en los bordes */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Sombra para que se vea mejor */
-}
-/* Tendencias.css */
-
-
-.receta-preview-container {
-    /* El contenedor de cada imagen individual */
-    width: 100%;
-    /* No definas una altura o relación de aspecto fija */
-    overflow: hidden; /* Oculta cualquier parte de la imagen que se desborde */
-    border-radius: 8px; /* Bordes redondeados */
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Define la cantidad de columnas. Puedes ajustarlo a tu gusto. */
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+    gap: 10px; /* Espacio entre las imágenes */
+    padding: 10px; /* Espacio alrededor de toda la grilla */
 }
 
-.receta-preview-container img {
-    /* ¡Aquí está el RESIZE! */
-    width: 100%; /* La imagen ocupará el 100% del ancho de su contenedor */
-    height: auto; /* La altura se ajustará automáticamente para mantener la proporción de la imagen */
-    display: block; /* Elimina cualquier espacio extra debajo de la imagen */
-    object-fit: cover; /* Mantiene la proporción de la imagen mientras llena el contenedor */
-}
-
-.header-contenedor-principal {
+.galeria-item {
     position: relative;
+    width: 100%;
+    padding-bottom: 120%; /* Altura de retrato */
+    overflow: hidden; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+}
+
+.galeria-item img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+    display: block; 
+}
+
+/* Estilos para el contenido de la Receta dentro del Dialog (CAMBIO CLAVE) */
+.receta-contenido {
+  width: 100%;
+  /* Eliminamos el max-width y margin, confiando en que el Dialog ya centra y limita el ancho */
+  background-color: white; 
+}
+
+
+/* Estilos del Header y Cargando (se mantienen) */
+.header-contenedor-principal {
+    position: sticky; /* Mantener fijo en la parte superior */
+    top: 0;
     max-width: 800px;
-    margin: 20px auto;
+    margin: 20px auto 0; /* Ajustado el margin superior para pegarlo al borde (si es necesario) */
     box-sizing: border-box;
     display: flex;
     align-content: center;
@@ -65,7 +68,6 @@
     margin-right: 15px;
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
 }
-/* Secci�n del input y el icono de b�squeda */
 .header-input-seccion {
     background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
     color: white;
@@ -73,68 +75,22 @@
     padding: 8px 16px;
     border-radius: 25px;
     justify-self: 'space-between';
-    cursor: 'pointer';        
-    display: 'flex';
-    align-Items: 'center';
+    cursor: 'pointer'; 
+    display: flex;
+    align-Items: center;
+    width: fit-content; /* Asegura que no ocupe todo el ancho del contenedor padre (opcional) */
+    margin: 0 auto;
 }
-/* Mensaje de cargando centrado para tendencias */
 .cargando-centrado, .cargando-tendencias {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 40vh;
     text-align: center;
     font-size: 1.1em;
     color: #555;
+    gap: 10px; /* Espacio entre el spinner y el texto */
 }
 
-.cargando-tendencias {
-    /* Para tendencias */
-}
-.grilla-tendencias {
-    display: grid;
-    /* Define la cantidad de columnas. Puedes ajustarlo a tu gusto. */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-    gap: 10px; /* Espacio entre las imágenes */
-    padding: 10px; /* Espacio alrededor de toda la grilla */
-}
-
-.galeria-item {
-    /* Establece una relación de aspecto para los contenedores */
-    /* Esto es clave para que las imágenes tengan una altura consistente y se adapten */
-    position: relative;
-    width: 100%;
-    /* Por ejemplo, un padding-bottom del 75% hará que la altura sea el 75% del ancho (relación 4:3) */
-    /* Para que sean "un poco más altas", podrías probar con 100% (cuadrado) o más, ej: 120% */
-    padding-bottom: 120%; /* <-- Haz este valor más grande para más altura (ej: 100% para cuadrado, 120% para retrato) */
-    overflow: hidden; /* Asegura que la imagen no se desborde del contenedor */
-    border-radius: 8px; /* Opcional: bordes redondeados */
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Opcional: sombra sutil */
-}
-
-.galeria-item img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Esto es crucial:
-       - 'cover': la imagen llenará el espacio, recortándose si es necesario para no distorsionar.
-       - 'contain': la imagen se escalará para que quepa completamente dentro del contenedor, manteniendo su relación de aspecto. Puede dejar "barras" si la relación no coincide.
-       - 'fill': la imagen llenará el espacio, distorsionándose si es necesario.
-       
-       Para que no se vea cortada y sea más alta, 'cover' es buena si quieres que siempre ocupe el espacio.
-       Si quieres que la imagen se vea completa sí o sí, usa 'contain' pero podrías tener espacios vacíos.
-       
-       ¡Intenta con 'cover' primero!
-    */
-    object-fit: cover; 
-    display: block; /* Elimina espacio extra que algunos navegadores agregan por defecto */
-}
-
-.receta-contenido {
-  width: 100%;
-  max-width: 500px; /* mismo ancho que el feed */
-  margin: 0 auto; /* centrado */
-  background-color: white;
-}
+/* Quitamos los estilos redundantes para receta-preview-container que ya están en galeria-item */

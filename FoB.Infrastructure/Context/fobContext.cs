@@ -44,6 +44,8 @@ public partial class fobContext : DbContext
 
     public virtual DbSet<SeguimientoUsuario> SeguimientoUsuario { get; set; }
 
+    public virtual DbSet<Unidades> Unidades { get; set; }
+
     public virtual DbSet<Usuario> Usuario { get; set; }
 
     public virtual DbSet<UsuarioImagen> UsuarioImagen { get; set; }
@@ -116,12 +118,12 @@ public partial class fobContext : DbContext
             entity.Property(e => e.FechaInicio)
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_inicio");
-            entity.Property(e => e.Nombre)
-                .HasMaxLength(255)
-                .HasColumnName("nombre");
             entity.Property(e => e.Ingrediente)
                 .HasMaxLength(255)
                 .HasColumnName("ingrediente");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(255)
+                .HasColumnName("nombre");
         });
 
         modelBuilder.Entity<Etiquetas>(entity =>
@@ -162,15 +164,15 @@ public partial class fobContext : DbContext
 
             entity.HasIndex(e => e.IngredienteId, "ingrediente_id");
 
+            entity.HasIndex(e => e.UnidadId, "ingrediente_receta_unidades_FK");
+
             entity.HasIndex(e => e.RecetaId, "receta_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Cantidad).HasColumnName("cantidad");
             entity.Property(e => e.IngredienteId).HasColumnName("ingrediente_id");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
-            entity.Property(e => e.UnidadDeMedida)
-                .HasMaxLength(255)
-                .HasColumnName("unidad_de_medida");
+            entity.Property(e => e.UnidadId).HasColumnName("unidad_id");
 
             entity.HasOne(d => d.Ingrediente).WithMany(p => p.IngredienteReceta)
                 .HasForeignKey(d => d.IngredienteId)
@@ -179,6 +181,11 @@ public partial class fobContext : DbContext
             entity.HasOne(d => d.Receta).WithMany(p => p.IngredienteReceta)
                 .HasForeignKey(d => d.RecetaId)
                 .HasConstraintName("ingrediente_receta_ibfk_1");
+
+            entity.HasOne(d => d.Unidad).WithMany(p => p.IngredienteReceta)
+                .HasForeignKey(d => d.UnidadId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("ingrediente_receta_unidades_FK");
         });
 
         modelBuilder.Entity<MensajeEstado>(entity =>
@@ -295,6 +302,7 @@ public partial class fobContext : DbContext
             entity.Property(e => e.FechaParticipacion)
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_participacion");
+            entity.Property(e => e.Puntos).HasColumnName("puntos");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
@@ -342,35 +350,34 @@ public partial class fobContext : DbContext
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Activa).HasColumnName("activa");
-
-            entity.Property(e => e.Descripcion)
-        .HasColumnType("text")
-        .HasColumnName("descripcion");
+            entity.Property(e => e.Descripcion)
+                .HasColumnType("text")
+                .HasColumnName("descripcion");
             entity.Property(e => e.Dificultad)
-              .HasColumnType("enum('Facil','Medio','Dificil','Experto')")
-              .HasColumnName("dificultad");
+                .HasColumnType("enum('Facil','Medio','Dificil','Experto')")
+                .HasColumnName("dificultad");
             entity.Property(e => e.Estado)
-              .HasColumnType("enum('Aprobada','Rechazada','Revision','Borrador')")
-              .HasColumnName("estado");
+                .HasColumnType("enum('Aprobada','Rechazada','Revision','Borrador')")
+                .HasColumnName("estado");
             entity.Property(e => e.FechaCreacion)
-              .HasDefaultValueSql("'0001-01-01 00:00:00'")
-              .HasColumnType("datetime")
-              .HasColumnName("fecha_creacion");
+                .HasDefaultValueSql("'0001-01-01 00:00:00'")
+                .HasColumnType("datetime")
+                .HasColumnName("fecha_creacion");
             entity.Property(e => e.FechaModificacion)
-              .HasColumnType("datetime")
-              .HasColumnName("fecha_modificacion");
+                .HasColumnType("datetime")
+                .HasColumnName("fecha_modificacion");
             entity.Property(e => e.PuntuacionPromedio).HasColumnName("puntuacion_promedio");
             entity.Property(e => e.TiempoPreparacion)
-              .HasColumnType("time")
-              .HasColumnName("tiempo_preparacion");
+                .HasColumnType("time")
+                .HasColumnName("tiempo_preparacion");
             entity.Property(e => e.Titulo)
-              .HasMaxLength(255)
-              .HasColumnName("titulo");
+                .HasMaxLength(255)
+                .HasColumnName("titulo");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Receta)
-              .HasForeignKey(d => d.UsuarioId)
-              .HasConstraintName("receta_ibfk_1");
+                .HasForeignKey(d => d.UsuarioId)
+                .HasConstraintName("receta_ibfk_1");
         });
 
         modelBuilder.Entity<RecetaEtiquetas>(entity =>
@@ -463,6 +470,19 @@ public partial class fobContext : DbContext
             entity.HasOne(d => d.Seguidor).WithMany(p => p.SeguimientoUsuarioSeguidor)
                 .HasForeignKey(d => d.SeguidorId)
                 .HasConstraintName("seguimiento_usuario_ibfk_1");
+        });
+
+        modelBuilder.Entity<Unidades>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("unidades");
+
+            entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.Nombre)
+                .IsRequired()
+                .HasMaxLength(100)
+                .HasColumnName("nombre");
         });
 
         modelBuilder.Entity<Usuario>(entity =>

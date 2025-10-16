@@ -6,6 +6,7 @@ import CasillaVerificacion from 'components/ui/CasillaVerificacion';
 import '../styles/Registrarse.css';
 import logoImage from '../assets/images/logo.png';
 import TerminosYCondicionesModal from 'components/Modal/TerminosYCondicionesModal';
+import { BASE_URL } from 'apiConfig';
 
 const Registrarse: React.FC = () => {
     const [nombre, setNombre] = useState<string>('');
@@ -33,7 +34,7 @@ const Registrarse: React.FC = () => {
         }
 
 
-        const API_URL = 'https://localhost:7084/Register';
+        const API_URL = `${BASE_URL}/Register`;
 
         try {
             const response = await fetch(API_URL, {

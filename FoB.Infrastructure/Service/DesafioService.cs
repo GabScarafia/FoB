@@ -47,14 +47,14 @@ namespace FoB.Infrastructure.Service
                 var participacionesAnteriores = await _participacionRepository.GetByDesafioIdAsync(desafioAnterior.Id);
 
                 // fecha de corte para obtener las estadísticas históricas
-                var fechaCierreAnterior = DateTime.SpecifyKind(desafioAnterior.FechaFin, DateTimeKind.Utc);
+                var fechaCierreAnterior = DateTime.SpecifyKind(desafioAnterior.FechaFin.Value, DateTimeKind.Utc);
 
                 // 3. Recalcular los puntos de CADA RECETA participante.
                 var puntajesRecetas = new List<RankingDto>();
 
                 foreach (var participacion in participacionesAnteriores)
                 {
-                    var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId, fechaCierreAnterior);
+                    var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaCierreAnterior);
 
                     // Si por alguna razón la receta o sus stats no existen a esa fecha, se ignora.
                     if (statsReceta == null) continue;
@@ -114,8 +114,8 @@ namespace FoB.Infrastructure.Service
                     Nombre = desafioActual.Nombre,
                     Ingrediente = desafioActual.Ingrediente,
                     Descripcion = desafioActual.Descripcion,
-                    FechaInicio = desafioActual.FechaInicio,
-                    FechaFin = desafioActual.FechaFin
+                    FechaInicio = desafioActual.FechaInicio.Value,
+                    FechaFin = desafioActual.FechaFin.Value
                 };
             }
 
@@ -153,7 +153,7 @@ namespace FoB.Infrastructure.Service
             foreach (var participacion in participaciones)
             {
                 // 2. Obtener las estadísticas actuales de la receta
-                var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId, fechaActualDeCorte);
+                var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaActualDeCorte);
 
                 // Si la receta no tiene stats o ya no existe, ignorarla (buena práctica)
                 if (statsReceta == null) continue;

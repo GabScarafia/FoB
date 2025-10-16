@@ -33,6 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import { BASE_URL } from 'apiConfig';
 
 interface Ingrediente {
     id: number;
@@ -153,7 +154,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         if (isProcessingLike) return; // Evita múltiples clics rápidos
         setIsProcessingLike(true);
         try {
-            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
+            const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData?.token}`,
@@ -197,7 +198,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             return; 
         }
 
-        const apiUrl = `https://localhost:7084/Follow/${usuarioId}`;
+        const apiUrl = `${BASE_URL}/Follow/${usuarioId}`;
 
         try {
             const response = await fetch(apiUrl, {
@@ -224,7 +225,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const handleDisLikeClick = async () => {
         try {
 
-            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
+            const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData?.token}`,
@@ -263,7 +264,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const handleFavoritoClick = async () => {
         try {
             
-            const response = await fetch(`https://localhost:7084/Recetas/Interaccion`, {
+            const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData?.token}`,

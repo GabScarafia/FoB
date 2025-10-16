@@ -34,6 +34,7 @@ import { useAuth } from "../context/AuthContext";
 import fotoPerfilLocal from "../assets/images/avatar.png";
 import { formatoTiempoRelativo } from "../utils/formateoDeTiempo";
 import "./DrawerComentarios.css";
+import { BASE_URL } from "apiConfig";
 
 // Interfaz para un solo comentario, incluyendo las respuestas anidadas.
 export interface Comentario {
@@ -229,7 +230,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     setErrorComentarios(null);
     try {
       // El backend ahora devuelve una lista anidada, por lo que no es necesario procesarla aquí
-      const response = await fetch(`https://localhost:7084/api/Comentario/receta/${idReceta}`, {
+      const response = await fetch(`${BASE_URL}/api/Comentario/receta/${idReceta}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -278,7 +279,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     if (comentarioEnEdicion) {
       // Estamos editando un comentario existente
       try {
-        const response = await fetch(`https://localhost:7084/api/Comentario/${comentarioEnEdicion.id}`, {
+        const response = await fetch(`${BASE_URL}/api/Comentario/${comentarioEnEdicion.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -318,7 +319,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
         console.log("Enviando comentario:", comentarioACrear);
         console.log("Comentario padre:", comentarioPadre);
         try {
-          const response = await fetch('https://localhost:7084/api/Comentario', {
+          const response = await fetch('${BASE_URL}/api/Comentario', {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,
@@ -385,7 +386,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     setDeleteError(null);
 
     try {
-      const response = await fetch(`https://localhost:7084/api/Comentario/${comentarioAEliminar.id}`, {
+      const response = await fetch(`${BASE_URL}/api/Comentario/${comentarioAEliminar.id}`, {
         method: "DELETE",
         headers: {
           'Authorization': `Bearer ${token}`,

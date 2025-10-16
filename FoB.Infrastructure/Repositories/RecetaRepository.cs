@@ -52,7 +52,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 IngredienteReceta ingredienteReceta = new()
                 {
                     Ingrediente = ingrediente,
-                    UnidadDeMedida = item.UnidadDeMedida,
+                    UnidadId = item.UnidadId,
                     Cantidad = item.Cantidad.GetValueOrDefault(),
                     Receta = nuevaReceta
                 };
@@ -162,6 +162,8 @@ internal sealed class RecetaRepository : IRecetaRepository
             .Include(x => x.Comentario)
             .Include(x => x.IngredienteReceta)
                 .ThenInclude(x => x.Ingrediente)
+            .Include(r => r.IngredienteReceta)
+                .ThenInclude(ir => ir.Unidad)
             .Include(x => x.RecetaEtiquetas)
                 .ThenInclude(x => x.Etiquetas)
             .Where(x => x.Activa == true  && x.UsuarioId != _currentUser.User.Id);
@@ -203,7 +205,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Id = i.IngredienteId,
                 Nombre = i.Ingrediente.Nombre,
                 Cantidad = i.Cantidad,
-                UnidadDeMedida = i.UnidadDeMedida
+                UnidadDeMedida = i.Unidad.Nombre
             }).ToList(),
             Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
@@ -258,6 +260,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                              .ThenInclude(x => x.Usuario)
                         .Include(x => x.IngredienteReceta)
                              .ThenInclude(x => x.Ingrediente)
+                        .Include(r => r.IngredienteReceta)
+                            .ThenInclude(ir => ir.Unidad)
                         .Include(x => x.RecetaEtiquetas)
                              .ThenInclude(x => x.Etiquetas)
                         .Include(x => x.Paso)
@@ -316,7 +320,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Id = i.IngredienteId,
                 Nombre = i.Ingrediente.Nombre,
                 Cantidad = i.Cantidad,
-                UnidadDeMedida = i.UnidadDeMedida
+                UnidadDeMedida = i.Unidad.Nombre
             }).ToList(),
             Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
@@ -428,6 +432,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 .ThenInclude(u => u.UsuarioImagen)
             .Include(r => r.RecetaImagen)
             .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+            .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
             .Include(r => r.Paso)
             .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
             .Include(r => r.Voto)
@@ -463,7 +468,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Id = ir.Ingrediente.Id,
                 Nombre = ir.Ingrediente.Nombre,
                 Cantidad = ir.Cantidad,
-                UnidadDeMedida = ir.UnidadDeMedida
+                UnidadDeMedida = ir.Unidad.Nombre
             }).ToList() ?? new List<IngredienteResponse>(),
             Pasos = receta.Paso?.Select(p => new PasoResponse
             {

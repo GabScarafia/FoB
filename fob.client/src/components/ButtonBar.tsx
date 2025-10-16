@@ -73,7 +73,8 @@ export default function ButtonBar() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    p: 2,
+                    height: 56,
+                    paddingLeft: 4,
                     zIndex: 1300
                 }}>
                     <IconButton

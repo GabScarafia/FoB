@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 import CreateRecetaDialog from 'components/CreateRecetaDialog';
+import { BASE_URL } from 'apiConfig';
 
 
 interface DesafioDto {
@@ -95,7 +96,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         setRankingCargando(true);
         try {
             //  Endpoint real para obtener el ranking ACTIVO
-            const response = await fetch('https://localhost:7084/Desafios/Ranking', {
+            const response = await fetch(`${BASE_URL}/Desafios/Ranking`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -128,7 +129,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         const obtenerDesafio = async () => {
             try {
                 // Endpoint simulado para obtener el desafío y el ranking anterior
-                const response = await fetch('https://localhost:7084/Desafios/Actual', {
+                const response = await fetch(`${BASE_URL}/Desafios/Actual`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -163,7 +164,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
         const obtenerRecetas = async () => {
             try {
-                const response = await fetch('https://localhost:7084/Recetas/Feed?pageSize=1', {
+                const response = await fetch(`${BASE_URL}/Recetas/Feed?pageSize=1`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
@@ -199,7 +200,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
 
         try {
-            const response = await fetch(`https://localhost:7084/Recetas/${recetaId}`, {
+            const response = await fetch(`${BASE_URL}/Recetas/${recetaId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -293,7 +294,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         setRecetasFiltradas(resultadosRecetas);
 
         try {
-            const response = await fetch(`https://localhost:7084/Busqueda/usuarios?termino=${termino}`, {
+            const response = await fetch(`${BASE_URL}/Busqueda/usuarios?termino=${termino}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -327,7 +328,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
         const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
         try {
-            const response = await fetch(`https://localhost:7084/Follow/${followedId}`, {
+            const response = await fetch(`${BASE_URL}/Follow/${followedId}`, {
                 method: method,
                 headers: {
                     'Authorization': `Bearer ${token}`,

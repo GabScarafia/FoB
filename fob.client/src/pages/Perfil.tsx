@@ -9,6 +9,7 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 
 // Foto por defecto
 import fotoPerfilDefault from '../assets/images/avatar.png';
+import { BASE_URL } from 'apiConfig';
 
 interface RecetaDto {
     id: number;
@@ -69,7 +70,7 @@ const Perfil: React.FC = () => {
                 const headers: Record<string, string> = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
 
-                const response = await fetch(`https://localhost:7084/Usuario/${perfilId}`, {
+                const response = await fetch(`${BASE_URL}/Usuario/${perfilId}`, {
                     headers,
                     signal,
                 });
