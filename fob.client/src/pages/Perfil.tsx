@@ -9,7 +9,7 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 
 // Foto por defecto
 import fotoPerfilDefault from '../assets/images/avatar.png';
-import { BASE_URL } from 'apiConfig';
+import { BASE_URL } from '../apiConfig';
 
 interface RecetaDto {
     id: number;

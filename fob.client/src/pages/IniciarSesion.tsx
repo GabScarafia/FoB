@@ -7,6 +7,7 @@ import Boton from '../components/ui/Boton';
 import '../styles/IniciarSesion.css';
 import logoImage from '../assets/images/logo.png';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../apiConfig';
 
 const IniciarSesion: React.FC = () => {
   const { login } = useAuth();

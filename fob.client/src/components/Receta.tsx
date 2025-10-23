@@ -33,7 +33,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import { BASE_URL } from 'apiConfig';
+import { BASE_URL } from '../apiConfig';
 
 interface Ingrediente {
     id: number;

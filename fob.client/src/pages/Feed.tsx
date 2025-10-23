@@ -15,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 import CreateRecetaDialog from 'components/CreateRecetaDialog';
-import { BASE_URL } from 'apiConfig';
+import { BASE_URL } from '../apiConfig';
 
 
 interface DesafioDto {
@@ -709,23 +709,41 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 onClose={handleCloseRankingModal}
                 aria-labelledby="modal-ranking-titulo"
                 closeAfterTransition
-            >
-                <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: { xs: '90%', sm: 400 },
+                sx={{
+                    p: 0,
+                    m: 0,
+                    display: 'flex',
+                    alignItems: { xs: 'flex-start', sm: 'center' },
+                    justifyContent: { xs: 'flex-start', sm: 'center' },
+                    backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' },
+                }}
+                slotProps={{
+                    backdrop: {
+                    sx: {
+                        backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' },
+                    },
+                    },
+                }}
+                >
+                <Box
+                    sx={{
+                    position: { xs: 'fixed', sm: 'relative' }, // 👈 fuerza full viewport en mobile
+                    top: { xs: 0, sm: '50%' },
+                    left: { xs: 0, sm: '50%' },
+                    transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
+                    width: { xs: '100vw', sm: 400 },
+                    height: { xs: '100vh', sm: 'auto' },
                     bgcolor: 'background.paper',
-                    borderRadius: '16px',
+                    borderRadius: { xs: 0, sm: '16px' },
                     boxShadow: 24,
-                    p: 4,
+                    p: { xs: 2, sm: 4 },
                     outline: 'none',
-                    maxHeight: '90vh',
                     overflowY: 'auto',
                     border: '3px solid #FF9800',
-                    background: '#fcfcfc'
-                }}>
+                    background: '#fcfcfc',
+                    maxHeight: { xs: 'none', sm: '90vh' },
+                    }}
+                >
                     <Typography id="modal-ranking-titulo" variant="h5" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: '#FF5722', textAlign: 'center' }}>
                         🏆 Ranking Actual
                     </Typography>

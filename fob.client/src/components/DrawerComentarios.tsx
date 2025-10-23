@@ -34,7 +34,7 @@ import { useAuth } from "../context/AuthContext";
 import fotoPerfilLocal from "../assets/images/avatar.png";
 import { formatoTiempoRelativo } from "../utils/formateoDeTiempo";
 import "./DrawerComentarios.css";
-import { BASE_URL } from "apiConfig";
+import { BASE_URL } from "../apiConfig";
 
 // Interfaz para un solo comentario, incluyendo las respuestas anidadas.
 export interface Comentario {

@@ -25,7 +25,7 @@ import logoImage from '../assets/images/logo-blanco.png';
 import { useAuth } from "../context/AuthContext";
 import type { etiquetaType } from "types/Etiqueta";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { BASE_URL } from "apiConfig";
+import { BASE_URL } from "../apiConfig";
 
 
 interface CreateRecetaDialogProps {

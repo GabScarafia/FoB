@@ -10,7 +10,7 @@ import Modal from '@mui/material/Modal';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import { BASE_URL } from 'apiConfig';
+import { BASE_URL } from '../apiConfig';
 
 
 interface RecetaDto {

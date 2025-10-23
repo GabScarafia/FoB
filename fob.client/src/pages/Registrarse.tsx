@@ -6,7 +6,7 @@ import CasillaVerificacion from 'components/ui/CasillaVerificacion';
 import '../styles/Registrarse.css';
 import logoImage from '../assets/images/logo.png';
 import TerminosYCondicionesModal from 'components/Modal/TerminosYCondicionesModal';
-import { BASE_URL } from 'apiConfig';
+import { BASE_URL } from '../apiConfig';
 
 const Registrarse: React.FC = () => {
     const [nombre, setNombre] = useState<string>('');
