@@ -1,10 +1,17 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, IconButton, Typography, Box } from "@mui/material";
+import { AppBar, Toolbar, IconButton, Typography, Box, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { useAuth } from "../context/AuthContext";
 
-export default function UpperAppBar() {
+interface UpperAppBarProps {
+    mode: "light" | "dark";
+    toggleTheme: () => void;
+}
+
+export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
     const { authData, clearAuthData } = useAuth();
     const navigate = useNavigate();
 
@@ -29,6 +36,12 @@ export default function UpperAppBar() {
                         <CloseIcon />
                     </IconButton>
                 )}
+                {/* Botón de alternar tema */}
+                <Tooltip title={mode === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
+                    <IconButton color="inherit" onClick={toggleTheme}>
+                        {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+                    </IconButton>
+                </Tooltip>
             </Toolbar>
         </AppBar>
     );

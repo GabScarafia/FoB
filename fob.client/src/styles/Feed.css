@@ -1,28 +1,25 @@
-/* Contenedor principal que envuelve todo el Feed (incluyendo la barra de búsqueda) */
+/* Contenedor principal que envuelve todo el Feed (incluyendo la barra de bï¿½squeda) */
 .feed-contenedor-principal {
     max-width: 500px;
-    margin: 0 auto;
-    background-color: white;
+    margin: 0 auto;    
     min-height: 100vh;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
-    background-color: #f9f9f9;
+    /*background-color: #f9f9f9;*/
 }
 .css-c11htj{
-    background-color: #f9f9f9;
+    /*background-color: #f9f9f9;*/
 }
 /* Estilos para el contenedor del mensaje del feed */
 .mensaje-feed {
     text-align: center;
     padding: 20px;
     margin: 50px auto;
-    max-width: 600px;
-    background-color: #f0f0f0;
+    max-width: 600px;    
     border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    font-size: 1.2em;
-    color: #555;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Considera usar el shadow del tema */
+    font-size: 1.2em;    
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -34,13 +31,12 @@
     margin-top: 10px;
 }
 
-/* Estilos para el mensaje de "no resultados" de la búsqueda */
+/* Estilos para el mensaje de "no resultados" de la bï¿½squeda */
 .no-resultados {
     text-align: center;
     padding: 20px;
     margin-top: 50px;
-    color: #888;
-    font-size: 1.1em;
+    font-size: 1.1em;    
 }
 
 /* Contenido del feed (recetas) */
@@ -53,15 +49,13 @@
 
 .feed-cargando, .feed-error {
     text-align: center;
-    padding: 20px;
-    color: #555;
+    padding: 20px;    
     font-size: 1.1em;
 }
 
 .no-resultados {
     text-align: center;
-    padding: 20px;
-    color: #888;
+    padding: 20px;    
     font-style: italic;
 }
 
@@ -69,21 +63,19 @@
 .cargando-centrado, .feed-cargando, .cargando-perfil {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: center;    
     min-height: 40vh;
     text-align: center;
     font-size: 1.1em;
-    color: #555;
 }
 
-/* Estilos para la barra de navegación inferior */
+/* Estilos para la barra de navegaciï¿½n inferior */
 .barra-inferior-navegacion-placeholder {
     display: flex;
     justify-content: space-around;
     align-items: center;
     padding: 10px 0;
-    background-color: #fff;
-    border-top: 1px solid #ddd;
+    /* background-color y border-top se manejarÃ¡n con MUI */
     box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
     position: fixed;
     bottom: 0;
@@ -96,21 +88,21 @@
 
 .barra-inferior-navegacion-placeholder .icono-nav {
     font-size: 1.8em;
-    color: #555;
     cursor: pointer;
 }
 
 .barra-inferior-navegacion-placeholder .icono-nav.activo {
-    color: #007bff;
+    /* El color activo se manejarÃ¡ con la prop `color="primary"` en el componente Icon de MUI */
 }
 
 .barra-inferior-navegacion-placeholder .icono-nav:hover {
-    color: #0056b3;
+    /* El hover se puede manejar con la prop `sx` de MUI */
 }
 
 .barra-inferior-navegacion-placeholder .boton-agregar {
-    background-color: #007bff;
-    color: white;
+    /* Esto deberÃ­a ser un componente <Fab color="primary"> de MUI */
+    /* background-color: #007bff; */
+    /* color: white; */
     width: 45px;
     height: 45px;
     border-radius: 50%;
@@ -128,8 +120,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     width: 90%;
-    max-width: 400px;
-    background-color: #fff;
+    max-width: 400px;    
     border-radius: 8px;
     box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
     padding: 24px;
@@ -138,18 +129,16 @@
     text-align: center;
 }
 
-/* Título del modal */
+/* Tï¿½tulo del modal */
 .modal-titulo {
     font-size: 1.5rem;
     font-weight: 600;
-    color: #0b2553;
     margin-bottom: 16px;
 }
 
 /* Texto del cuerpo del modal */
 .modal-descripcion {
-    font-size: 1rem;
-    color: #555;
+    font-size: 1rem;    
     margin-bottom: 24px;
 }
 
@@ -160,20 +149,18 @@
     gap: 16px;
 }
 
-/* Estilo para el botón Cancelar */
+/* Estilo para el botï¿½n Cancelar */
 .modal-btn-cancelar {
     text-transform: none;
-    font-weight: 600;
-    border-color: #0b2553 !important;
-    color: #0b2553 !important;
+    font-weight: 600;    
+    /* Se manejarÃ¡ con <Button variant="outlined" color="primary"> */
 }
 
-/* Estilo para el botón Eliminar */
+/* Estilo para el botï¿½n Eliminar */
 .modal-btn-eliminar {
     text-transform: none;
     font-weight: 600;
-    background-color: #d32f2f !important;
-    color: #fff !important;
+    /* Se manejarÃ¡ con <Button variant="contained" color="error"> */
 }
 
 

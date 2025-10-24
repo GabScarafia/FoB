@@ -1,5 +1,6 @@
-﻿import React, { useState } from 'react';
+﻿﻿import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import './Receta.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -11,12 +12,9 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import Menu from '@mui/material/Menu';
-import MenuItem from '@mui/material/MenuItem';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/MenuItem';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
-import IconButton from '@mui/material/IconButton';
+
 
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
@@ -388,8 +386,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     //console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
 
     return (
-        <div className="tarjeta-receta">
-            <div className="encabezado-receta">
+        <Paper elevation={2} sx={{ 
+            maxWidth: '500px', 
+            mx: 'auto', 
+            mb: 3, 
+            overflow: 'hidden',
+            bgcolor: 'background.paper' // Usa el color de fondo del tema
+        }}>
+            <Box className="encabezado-receta" sx={{ p: 2 }}>
                 <div className="info-autor" onClick={handleUsuarioClick} style={{cursor: 'pointer'}}>
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
@@ -415,7 +419,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 aria-haspopup="true"
                                 aria-expanded={openMenu ? 'true' : undefined}
                                 onClick={handleClickMenu}
-                                sx={{ color: '#0b2553', p: 0.5, ml: 1 }}
+                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }} // Usa color del tema
                             >
                                 <MoreVertIcon />
                             </IconButton>
@@ -438,7 +442,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         </>
                     )}
                 </div>
-            </div>
+            </Box>
 
             {/* Imagen principal del carrusel con swipe */}
             <div className="carrusel-imagen" {...swipeHandlers}>
@@ -452,15 +456,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
             {/* Navegación y puntitos debajo de la imagen */}
             <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0}>
+                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
                     <ArrowBackIcon />
                 </IconButton>
                 <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
                     {imagenesCarrusel.map((_, idx) => (
-                        <span key={idx} className={idx === indiceImagen ? 'punto activo' : 'punto'} style={{ fontSize: 18, color: idx === indiceImagen ? '#1f43aa' : '#bbb' }}>●</span>
+                        <Box 
+                            key={idx} 
+                            component="span" 
+                            sx={{ 
+                                fontSize: 18, 
+                                color: idx === indiceImagen ? 'primary.main' : 'text.disabled' // Colores del tema
+                            }}
+                        >●</Box>
                     ))}
                 </div>
-                <IconButton onClick={handleNextImagen} disabled={indiceImagen === imagenesCarrusel.length - 1}>
+                <IconButton onClick={handleNextImagen} disabled={indiceImagen === imagenesCarrusel.length - 1} color="primary">
                     <ArrowForwardIcon />
                 </IconButton>
             </div>
@@ -468,54 +479,61 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             {/* Info del paso si corresponde */}
             {indiceImagen > 0 && pasosConImagen[indiceImagen - 1] && (
                 <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
-                    <strong>Paso {pasosConImagen[indiceImagen - 1].numero}:</strong> {pasosConImagen[indiceImagen - 1].titulo}
-                    <div>{pasosConImagen[indiceImagen - 1].descripcion}</div>
+                    <Typography variant="body2"><strong>Paso {pasosConImagen[indiceImagen - 1].numero}:</strong> {pasosConImagen[indiceImagen - 1].titulo}</Typography>
+                    <Typography variant="caption">{pasosConImagen[indiceImagen - 1].descripcion}</Typography>
                 </div>
             )}
 
-            <div className="acciones-receta">
-                <div className="acciones-izquierda">
-                    {liked ? (
-                        <ThumbUpIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleLikeClick} />
-                    ) : (
-                        <ThumbUpAltOutlinedIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleLikeClick} />
-                    )}
+            <Box className="acciones-receta" sx={{ px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <IconButton onClick={handleLikeClick} size="small">
+                        {liked ? (
+                            <ThumbUpIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <ThumbUpAltOutlinedIcon />
+                        )}
+                    </IconButton>
                     <span className="conteo-me-gusta">{likesCount}</span>
-                    {disliked ? (
-                        <ThumbDownIcon className="icono-accion icono-me-gusta azul-relleno" onClick={handleDisLikeClick} />
-                    ) : (
-                        <ThumbDownAltOutlinedIcon className="icono-accion icono-me-gusta azul-borde" onClick={handleDisLikeClick} />
-                    )}
-                    <ChatBubbleOutlineIcon
-                        className="icono-accion icono-comentario azul-borde"
-                        onClick={handleOpenDrawer}
-                    />
+
+                    <IconButton onClick={handleDisLikeClick} size="small">
+                        {disliked ? (
+                            <ThumbDownIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <ThumbDownAltOutlinedIcon />
+                        )}
+                    </IconButton>
+
+                    <IconButton onClick={handleOpenDrawer} size="small">
+                        <ChatBubbleOutlineIcon />
+                    </IconButton>
                     <span className="conteo-comentarios">{comentariosCount}</span>
 
-                    <AccessTimeIcon className="icono-accion icono-tiempo azul-relleno" />
+                    <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
                     <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
-                </div>
+                </Box>
                 <div className="acciones-derecha">
-                    {favorite ? (
-                        <StarIcon className="icono-accion icono-guardar azul-relleno" onClick={handleFavoritoClick} />
-                    ) : (
-                        <StarBorderIcon className="icono-accion icono-guardar azul-borde" onClick={handleFavoritoClick} />
-                    )}
+                    <IconButton onClick={handleFavoritoClick} size="small">
+                        {favorite ? (
+                            <StarIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <StarBorderIcon />
+                        )}
+                    </IconButton>
                 </div>
-            </div>
+            </Box>
 
-            <div className="titulo-receta">
-                <h3>{receta.titulo}</h3>
-            </div>
+            <Box sx={{ px: 2, mt: 1 }}>
+                <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography>
+            </Box>
 
-            <div className="descripcion-receta">
-                <p>{descripcionMostrada}</p>
+            <Box sx={{ px: 2, mt: 1 }}>
+                <Typography variant="body2">{descripcionMostrada}</Typography>
                 {debeMostrarBotonLeerMas && (
-                    <button onClick={handleToggleDescripcion} className="boton-leer-mas">
+                    <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}>
                         {mostrarMas ? 'Leer menos' : 'Leer más'}
-                    </button>
+                    </Button>
                 )}
-            </div>
+            </Box>
 
             <div className="informacion-adicional">
                 {receta.ingredientes && receta.ingredientes.length > 0 && (
@@ -542,9 +560,9 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 )}
                 {receta.pasos && receta.pasos.length > 0 && (
                     <div className="pasos-receta">
-                        <button className="boton-pasos" onClick={handleOpenModalPasos}>
-                            <strong>Ver Pasos</strong>
-                        </button>
+                        <Button variant="contained" onClick={handleOpenModalPasos} sx={{ mt: 1, mb: 0.5 }}>
+                            Ver Pasos
+                        </Button>
                     </div>
                 )}
             </div>
@@ -565,26 +583,26 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 )}
             </div>
 
-            {modalPasosAbierto && (
-                <div className="modal-overlay" onClick={handleCloseModalPasos}>
-                    <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                        <h3>Pasos de la Receta</h3>
-                        <button className="boton-cerrar-modal" onClick={handleCloseModalPasos}>×</button>
-                        <div className="lista-pasos">
-                            {receta.pasos.sort((a, b) => a.numero - b.numero).map((paso, index) => (
-                                <div key={index} className="paso-item">
-                                    <div className="paso-titulo-contenedor">
-                                        <h4 className="paso-numero-titulo">
-                                            {paso.numero}- {paso.titulo}
-                                        </h4>
-                                    </div>
-                                    <p className="paso-descripcion">{paso.descripcion}</p>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                </div>
-            )}
+            <Dialog open={modalPasosAbierto} onClose={handleCloseModalPasos} scroll="paper" fullWidth maxWidth="sm">
+                <DialogTitle>Pasos de la Receta</DialogTitle>
+                <DialogContent dividers>
+                    <Box component="div" className="lista-pasos">
+                        {receta.pasos.sort((a, b) => a.numero - b.numero).map((paso, index) => (
+                            <div key={index} className="paso-item">
+                                <Typography variant="h6" component="h4" className="paso-numero-titulo">
+                                    {paso.numero}- {paso.titulo}
+                                </Typography>
+                                <Typography variant="body2" className="paso-descripcion">
+                                    {paso.descripcion}
+                                </Typography>
+                            </div>
+                        ))}
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseModalPasos}>Cerrar</Button>
+                </DialogActions>
+            </Dialog>
 
             <DrawerComentarios
                 open={drawerAbierto}
@@ -592,7 +610,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 idReceta={receta.id}
                 onComentarioAgregado={handleComentarioAgregado}
             />
-        </div>
+        </Paper>
     );
 };
 

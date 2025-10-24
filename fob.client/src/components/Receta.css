@@ -45,13 +45,11 @@
 
 .nombre-autor {
     font-weight: bold;
-    color: #333;
     font-size: 1.1rem;
 }
 
 .tiempo-publicacion {
     font-size: 0.8em;
-    color: #888;
 }
 
 .meta-receta {
@@ -62,7 +60,6 @@
 
 .tipo-contenido {
     font-size: 0.8em;
-    color: #1a2d72;
     border-radius: 4px;
 }
 
@@ -74,7 +71,6 @@
 
 .titulo-receta h3 {
     font-size: 1.2em;
-    color: black;
     margin: 0;
     padding: 0;
     font-weight: bold;
@@ -100,12 +96,10 @@
 }
 
 .estrellas-calificacion .estrella {
-    color: #ccc;
     font-size: 1.2em;
 }
 
 .estrellas-calificacion .estrella.rellena {
-    color: #1a2d72;
 }
 
 /* Contenedor de la imagen */
@@ -154,25 +148,13 @@
     align-items: center;
 }
 
-/* Color azul general para iconos con borde (como el coraz�n antes de dar like) */
-.icono-accion.azul-borde {
-    color: #1a2d72;
-}
-
-/* Color azul general para iconos rellenos (como el coraz�n despu�s de dar like, comentario y guardar) */
-.icono-accion.azul-relleno {
-    color: #1a2d72;
-}
-
 /* Efecto al pasar el mouse sobre cualquier icono de acci�n */
 .icono-accion:hover {
-    color: #0056b3;
     transform: scale(1.1);
 }
 
 .conteo-me-gusta, .conteo-comentarios {
     font-size: 0.9em;
-    color: #393939;
     font-weight: bold;
     margin-left: -5px;
 }
@@ -180,13 +162,11 @@
 .icono-tiempo {
     font-size: 28px !important;
     pointer-events: none;
-    color: #393939;
     cursor: default;
 }
 
 .conteo-tiempo {
     font-size: 0.9em;
-    color: #393939;
     font-weight: bold;
     margin-left: -5px;
 }
@@ -196,7 +176,6 @@
     padding: 0 15px;
     margin-top: 10px;
     font-size: 0.95em;
-    color: #333;
 }
 
 .ingredientes-receta {
@@ -216,7 +195,6 @@
     margin-top: 3px;
     font-size: 0.85em;
     display: inline-block;
-    color: #333;
 }
 
 .tag-ingrediente {
@@ -224,18 +202,15 @@
 }
 
 .ingredientes-receta strong {
-    color: black;
 }
 
 .etiquetas-receta strong {
-    color: black;
 }
 
 /* Descripci�n de la receta */
 .descripcion-receta {
     padding: 5px 15px 10px 15px;
     font-size: 0.95em;
-    color: #333;
     line-height: 1.4;
 }
 
@@ -243,7 +218,6 @@
 .vista-previa-comentarios {
     padding: 0 15px 15px;
     font-size: 0.85em;
-    color: #555;
 }
 
 .item-comentario {
@@ -258,7 +232,6 @@
 /* icono de comentario peque�o */
 .icono-comentario-pequeno {
     font-size: 1em !important;
-    color: black;
     margin-right: 5px;
     flex-shrink: 0;
 }
@@ -271,18 +244,15 @@
 
 .autor-comentario {
     font-weight: bold;
-    color: black;
     margin-right: 5px;
 }
 
 .tiempo-comentario {
-    color: #999;
     font-size: 0.8em;
     margin-left: 5px;
 }
 
 .sin-comentarios {
-    color: #888;
     font-style: italic;
     text-align: center;
     padding-top: 5px;
@@ -292,7 +262,6 @@
 .boton-leer-mas {
     background: none;
     border: none;
-    color: #1a2d72;
     cursor: pointer;
     font-size: 0.9em;
     font-weight: bold;
@@ -303,94 +272,11 @@
 }
 
 .boton-leer-mas:hover {
-    color: #0056b3;
     text-decoration: underline;
 }
 
 
 .boton-pasos {
-    background-color: #1f45b0;
-    color: #fff;
-    font-size: 15px;
-    padding: 5px 15px;
-    border: none;
-    border-radius: 25px;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    letter-spacing: 1px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-}
-
-.boton-pasos:hover {
-    background-color: #0b37b3;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
-
-.boton-pasos:active {
-    background-color: #004085;
-    transform: translateY(0);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-/* Contenedor principal del modal */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-    backdrop-filter: blur(5px);
-}
-
-/* Contenido del modal */
-.modal-content {
-    background: #000000c2;
-    border: 3px solid #1a2d72;
-    color: #fff;
-    padding: 30px;
-    border-radius: 15px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-    position: relative;
-}
-
-/* Encabezado del modal  */
-.modal-content h3 {
-    text-align: center;
-    font-size: 1.8rem;
-    color: #fff;
-    margin-bottom: 20px;
-}
-
-/* Estilos para el botón de cerrar */
-.boton-cerrar-modal {
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    background: transparent;
-    border: none;
-    color: #fff;
-    font-size: 2rem;
-    cursor: pointer;
-    transition: color 0.2s ease;
-}
-
-.boton-cerrar-modal:hover {
-    color: #ccc;
-}
-
-
 .pasos-receta{
     display: flex;
     justify-content: center;
@@ -405,34 +291,13 @@
 
 /* Cada paso individual */
 .lista-pasos li {
-    margin-bottom: 20px;
-    position: relative;
-    counter-increment: step-counter;
 }
 
 /* Título de cada paso */
 .lista-pasos h4 {
-    font-size: 1.2rem;
-    margin-bottom: 5px;
-    color: #fff;
-    font-weight: bold;
 }
 
 /* Descripción del paso */
 .lista-pasos p {
-    color: #ccc;
     line-height: 1.6;
-    margin: 0;
-    padding-left: 25px;
-}
-
-/* Estilo para el número del paso */
-.lista-pasos li::before {
-    content: counter(step-counter) "- ";
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #3f51b5;
-    position: absolute;
-    left: 0;
-    top: 0;
-}
+}}
