@@ -4,6 +4,7 @@
     padding: 30px;
     background-color: #ffffff;
     border-radius: 8px;
+    padding-bottom: 42px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     font-family: Arial, sans-serif;
 }
@@ -13,7 +14,7 @@
     color: #333;
     margin-bottom: 25px;
     border-bottom: 2px solid #f0f0f0;
-    padding-bottom: 10px;
+    padding-bottom: 42px;
 }
 
 /* Estilos para la Foto de Perfil  */
@@ -103,7 +104,7 @@
 
 
 
-/* Estilo para el contenedor de botones de acción */
+/* Estilo para el contenedor de botones de acciï¿½n */
 .form-botones-accion {
     display: flex;
     justify-content: flex-end;
@@ -114,7 +115,7 @@
 }
 
 
-/* Botón Guardar */
+/* Botï¿½n Guardar */
 .boton-guardar {
     display: block;
     width: 100%;
@@ -157,7 +158,7 @@
 
 /* Mensajes de Estado y Carga */
 
-/* Mensaje de Éxito */
+/* Mensaje de ï¿½xito */
 .mensaje-exito {
     background-color: #e6ffed;
     color: #1a7a2a;

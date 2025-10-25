@@ -264,7 +264,7 @@ const EditarPerfil: React.FC = () => {
     }
 
     return (
-        <Paper component="main" sx={{ maxWidth: '600px', mx: 'auto', p: { xs: 2, sm: 3 }, mt: 2 }}>
+        <Paper component="main" sx={{ maxWidth: '600px', mx: 'auto', p: { xs: 2, sm: 3 }, mt: 2 , pb: { xs: 8, sm: 8 } }}>
             <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold' }}>
                 Editar Perfil
             </Typography>

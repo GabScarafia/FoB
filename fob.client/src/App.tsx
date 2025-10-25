@@ -1,14 +1,15 @@
 // src/App.tsx
 import React, { useState, useMemo, useEffect } from "react";
-import { CssBaseline, Box, ThemeProvider } from "@mui/material";
+// 1. QUITA la importación de GlobalStyles
+import { CssBaseline, Box, ThemeProvider } from "@mui/material"; 
 import { getTheme } from "./theme";
 import AppRoutes from "./components/AppRoutes";
 import { AuthProvider } from "./context/AuthContext";
 import UpperAppBar from "./components/UpperAppBar";
 import ButtonBar from "./components/ButtonBar";
 import { useLocation } from "react-router-dom";
-import { useAuth } from "./context/AuthContext"; // Importamos el hook
-import "./App.css";
+import { useAuth } from "./context/AuthContext";
+import "./App.css"; 
 
 // ================================================================
 // 🌙 Componente principal que contiene la lógica del layout
@@ -35,9 +36,15 @@ const MainApp = ({
   };
 
   return (
-    <Box sx={{ display: "flex", flexDirection: "column", width: "100%", minHeight: "100vh" }}>
-      <CssBaseline />
-      {/* Barra superior solo si el usuario está logueado y no es página de login/registro */}
+    <Box sx={{ 
+        display: "flex", 
+        flexDirection: "column", 
+        width: "100%",
+        minHeight: '100vh' 
+    }}>
+      
+      <CssBaseline /> 
+      
       {!isAuthPage && isLoggedIn && (
         <UpperAppBar toggleTheme={toggleTheme} mode={mode} />
       )}
@@ -47,12 +54,10 @@ const MainApp = ({
         component="main"
         sx={{
           flexGrow: 1,
-          p: isAuthPage ? 0 : 3,
+          py: isAuthPage ? 0 : 3,
           width: "100%",
-          minHeight: "100vh",
-          bgcolor: "background.default", // <-- AÑADIMOS ESTA LÍNEA
-          pt: { xs: isAuthPage ? 0 : 8, sm: isAuthPage ? 0 : 8 }, // espacio para AppBar
-          pb: { xs: 9, sm: 0 }, // espacio para BottomNavigation
+          bgcolor: "background.default", 
+          pt: { xs: isAuthPage ? 0 : 8, sm: isAuthPage ? 0 : 8 }, 
         }}
       >
         <AppRoutes onDrawerToggle={handleDrawerToggle} />
@@ -64,11 +69,7 @@ const MainApp = ({
   );
 };
 
-// ================================================================
-// 🌗 App principal con manejo del tema claro/oscuro
-// ================================================================
 export default function App() {
-  // Guardar y restaurar modo en localStorage
   const storedMode = (localStorage.getItem("themeMode") as "light" | "dark") || "light";
   const [mode, setMode] = useState<"light" | "dark">(storedMode);
 
@@ -80,7 +81,6 @@ export default function App() {
     localStorage.setItem("themeMode", newMode);
   };
 
-  // Detectar preferencia del sistema al cargar (solo si no hay valor guardado)
   useEffect(() => {
     const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     if (!localStorage.getItem("themeMode")) {
@@ -91,12 +91,10 @@ export default function App() {
   return (
     <AuthProvider>
       <ThemeProvider theme={theme}>
+        {/* 6. QUITA 'height: "100%"' y 'display: "flex"' */}
         <Box sx={{
-          display: "flex",
           width: "100%",
-          minHeight: "100vh",
-          flexDirection: "column",
-          bgcolor: "background.default",   // 💡 usa el fondo del theme
+          bgcolor: "background.default", 
           transition: "background-color 0.4s ease, color 0.4s ease",
         }}>
           <MainApp toggleTheme={toggleTheme} mode={mode} />

@@ -588,12 +588,38 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 {receta.etiquetas && receta.etiquetas.length > 0 && (
                     <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
                         <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
-                        {receta.etiquetas.map((etiqueta, index) => (
+                        {receta.etiquetas
+                            .sort((a, b) => {
+                                // Convertimos a minúsculas para asegurarnos que "desafio" o "Desafio" funcionen
+                                const aEsDesafio = a.toLowerCase() === 'desafio';
+                                const bEsDesafio = b.toLowerCase() === 'desafio';
+
+                                if (aEsDesafio) return -1; // 'a' ("Desafio") va primero
+                                if (bEsDesafio) return 1;  // 'b' ("Desafio") va primero
+                                
+                                return 0; // Mantiene el orden relativo de las demás
+                                // Opcional: si querés que el resto se ordene alfabéticamente:
+                                // return a.localeCompare(b);
+                            }).map((etiqueta, index) => (
                             <Chip
                                 key={index}
                                 label={etiqueta}
                                 size="small"
-                                variant="outlined" // El variant 'outlined' se ve genial en ambos temas
+                                variant="outlined" // El variant 'outlined' se ve genial en ambos temas,
+                                sx={{
+                                    // Estilos base para todos los chips
+                                    color: 'text.primary', // Color de texto por defecto del tema
+                                    borderColor: 'divider', // Color del borde por defecto del tema
+                                    // Condición para el chip "Desafío"
+                                    ...(etiqueta === 'Desafio' && {
+                                        background: 'linear-gradient(to right, #FF7B00, #FFD700)', // Gradiente naranja a dorado
+                                        color: 'white', // Texto blanco para que contraste
+                                        fontWeight: 'bold',
+                                        '&:hover': {
+                                            opacity: 0.9 // Un ligero efecto al pasar el mouse
+                                        }
+                                    }),
+                                }}
                             />
                         ))}
                     </Box>
