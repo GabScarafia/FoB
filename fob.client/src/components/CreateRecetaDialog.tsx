@@ -32,6 +32,7 @@ import { BASE_URL } from "../apiConfig";
 interface CreateRecetaDialogProps {
     open: boolean;
     onClose: () => void;
+    onRecetaCreada: () => void; // Nueva prop para notificar la creación
     ingrediente?: string;
     desafioId?: number;
 }
@@ -88,7 +89,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export default function CreateRecetaDialog({ open, onClose, ingrediente, desafioId }: CreateRecetaDialogProps) {
+export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingrediente, desafioId }: CreateRecetaDialogProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [dificultad, setDificultad] = React.useState('');
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -503,7 +504,10 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
             }
 
             console.log('Receta creada:', responseBody);
-            onClose();
+            // Disparamos un evento global para que cualquier componente (como el Feed) pueda reaccionar.
+            const event = new CustomEvent('recetaCreada');
+            document.dispatchEvent(event);
+            onClose(); // Cerramos el diálogo como antes.
         } catch (error) {
             console.error('Error al crear la receta:', error);
         } finally {
@@ -564,7 +568,10 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                         borderRadius: 2,
                         p: 3,
                         cursor: 'pointer',
-                        ...(previewImage && { border: 'none', backgroundColor: '#f0f0f0' }),
+                        // Se cambia el color de fondo hardcodeado por uno que se adapta al tema
+                        ...(previewImage && { 
+                            border: 'none', 
+                            backgroundColor: 'action.hover' }),
                     }}
                     onClick={handleBoxClick}
                 >

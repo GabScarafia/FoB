@@ -18,6 +18,7 @@ const Registrarse: React.FC = () => {
     const [aceptarTerminos, setAceptarTerminos] = useState<boolean>(false);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
     const [mensajeError, setMensajeError] = useState<string>('');
+    const [registroExitoso, setRegistroExitoso] = useState<boolean>(false);
     const navigate = useNavigate();
 
     const manejarEnvioRegistro = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -53,8 +54,7 @@ const Registrarse: React.FC = () => {
             });
 
             if (response.ok) {
-                alert('¡Registro exitoso! Por favor, inicia sesión.');
-                navigate('/iniciar-sesion');
+                setRegistroExitoso(true);
             } else {
                 const errorData = await response.json();
                 if (response.status === 400 && errorData.errors) {
@@ -79,6 +79,10 @@ const Registrarse: React.FC = () => {
         setIsModalOpen(false);
     };
 
+    const handleContinuarAlLogin = () => {
+        navigate('/iniciar-sesion');
+    };
+
     return (
         <div className="contenedor-registrarse">
             <div className="header-autenticacion-curvo">
@@ -88,82 +92,47 @@ const Registrarse: React.FC = () => {
             </div>
 
             <div className="formulario-registrarse-caja">
-                <h2>REGISTRATE</h2>
-                <form onSubmit={manejarEnvioRegistro}>
-                    <CampoEntrada
-                        etiqueta="Nombre"
-                        tipo="text"
-                        id="nombre"
-                        valor={nombre}
-                        manejarCambio={(e) => setNombre(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                    />
-                    <CampoEntrada
-                        etiqueta="Apellido"
-                        tipo="text"
-                        id="apellido"
-                        valor={apellido}
-                        manejarCambio={(e) => setApellido(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                    />
-                    <CampoEntrada
-                        etiqueta="Nombre de usuario"
-                        tipo="text"
-                        id="nombre-usuario"
-                        valor={nombreUsuario}
-                        manejarCambio={(e) => setNombreUsuario(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                    />
-                    <CampoEntrada
-                        etiqueta="Correo electrónico"
-                        tipo="email"
-                        id="correo-registro"
-                        valor={correoRegistro}
-                        manejarCambio={(e) => setCorreoRegistro(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                    />
-                    <CampoEntrada
-                        etiqueta="Contraseña"
-                        tipo="password"
-                        id="contrasena-registro"
-                        valor={contrasenaRegistro}
-                        manejarCambio={(e) => setContrasenaRegistro(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                        mostrarOcultarContrasena={true}
-                    />
-                    <CampoEntrada
-                        etiqueta="Confirmar contraseña"
-                        tipo="password"
-                        id="confirmar-contrasena"
-                        valor={confirmarContrasena}
-                        manejarCambio={(e) => setConfirmarContrasena(e.target.value)}
-                        requerido={true}
-                        mostrarAsteriscoRequerido={true}
-                        mostrarOcultarContrasena={true}
-                    />
-                    <CasillaVerificacion
-                        id="aceptar-terminos"
-                        chequeado={aceptarTerminos}
-                        manejarCambio={(e) => setAceptarTerminos(e.target.checked)}
-                        etiquetaInicio="Acepto los&nbsp;"
-                        textoNegrita="términos y condiciones"
-                        restoEtiqueta="&nbsp;de la aplicación"
-                        requerido={true}
-                        onTextoNegritaClick={abrirModalTerminos}
-                    />
+                {registroExitoso ? (
+                    <div className="contenido-exito-tarjeta">
+                        <h3>¡Registro Exitoso!</h3>
+                        <p>Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.</p>
+                        <Boton
+                            onClick={handleContinuarAlLogin}
+                            className="boton-principal"
+                        >
+                            Continuar
+                        </Boton>
+                    </div>
+                ) : (
+                    <>
+                        <h2>REGISTRATE</h2>
+                        <form onSubmit={manejarEnvioRegistro}>
+                            <CampoEntrada etiqueta="Nombre" tipo="text" id="nombre" valor={nombre} manejarCambio={(e) => setNombre(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
+                            <CampoEntrada etiqueta="Apellido" tipo="text" id="apellido" valor={apellido} manejarCambio={(e) => setApellido(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
+                            <CampoEntrada etiqueta="Nombre de usuario" tipo="text" id="nombre-usuario" valor={nombreUsuario} manejarCambio={(e) => setNombreUsuario(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
+                            <CampoEntrada etiqueta="Correo electrónico" tipo="email" id="correo-registro" valor={correoRegistro} manejarCambio={(e) => setCorreoRegistro(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
+                            <CampoEntrada etiqueta="Contraseña" tipo="password" id="contrasena-registro" valor={contrasenaRegistro} manejarCambio={(e) => setContrasenaRegistro(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} mostrarOcultarContrasena={true} />
+                            <CampoEntrada etiqueta="Confirmar contraseña" tipo="password" id="confirmar-contrasena" valor={confirmarContrasena} manejarCambio={(e) => setConfirmarContrasena(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} mostrarOcultarContrasena={true} />
+                            <CasillaVerificacion
+                                id="aceptar-terminos"
+                                chequeado={aceptarTerminos}
+                                manejarCambio={(e) => setAceptarTerminos(e.target.checked)}
+                                etiquetaInicio="Acepto los&nbsp;"
+                                textoNegrita="términos y condiciones"
+                                restoEtiqueta="&nbsp;de la aplicación"
+                                requerido={true}
+                                onTextoNegritaClick={abrirModalTerminos}
+                            />
 
-                    {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
+                            {mensajeError && <p className="mensaje-error">{mensajeError}</p>}
 
-                    <Boton tipo="submit" className="boton-principal">REGISTRARTE</Boton>
-                </form>
-                <Link to="/iniciar-sesion" style={{ textDecoration: 'none', width: '100%' }}>
-                    <Boton className="boton-atras-a-inicio-sesion">ATRÁS</Boton>
-                </Link>
+                            <Boton tipo="submit" className="boton-principal">REGISTRARTE</Boton>
+                        </form>
+                        <Link to="/iniciar-sesion" style={{ textDecoration: 'none', width: '100%' }}>
+                            <Boton className="boton-atras-a-inicio-sesion">ATRÁS</Boton>
+                        </Link>
+                    </>
+                )}
             </div>
 
             <TerminosYCondicionesModal isOpen={isModalOpen} onClose={cerrarModalTerminos} />
