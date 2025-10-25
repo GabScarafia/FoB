@@ -2,6 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import CameraAltIcon from '@mui/icons-material/CameraAlt'; 
+import { Paper, Box, Typography, TextField, Button, Avatar, CircularProgress, Alert, IconButton } from '@mui/material';
 // Nota: Revisa que la ruta a tu CSS y la imagen sea correcta
 import '../styles/EditarPerfil.css';
 
@@ -247,145 +248,149 @@ const EditarPerfil: React.FC = () => {
             setNuevaImagenFile(null);
         }
     };
-
-    // Uso de la imagen de perfil actual o la default
-    const imagenSrc = formData.fotoPerfilBase64 
-        ? `data:image/jpeg;base64,${formData.fotoPerfilBase64}` 
-        : fotoPerfilDefault;
-
+ 
+    const imagenSrc = formData.fotoPerfilBase64
+        ? `data:image/jpeg;base64,${formData.fotoPerfilBase64}`
+        : fotoPerfilDefault;
+        
     // Mostrar un loader si está cargando y aún no tiene datos iniciales
     if (cargando && !formData.nombreUsuario) {
-        return <div className="cargando-perfil">Cargando datos del perfil...</div>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh', flexDirection: 'column', gap: 2 }}>
+                <CircularProgress />
+                <Typography color="text.secondary">Cargando datos del perfil...</Typography>
+            </Box>
+        );
     }
 
     return (
-        <div className="editar-perfil-contenedor">
-            <div className="header-editar-perfil">
-                <h2>Editar Perfil</h2>
-            </div>
+        <Paper component="main" sx={{ maxWidth: '600px', mx: 'auto', p: { xs: 2, sm: 3 }, mt: 2 }}>
+            <Typography variant="h5" component="h2" gutterBottom sx={{ textAlign: 'center', fontWeight: 'bold' }}>
+                Editar Perfil
+            </Typography>
 
-            {error && <div className="mensaje-error">Error: {error}</div>}
-            {exito && <div className="mensaje-exito">Éxito: {exito}</div>}
-            
-            <form onSubmit={handleSubmit} key={formKey}> 
-                
-                <div className="form-foto-perfil">
-                    <div className="imagen-preview">
-                        <img 
-                            src={imagenSrc} 
-                            alt="Foto de perfil actual" 
-                            className="foto-perfil-circular"
-                        />
-                        <label htmlFor="foto-upload" className="boton-cambiar-foto" title="Cambiar foto">
-                            <CameraAltIcon />
-                        </label>
-                        <input 
-                            type="file" 
-                            id="foto-upload" 
-                            accept="image/*" 
-                            onChange={handleImageChange} 
-                            style={{ display: 'none' }}
-                        />
-                    </div>
-                </div>
+            {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+            {exito && <Alert severity="success" sx={{ mb: 2 }}>{exito}</Alert>}
 
-                <div className="form-grupo">
-                    <label htmlFor="nombre">Nombre:</label>
-                    <input
-                        type="text"
-                        id="nombre"
-                        name="nombre"
-                        value={formData.nombre}
-                        onChange={handleChange}
-                        autoComplete="given-name" 
-                    />
-                </div>
-                <div className="form-grupo">
-                    <label htmlFor="apellido">Apellido:</label>
-                    <input
-                        type="text"
-                        id="apellido"
-                        name="apellido"
-                        value={formData.apellido}
-                        onChange={handleChange}
-                        autoComplete="family-name" 
-                    />
-                </div>
-                <div className="form-grupo">
-                    <label htmlFor="nombreUsuario">Nombre de usuario:</label>
-                    <input
-                        type="text"
-                        id="nombreUsuario"
-                        name="nombreUsuario"
-                        value={formData.nombreUsuario}
-                        onChange={handleChange}
-                        required
-                        autoComplete="username"
-                    />
-                </div>
-                <div className="form-grupo">
-                    <label htmlFor="biografia">Biografía:</label>
-                    <textarea
-                        id="biografia"
-                        name="biografia"
-                        value={formData.biografia}
-                        onChange={handleChange}
-                        autoComplete="off" 
-                    />
-                </div>
-                <div className="form-grupo">
-                    <label htmlFor="email">Email:</label>
-                    <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        required
-                        autoComplete="email" 
-                    />
-                </div>
-                
-                <div className="form-grupo">
-                    <label htmlFor="contrasena">Nueva contraseña:</label>
-                    <input
-                        type="password"
-                        id="contrasena"
-                        name="contrasena"
-                        value={formData.contrasena}
-                        onChange={handleChange}
-                        autoComplete="new-password"
-                    />
-                </div>
-                <div className="form-grupo">
-                    <label htmlFor="confirmarContrasena">Repetir nueva contraseña:</label>
-                    <input
-                        type="password"
-                        id="confirmarContrasena"
-                        name="confirmarContrasena"
-                        value={confirmarContrasena}
-                        onChange={handleConfirmarContrasenaChange}
-                        autoComplete="new-password"
-                    />
-                </div>
-                
-                {/* Contenedor para alinear los botones Volver y Guardar */}
-                <div className="form-botones-accion">
-                    <button 
-                        type="button" 
-                        className="boton-volver-inline" 
-                        onClick={handleVolverClick}
-                        disabled={cargando}
-                    >
-                        Cancelar
-                    </button>
-                    
-                    <button type="submit" className="boton-guardar" disabled={cargando}>
-                        {cargando ? 'Guardando...' : 'Guardar cambios'}
-                    </button>
-                </div>
-            </form>
-        </div>
+            <Box component="form" onSubmit={handleSubmit} key={formKey} sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+                <Box sx={{ position: 'relative', alignSelf: 'center', mb: 2 }}>
+                    <Avatar
+                        src={imagenSrc}
+                        alt="Foto de perfil actual"
+                        sx={{ width: 120, height: 120, border: '3px solid', borderColor: 'primary.main' }}
+                    />
+                    <IconButton
+                        component="label"
+                        htmlFor="foto-upload"
+                        title="Cambiar foto"
+                        sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            right: 0,
+                            bgcolor: 'background.paper',
+                            border: '2px solid',
+                            borderColor: 'primary.main',
+                            '&:hover': { bgcolor: 'action.hover' }
+                        }}
+                    >
+                        <CameraAltIcon color="primary" />
+                        <input
+                            type="file"
+                            id="foto-upload"
+                            accept="image/*"
+                            onChange={handleImageChange}
+                            hidden
+                        />
+                    </IconButton>
+                </Box>
+
+                <TextField
+                    label="Nombre"
+                    name="nombre"
+                    value={formData.nombre}
+                    onChange={handleChange}
+                    autoComplete="given-name"
+                    fullWidth
+                />
+                <TextField
+                    label="Apellido"
+                    name="apellido"
+                    value={formData.apellido}
+                    onChange={handleChange}
+                    autoComplete="family-name"
+                    fullWidth
+                />
+                <TextField
+                    label="Nombre de usuario"
+                    name="nombreUsuario"
+                    value={formData.nombreUsuario}
+                    onChange={handleChange}
+                    required
+                    autoComplete="username"
+                    fullWidth
+                />
+                <TextField
+                    label="Biografía"
+                    name="biografia"
+                    value={formData.biografia}
+                    onChange={handleChange}
+                    autoComplete="off"
+                    multiline
+                    rows={3}
+                    fullWidth
+                />
+                <TextField
+                    label="Email"
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    autoComplete="email"
+                    fullWidth
+                />
+
+                <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>Cambiar Contraseña (opcional)</Typography>
+                <TextField
+                    label="Nueva contraseña"
+                    type="password"
+                    name="contrasena"
+                    value={formData.contrasena}
+                    onChange={handleChange}
+                    autoComplete="new-password"
+                    fullWidth
+                />
+                <TextField
+                    label="Repetir nueva contraseña"
+                    type="password"
+                    name="confirmarContrasena"
+                    value={confirmarContrasena}
+                    onChange={handleConfirmarContrasenaChange}
+                    autoComplete="new-password"
+                    fullWidth
+                />
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 2, mt: 3 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={handleVolverClick}
+                        disabled={cargando}
+                        sx={{ flex: 1 }}
+                    >
+                        Cancelar
+                    </Button>
+                    <Button
+                        type="submit"
+                        variant="contained"
+                        disabled={cargando}
+                        sx={{ flex: 1 }}
+                    >
+                        {cargando ? <CircularProgress size={24} /> : 'Guardar cambios'}
+                    </Button>
+                </Box>
+            </Box>
+        </Paper>
     );
 };
 

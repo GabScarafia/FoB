@@ -2,6 +2,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import '../styles/Perfil.css';
 import { useAuth } from '../context/AuthContext';
+import { Box, Typography, Button, Divider } from '@mui/material';
 
 // Íconos de Material UI
 import AppsIcon from '@mui/icons-material/Apps';
@@ -111,16 +112,25 @@ const Perfil: React.FC = () => {
 
     // Renderizado según estado
     if (cargando) {
-        return <div className="cargando-perfil">Cargando perfil...</div>;
+        return <Box className="cargando-perfil" sx={{ color: 'text.secondary' }}>Cargando perfil...</Box>;
     }
 
     if (error) {
-        return <div className="error-perfil">{error}</div>;
+        return (
+            <Box className="error-perfil" sx={{ color: 'error.main', textAlign: 'center', mt: 4 }}>
+                <Typography variant="h6">Error</Typography>
+                <Typography>{error}</Typography>
+            </Box>
+        );
     }
 
     // Solo mostramos "No se encontraron..." si ya intentamos hacer el fetch
     if (!cargando && !datosPerfil && fetchAttempted) {
-        return <div className="error-perfil">No se encontraron datos de perfil.</div>;
+        return (
+            <Box className="error-perfil" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
+                No se encontraron datos de perfil.
+            </Box>
+        );
     }
 
     if (!datosPerfil) {
@@ -153,7 +163,11 @@ const Perfil: React.FC = () => {
     const renderGaleria = () => {
         if (!tienePublicaciones) {
             // Si es el propio perfil, el texto puede ser diferente; acá dejo el original
-            return <div className="sin-recetas">Aún no has publicado ninguna receta.</div>;
+            return (
+                <Typography className="sin-recetas" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
+                    Aún no has publicado ninguna receta.
+                </Typography>
+            );
         }
         return publicaciones.map((receta) => {
             const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
@@ -172,61 +186,65 @@ const Perfil: React.FC = () => {
     };
 
     return (
-        <div className="perfil-contenedor">
-            <header className="perfil-header">
+        <Box className="perfil-contenedor">
+            <Box component="header" className="perfil-header">
                 <div className="perfil-imagen-circular">
                     <img
                         src={fotoPerfilBase64 ? `data:image/jpeg;base64,${fotoPerfilBase64}` : fotoPerfilDefault}
                         alt="Foto de perfil"
                     />
                 </div>
-                <div className="perfil-info-principal">
-                    <div className="perfil-stats">
+                <Box className="perfil-info-principal">
+                    <Box className="perfil-stats">
                         <span>
-                            <span className="perfil-stats-label">Publicaciones</span>
-                            <span className="perfil-stats-numero">{cantidadPublicaciones}</span>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Publicaciones</Typography>
+                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadPublicaciones}</Typography>
                         </span>
                         <span>
-                            <span className="perfil-stats-label">Seguidores</span>
-                            <span className="perfil-stats-numero">{cantidadSeguidores}</span>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidores</Typography>
+                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidores}</Typography>
                         </span>
                         <span>
-                            <span className="perfil-stats-label">Seguidos</span>
-                            <span className="perfil-stats-numero">{cantidadSeguidos}</span>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidos</Typography>
+                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidos}</Typography>
                         </span>
-                    </div>
-                    <div className="perfil-info">
-                        <div className="perfil-nombre-usuario">@{nombreUsuario}</div>
+                    </Box>
+                    <Box className="perfil-info">
+                        <Typography variant="h6" className="perfil-nombre-usuario">@{nombreUsuario}</Typography>
                         
-                        <div className="perfil-nombre-completo">{nombreCompletoDisplay}</div>
+                        <Typography variant="body1" className="perfil-nombre-completo" fontWeight="bold">{nombreCompletoDisplay}</Typography>
                         
-                        <div className="perfil-bio">{biografia}</div>
-                    </div>
-                </div>
-            </header>
+                        <Typography variant="body2" className="perfil-bio" color="text.secondary">{biografia}</Typography>
+                    </Box>
+                </Box>
+            </Box>
 
             {esPerfilPropio && (
-                <div className="perfil-botones">
-                    <button className="perfil-boton" onClick={handleEditarPerfilClick}>Editar Perfil</button>
-                    <button className="perfil-boton">Compartir perfil</button>
-                </div>
+                <Box className="perfil-botones">
+                    <Button variant="contained" className="perfil-boton" onClick={handleEditarPerfilClick}>Editar Perfil</Button>
+                    <Button variant="outlined" className="perfil-boton">Compartir perfil</Button>
+                </Box>
             )}
 
-            <hr className="perfil-separador" />
+            <Divider sx={{ my: 2 }} />
 
-            <nav className="perfil-navegacion">
-                <div className="perfil-navegacion-item activo">
-                    <AppsIcon className="perfil-navegacion-icono" />
-                </div>
-                <div className="perfil-navegacion-item">
-                    <VideoLibraryIcon className="perfil-navegacion-icono" />
-                </div>
-            </nav>
+            <Box component="nav" className="perfil-navegacion">
+                <Box className="perfil-navegacion-item" sx={{ 
+                    cursor: 'pointer', 
+                    borderBottom: '2px solid', 
+                    borderColor: 'primary.main' 
+                }}>
+                    <AppsIcon className="perfil-navegacion-icono" color="primary" />
+                </Box>
+                <Box className="perfil-navegacion-item" sx={{ cursor: 'pointer' }}>
+                    <VideoLibraryIcon className="perfil-navegacion-icono" sx={{ color: 'text.secondary' }} />
+                </Box>
+            </Box>
 
             <div className="perfil-galeria">
                 {renderGaleria()}
             </div>
-        </div>
+        </Box>
     );
 };
 

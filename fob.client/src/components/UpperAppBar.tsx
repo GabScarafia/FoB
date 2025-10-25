@@ -26,22 +26,21 @@ export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
                 <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                     {authData?.email ? authData.email : "FondoBlanco"}
                 </Typography>
+
                 {authData?.email && (
-                    <IconButton
-                        color="inherit"
-                        edge="end"
-                        onClick={handleLogout}
-                        aria-label="clear auth data"
-                    >
-                        <CloseIcon />
-                    </IconButton>
+                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                        {/* Botón de alternar tema */}
+                        <Tooltip title={mode === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
+                            <IconButton color="inherit" onClick={toggleTheme}>
+                                {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+                            </IconButton>
+                        </Tooltip>
+                        {/* Botón de cerrar sesión con margen */}
+                        <IconButton color="inherit" onClick={handleLogout} aria-label="clear auth data" sx={{ ml: '3px' }}>
+                            <CloseIcon />
+                        </IconButton>
+                    </Box>
                 )}
-                {/* Botón de alternar tema */}
-                <Tooltip title={mode === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}>
-                    <IconButton color="inherit" onClick={toggleTheme}>
-                        {mode === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
-                    </IconButton>
-                </Tooltip>
             </Toolbar>
         </AppBar>
     );
