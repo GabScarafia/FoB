@@ -726,60 +726,72 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 }}
                 >
                 <Box
-                    sx={{
-                    position: { xs: 'fixed', sm: 'fixed' },
-                    top: { xs: 0, sm: '50%' },
-                    left: { xs: 0, sm: '50%' },
-                    transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
-                    width: { xs: '100vw', sm: 400 },
-                    height: { xs: '100vh', sm: 'auto' },
-                    bgcolor: 'background.paper',
-                    borderRadius: { xs: 0, sm: '16px' },
-                    boxShadow: 24,
-                    p: { xs: 2, sm: 4 },
-                    outline: 'none',
-                    overflowY: 'auto',
-                    border: '3px solid #FF9800',
-                    background: '#fcfcfc',
-                    maxHeight: { xs: 'none', sm: '90vh' },
-                    }}
+                    sx={(theme) => ({
+                        position: { xs: 'fixed', sm: 'fixed' },
+                        top: { xs: 0, sm: '50%' },
+                        left: { xs: 0, sm: '50%' },
+                        transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
+                        width: { xs: '100vw', sm: 400 },
+                        height: { xs: '100vh', sm: 'auto' },
+                        bgcolor: 'background.paper',
+                        borderRadius: { xs: 0, sm: '16px' },
+                        boxShadow: 24,
+                        p: { xs: 2, sm: 4 },
+                        outline: 'none',
+                        overflowY: 'auto',
+                        border: `3px solid ${theme.palette.warning.main}`,
+                        background: theme.palette.background.paper,
+                        maxHeight: { xs: 'none', sm: '90vh' },
+                    })}
                 >
-                    <Typography id="modal-ranking-titulo" variant="h5" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: '#FF5722', textAlign: 'center' }}>
+                    <Typography id="modal-ranking-titulo" variant="h5" component="h2"
+                        sx={{
+                            mb: 1,
+                            fontWeight: 'bold',
+                            color: 'primary.main',
+                            textAlign: 'center'
+                        }}
+                    >
                         🏆 Ranking Actual
                     </Typography>
-                    <Typography variant="subtitle2" sx={{ mb: 3, color: '#666', textAlign: 'center', fontStyle: 'italic' }}>
+                    <Typography variant="subtitle2"
+                        sx={{
+                            mb: 3,
+                            color: 'text.secondary',
+                            textAlign: 'center',
+                            fontStyle: 'italic'
+                        }}
+                    >
                         {nombreDesafio}
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
 
-                    {rankingCargando && (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', my: 3 }}>
-                            <CircularProgress />
-                        </Box>
-                    )}
-
-                    {!hasRanking && !rankingCargando && (
-                        <Typography variant="body1" sx={{ textAlign: 'center', color: '#999' }}>
-                            Aún no hay participantes registrados en el ranking de este desafío.
-                        </Typography>
-                    )}
 
                     {hasRanking && (
                         <List sx={{ p: 0 }}>
                             {currentRanking.map((item, index) => (
                                 <ListItem
                                     key={item.usuarioId}
-                                    sx={{
+                                    // Usamos una función para acceder al tema en estilos dinámicos de la lista
+                                    sx={(theme) => ({
                                         p: 1.5,
                                         mb: 1,
                                         borderRadius: '8px',
-                                        bgcolor: index < 3 ? '#ffe0b2' : 'white', // Fondo para Top 3
-                                        borderLeft: `5px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : index === 2 ? '#CD7F32' : '#eee'}`,
+                                        bgcolor: index < 3 ? theme.palette.action.hover : 'background.paper',
+                                        borderLeft: `5px solid ${index === 0 ? theme.palette.warning.main :
+                                                index === 1 ? theme.palette.info.main :
+                                                    index === 2 ? theme.palette.error.main :
+                                                        theme.palette.divider}`,
                                         boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-                                    }}
+                                    })}
                                 >
                                     <ListItemIcon sx={{ minWidth: 40 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? '#FF5722' : '#333' }}>
+                                        <Typography
+                                            variant="h6"
+                                            sx={{
+                                                fontWeight: 'bold',
+                                                color: index < 3 ? 'primary.main' : 'text.primary'
+                                            }}>
                                             {index + 1}°
                                         </Typography>
                                     </ListItemIcon>
@@ -799,11 +811,19 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             onClick={handleCloseRankingModal}
                             variant="contained"
                             color="primary"
-                            sx={{
-                                bgcolor: '#182969',
-                                borderRadius: '8px',
-                                '&:hover': { bgcolor: '#0b2553' }
-                            }}
+                            sx={(theme) => ({
+                               
+                                ...(theme.palette.mode === 'dark' && {
+                                    backgroundColor: '#90caf9',
+                                    
+                                    color: theme.palette.getContrastText('#90caf9'),
+                              
+                                    '&:hover': {
+
+                                        backgroundColor: '#79a5c6',
+                                    }
+                                }),
+                            })}
                         >
                             Cerrar Ranking
                         </Button>
