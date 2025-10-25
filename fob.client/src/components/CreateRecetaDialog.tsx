@@ -568,7 +568,10 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         borderRadius: 2,
                         p: 3,
                         cursor: 'pointer',
-                        ...(previewImage && { border: 'none', backgroundColor: '#f0f0f0' }),
+                        // Se cambia el color de fondo hardcodeado por uno que se adapta al tema
+                        ...(previewImage && { 
+                            border: 'none', 
+                            backgroundColor: 'action.hover' }),
                     }}
                     onClick={handleBoxClick}
                 >
