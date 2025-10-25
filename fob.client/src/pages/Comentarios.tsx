@@ -1,5 +1,6 @@
 // src/pages/Comentarios.tsx
 import React, { useState, useEffect } from "react";
+import { BASE_URL } from '../apiConfig';
 
 interface Comentario {
   id: number;
@@ -23,7 +24,7 @@ const ComentariosPage: React.FC = () => {
   useEffect(() => {
     const token = JSON.parse(localStorage.getItem("AuthData") || "{}")?.token;
 
-    fetch(`https://localhost:5001/api/comentarios/${recetaId}`, {
+    fetch(`${BASE_URL}/api/comentarios/${recetaId}`, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -45,7 +46,7 @@ const ComentariosPage: React.FC = () => {
     };
 
     try {
-      const res = await fetch("https://localhost:5001/api/comentarios", {
+      const res = await fetch(`${BASE_URL}/api/comentarios`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

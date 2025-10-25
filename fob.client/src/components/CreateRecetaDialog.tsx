@@ -13,7 +13,7 @@ import {
     MenuItem,
     Chip, // Importamos Chip para las etiquetas
     Autocomplete, // Importamos Autocomplete para el debounce con búsqueda
-    CircularProgress, // Importamos CircularProgress para el indicador de carga (Faltaba en tu snippet)
+    CircularProgress, // Importamos CircularProgress para el indicador de carga
     alpha
 } from "@mui/material";
 import type { TransitionProps } from '@mui/material/transitions';
@@ -401,11 +401,29 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
         setPasos(nuevosPasos);
     };
 
+    // 🌟 FUNCIÓN MODIFICADA 🌟
     const handleAddEtiqueta = (etiqueta: etiquetaType | null) => {
         if (etiqueta && !etiquetas.some(e => e.id === etiqueta.id)) {
             setEtiquetas([...etiquetas, etiqueta]);
             setInputEtiqueta('');
             setEtiquetaOptions([]);
+
+            // 🆕 Lógica para buscar un ingrediente que coincida con el nombre de la etiqueta
+            // Busca en las opciones de ingredientes YA CARGADAS por el debounce
+            const matchingIngredient = ingredienteOptions.find(
+                (ing) => ing.nombre.toLowerCase() === etiqueta.nombre.toLowerCase()
+            );
+
+            if (matchingIngredient) {
+                // Si encontramos una coincidencia, pre-seteamos el ingrediente
+                // en el Autocomplete para que el usuario solo ingrese cantidad/unidad.
+                setNuevoIngrediente((prev) => ({
+                    ...prev,
+                    ingrediente: matchingIngredient,
+                }));
+                // Forzamos el texto del input del Autocomplete de ingrediente
+                setInputIngrediente(matchingIngredient.nombre); 
+            }
         }
     };
 
@@ -463,7 +481,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
         };
 
         try {
-            const response = await fetch("${BASE_URL}/Recetas", {
+            const response = await fetch(`${BASE_URL}/Recetas`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
