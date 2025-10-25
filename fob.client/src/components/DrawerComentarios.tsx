@@ -319,7 +319,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
         console.log("Enviando comentario:", comentarioACrear);
         console.log("Comentario padre:", comentarioPadre);
         try {
-          const response = await fetch('${BASE_URL}/api/Comentario', {
+          const response = await fetch(`${BASE_URL}/api/Comentario`, {
             method: 'POST',
             headers: {
               'Authorization': `Bearer ${token}`,

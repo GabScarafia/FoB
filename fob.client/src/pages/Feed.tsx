@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
 import { useAuth } from "../context/AuthContext";
@@ -10,12 +10,13 @@ import SportsScoreIcon from '@mui/icons-material/SportsScore';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import KitchenIcon from '@mui/icons-material/Kitchen'
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha } from '@mui/material';
+import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha, ThemeProvider } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 import CreateRecetaDialog from 'components/CreateRecetaDialog';
 import { BASE_URL } from '../apiConfig';
+import { getTheme } from '../theme';
 
 
 interface DesafioDto {
@@ -832,7 +833,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             </Modal>
         );
     };
-
+    
+    // const storedMode = (localStorage.getItem("themeMode") as "light" | "dark") || "light";
+    // const [mode, setMode] = useState<"light" | "dark">(storedMode);
+    // const theme = useMemo(() => getTheme(mode), [mode]);
     return (
         <div className="feed-contenedor-principal">
             {/* Botón Flotante para el Desafío */}
@@ -930,28 +934,32 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             </div>
 
             {/* Modal de confirmación de eliminación */}
-            <Modal
-                open={modalOpen}
-                onClose={handleCloseModal}
-                aria-labelledby="modal-eliminar-receta"
-            >
-                <Box className="modal-contenedor">
-                    <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
-                        Confirmar eliminación
-                    </Typography>
-                    <Typography className="modal-descripcion" sx={{ mt: 2 }}>
-                        ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
-                    </Typography>
-                    <Box className="modal-acciones" sx={{ mt: 3 }}>
-                        <Button onClick={handleCloseModal} variant="outlined" className="modal-btn-cancelar">
-                            Cancelar
-                        </Button>
-                        <Button onClick={handleConfirmDelete} variant="contained" className="modal-btn-eliminar">
-                            Eliminar
-                        </Button>
+            
+                <Modal
+                    open={modalOpen}
+                    onClose={handleCloseModal}
+                    aria-labelledby="modal-eliminar-receta"
+                >
+                    <Box sx={{
+                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                        width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: '8px'
+                    }}>
+                        <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
+                            Confirmar eliminación
+                        </Typography>
+                        <Typography className="modal-descripcion" sx={{ mt: 2 }}>
+                            ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
+                        </Typography>
+                        <Box className="modal-acciones" sx={{ mt: 3 }}>
+                            <Button onClick={handleCloseModal} variant="outlined" className="modal-btn-cancelar">
+                                Cancelar
+                            </Button>
+                            <Button onClick={handleConfirmDelete} variant="contained" className="modal-btn-eliminar">
+                                Eliminar
+                            </Button>
+                        </Box>
                     </Box>
-                </Box>
-            </Modal>
+                </Modal>
         </div>
     );
 };
