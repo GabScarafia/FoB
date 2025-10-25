@@ -19,6 +19,7 @@ namespace FoB.Application.Dtos
         public int CantidadPublicaciones { get; set; }
         public int CantidadSeguidores { get; set; }
         public int CantidadSeguidos { get; set; }
+        public bool EsSeguido { get; set; }
 
         public List<RecetaDto> Publicaciones { get; set; }
     }

@@ -31,6 +31,7 @@ interface UsuarioPerfilDto {
     cantidadSeguidores: number;
     cantidadSeguidos: number;
     publicaciones: RecetaDto[];
+    esSeguido: boolean;
 }
 
 const Perfil: React.FC = () => {
@@ -45,6 +46,12 @@ const Perfil: React.FC = () => {
     const [fetchAttempted, setFetchAttempted] = useState(false);
     const navigate = useNavigate();
 
+    // ***  Estado para manejar el seguimiento localmente ***
+    const [isFollowing, setIsFollowing] = useState(false);
+    // Estado para deshabilitar el botón mientras se procesa la solicitud
+    const [isProcessingFollow, setIsProcessingFollow] = useState(false);
+
+    // --- useEffect para Cargar Datos del Perfil ---
     useEffect(() => {
         if (id === undefined && currentUserId == null) return;
 
@@ -88,13 +95,17 @@ const Perfil: React.FC = () => {
 
                 const data: UsuarioPerfilDto = await response.json();
                 if (!isMounted) return;
+
+                // Inicializar el estado de seguimiento con el valor del DTO
+                setIsFollowing(data.esSeguido);
                 setDatosPerfil(data);
+
             } catch (err: any) {
                 if (err?.name === 'AbortError') return;
 
                 console.error('Error al cargar el perfil:', err);
                 if (!isMounted) return;
-                setError('Ocurrió un error al cargar tu perfil.');
+                setError('Ocurrió un error al cargar el perfil. Puede que no exista.');
                 setDatosPerfil(null);
             } finally {
                 if (!isMounted) return;
@@ -110,9 +121,72 @@ const Perfil: React.FC = () => {
         };
     }, [id, token, currentUserId]);
 
+    // --- Manejador de Seguimiento (Follow/Unfollow)  ---
+    const handleFollowClick = async () => {
+        if (!datosPerfil || !currentUserId || isProcessingFollow) return;
+
+        // Bloquear múltiples clics
+        setIsProcessingFollow(true);
+
+        const usuarioId = datosPerfil.id;
+        const apiUrl = `${BASE_URL}/Follow/${usuarioId}`;
+
+        // Determinar el método y la acción basados en el estado actual
+        const method = isFollowing ? 'DELETE' : 'POST';
+        const previousIsFollowing = isFollowing;
+        const newFollowerCount = isFollowing ? datosPerfil.cantidadSeguidores - 1 : datosPerfil.cantidadSeguidores + 1;
+
+        // 1. Actualización optimista del UI
+        setIsFollowing(prev => !prev);
+        setDatosPerfil(prev => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                cantidadSeguidores: newFollowerCount,
+            };
+        });
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: method,
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                // Si falla, revertir el cambio de estado optimista
+                alert(`Ocurrió un error al intentar ${previousIsFollowing ? 'dejar de seguir' : 'seguir'}. Se revertirá el cambio.`);
+
+                // Revertir el estado de seguimiento local
+                setIsFollowing(previousIsFollowing);
+
+                // Revertir el contador de seguidores
+                setDatosPerfil(prev => {
+                    if (!prev) return null;
+                    const originalCount = previousIsFollowing ? prev.cantidadSeguidores + 1 : prev.cantidadSeguidores - 1;
+                    return {
+                        ...prev,
+                        cantidadSeguidores: originalCount,
+                    };
+                });
+
+                throw new Error(`Error: ${response.status}`);
+            }
+
+            // Si la respuesta es exitosa (200, 204, etc.), la actualización optimista se mantiene.
+
+        } catch (error) {
+            console.error("Fallo al ejecutar la acción de seguir/dejar de seguir:", error);
+        } finally {
+            setIsProcessingFollow(false);
+        }
+    };
+
+
     // Renderizado según estado
     if (cargando) {
-        return <Box className="cargando-perfil" sx={{ color: 'text.secondary' }}>Cargando perfil...</Box>;
+        return <Box className="cargando-perfil" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>Cargando perfil...</Box>;
     }
 
     if (error) {
@@ -150,7 +224,7 @@ const Perfil: React.FC = () => {
     } = datosPerfil;
 
     const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
-    
+
 
     const handleEditarPerfilClick = () => {
         navigate('/editar-perfil');
@@ -162,27 +236,35 @@ const Perfil: React.FC = () => {
 
     const renderGaleria = () => {
         if (!tienePublicaciones) {
-            // Si es el propio perfil, el texto puede ser diferente; acá dejo el original
+            // El mensaje dependerá si es el propio o un tercero.
+            const mensaje = esPerfilPropio
+                ? 'Aún no has publicado ninguna receta.'
+                : `${datosPerfil.nombreUsuario || 'Este usuario'} aún no ha publicado ninguna receta.`;
             return (
                 <Typography className="sin-recetas" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-                    Aún no has publicado ninguna receta.
+                    {mensaje}
                 </Typography>
             );
         }
-        return publicaciones.map((receta) => {
-            const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
-            if (!imagen) return null;
-            return (
-                <div key={receta.id} className="galeria-item">
-                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
-                        <img
-                            src={`data:image/jpeg;base64,${imagen}`}
-                            alt={receta.titulo ?? `Receta-${receta.id}`}
-                        />
-                    </Link>
-                </div>
-            );
-        });
+        return (
+            <div className="perfil-galeria-grid">
+                {publicaciones.map((receta) => {
+                    const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
+                    if (!imagen) return null;
+                    return (
+                        <div key={receta.id} className="galeria-item">
+                            {/* La ruta de navegación debe ser la correcta para el detalle de la receta */}
+                            <Link to={`/receta/${receta.id}`}>
+                                <img
+                                    src={`data:image/jpeg;base64,${imagen}`}
+                                    alt={receta.titulo ?? `Receta-${receta.id}`}
+                                />
+                            </Link>
+                        </div>
+                    );
+                })}
+            </div>
+        );
     };
 
     return (
@@ -197,42 +279,88 @@ const Perfil: React.FC = () => {
                 <Box className="perfil-info-principal">
                     <Box className="perfil-stats">
                         <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Publicaciones</Typography>
                             <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadPublicaciones}</Typography>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Publicaciones</Typography>
                         </span>
                         <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidores</Typography>
                             <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidores}</Typography>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidores</Typography>
                         </span>
                         <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidos</Typography>
                             <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidos}</Typography>
+                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidos</Typography>
                         </span>
                     </Box>
                     <Box className="perfil-info">
                         <Typography variant="h6" className="perfil-nombre-usuario">@{nombreUsuario}</Typography>
-                        
+
                         <Typography variant="body1" className="perfil-nombre-completo" fontWeight="bold">{nombreCompletoDisplay}</Typography>
-                        
+
                         <Typography variant="body2" className="perfil-bio" color="text.secondary">{biografia}</Typography>
                     </Box>
                 </Box>
             </Box>
 
-            {esPerfilPropio && (
-                <Box className="perfil-botones">
-                    <Button variant="contained" className="perfil-boton" onClick={handleEditarPerfilClick}>Editar Perfil</Button>
-                    <Button variant="outlined" className="perfil-boton">Compartir perfil</Button>
-                </Box>
-            )}
+            {/* Botones condicionales *** */}
+            <Box className="perfil-botones">
+                {esPerfilPropio ? (
+                    <>
+                        <Button
+                            variant="contained"
+                            className="perfil-boton"
+                            onClick={handleEditarPerfilClick}
+                            sx={{ flexGrow: 1 }}
+                        >
+                            Editar Perfil
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            className="perfil-boton"
+                            sx={{ flexGrow: 1 }}
+                        >
+                            Compartir perfil
+                        </Button>
+                    </>
+                ) : (
+                    // Botón Seguir/Siguiendo para perfiles de terceros
+                    <Button
+                        variant={isFollowing ? 'outlined' : 'contained'}
+                        color={isFollowing ? 'primary' : 'primary'} // Texto primary para ambos estados
+                        className={`perfil-boton ${isFollowing ? 'siguiendo' : ''}`}
+                        onClick={handleFollowClick}
+                        disabled={!token || isProcessingFollow}
+                        sx={{
+                            flexGrow: 1,
+                            // Fondo: Contained es primary, Outlined es transparente/claro
+                            backgroundColor: !isFollowing ? 'rgb(31 69 176)' : 'transparent',
+                            color: !isFollowing ? 'white' : undefined,
+                            // Estilos de Hover (se ajustan mejor)
+                            '&:hover': {
+                                backgroundColor: isFollowing ? 'rgba(31, 69, 176, 0.08)' : 'primary.dark',
+                            },
+                            // *** ESTILOS PARA 'SIGUIENDO' (outlined) ***
+                            ...(isFollowing && {
+                                borderColor: 'rgb(31 69 176)',
+                                '&:hover': {
+ 
+                                    borderColor: 'rgb(31 69 176)',
+
+                                }
+                            })
+                        }}
+                    >
+                        {isFollowing ? 'Siguiendo' : 'Seguir'}
+                    </Button>
+                )}
+            </Box>
 
             <Divider sx={{ my: 2 }} />
 
             <Box component="nav" className="perfil-navegacion">
-                <Box className="perfil-navegacion-item" sx={{ 
-                    cursor: 'pointer', 
-                    borderBottom: '2px solid', 
-                    borderColor: 'primary.main' 
+                <Box className="perfil-navegacion-item" sx={{
+                    cursor: 'pointer',
+                    borderBottom: '2px solid',
+                    borderColor: 'primary.main'
                 }}>
                     <AppsIcon className="perfil-navegacion-icono" color="primary" />
                 </Box>

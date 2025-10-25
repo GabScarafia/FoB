@@ -5,6 +5,6 @@ namespace FoB.Application.Interfaces
 {
     public interface IUsuarioPerfilService
     {
-        Task<UsuarioPerfilDto> ObtenerPerfilUsuarioAsync(int idUsuario);
+        Task<UsuarioPerfilDto> ObtenerPerfilUsuarioAsync(int idUsuario, int? idUsuarioActual = null);
     }
 }
