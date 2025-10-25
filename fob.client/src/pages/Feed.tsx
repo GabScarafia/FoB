@@ -611,17 +611,21 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                         {renderRankingAnterior()}
                     </Box>
-
                     {/* Botón para ver el ranking completo */}
-                    {desafioSemanal?.desafioActual && ( // Solo si hay un desafío activo, mostramos el botón
+                    {desafioSemanal?.desafioActual && (
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
                             <Button
                                 onClick={fetchCurrentRanking}
-                                variant="text"
+                                variant="contained"
+                                color="primary"
                                 size="small"
-                                disabled={rankingCargando}                                
+                                sx={{
+                                    fontWeight: 'bold',
+                                    textTransform: 'uppercase'
+                                }}
+                                disabled={rankingCargando}
                             >
-                                {rankingCargando ? <CircularProgress size={20} /> : "Ver Ranking Actual Completo"}
+                                {rankingCargando ? <CircularProgress size={20} color="inherit" /> : "VER RANKING ACTUAL"}
                             </Button>
                         </Box>
                     )}
@@ -723,7 +727,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 >
                 <Box
                     sx={{
-                    position: { xs: 'fixed', sm: 'relative' }, // 👈 fuerza full viewport en mobile
+                    position: { xs: 'fixed', sm: 'fixed' },
                     top: { xs: 0, sm: '50%' },
                     left: { xs: 0, sm: '50%' },
                     transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
