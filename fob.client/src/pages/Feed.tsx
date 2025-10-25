@@ -935,13 +935,15 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
             {/* Modal de confirmación de eliminación */}
             
-            {/* <ThemeProvider theme={theme}> */}
                 <Modal
                     open={modalOpen}
                     onClose={handleCloseModal}
                     aria-labelledby="modal-eliminar-receta"
                 >
-                    <Box className="modal-contenedor">
+                    <Box sx={{
+                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                        width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: '8px'
+                    }}>
                         <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
                             Confirmar eliminación
                         </Typography>
@@ -958,7 +960,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         </Box>
                     </Box>
                 </Modal>
-            {/* </ThemeProvider> */}
         </div>
     );
 };
