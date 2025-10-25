@@ -13,7 +13,8 @@ import {
     MenuItem,
     Chip, // Importamos Chip para las etiquetas
     Autocomplete, // Importamos Autocomplete para el debounce con búsqueda
-    CircularProgress // Importamos CircularProgress para el indicador de carga (Faltaba en tu snippet)
+    CircularProgress, // Importamos CircularProgress para el indicador de carga (Faltaba en tu snippet)
+    alpha
 } from "@mui/material";
 import type { TransitionProps } from '@mui/material/transitions';
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
@@ -551,8 +552,8 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                 >
                     {!previewImage && (
                         <>
-                            <AddPhotoAlternateIcon sx={{ fontSize: 60, color: '#182969' }} />
-                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: '#182969' }}>
+                            <AddPhotoAlternateIcon sx={{ fontSize: 60, color: 'primary.main' }} />
+                            <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'text.primary' }}>
                                 SUBIR FOTO/VIDEO
                             </Typography>
                         </>
@@ -629,7 +630,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                     >
                     {pasos.length + 1}
                     </Box>
-                        <IconButton color="primary" sx={{ color: "#182969" }} onClick={() => handleRemovePaso(pasoActualIndex)}>
+                        <IconButton color="error" onClick={() => handleRemovePaso(pasoActualIndex)}>
                             <CloseIcon sx={{ fontSize: 30 }} />
                         </IconButton>
                     </Box>
@@ -677,7 +678,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                                         />
                                         <IconButton
                                             size="small"
-                                            sx={{ position: 'absolute', top: 0, right: 0, background: 'rgba(255,255,255,0.7)' }}
+                                            sx={{ position: 'absolute', top: 0, right: 0, background: (theme) => alpha(theme.palette.background.paper, 0.7) }}
                                             onClick={() => handleRemovePasoImagen(pasoActualIndex)}
                                         >
                                             <CloseIcon fontSize="small" />
@@ -691,7 +692,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
 
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', color: 'black' }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
                         Etiquetas
                     </Typography>
                     <Autocomplete
@@ -866,10 +867,10 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
                         <IconButton 
                             onClick={handleAddIngrediente} 
                             color="primary" 
-                            sx={{ p: 0 }}
+                            sx={{ p: 0.5 }}
                             disabled={!nuevoIngrediente.ingrediente || !nuevoIngrediente.cantidad || !nuevoIngrediente.unidad}
                         >
-                            <AddCircleIcon sx={{ fontSize: 40, color: '#182969' }} />
+                            <AddCircleIcon sx={{ fontSize: 40 }} />
                         </IconButton>
                     </Box>
 

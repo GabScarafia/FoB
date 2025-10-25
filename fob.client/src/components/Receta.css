@@ -173,44 +173,11 @@
 
 /* Nuevos estilos para la secci�n de ingredientes y categor�as */
 .informacion-adicional {
-    padding: 0 15px;
-    margin-top: 10px;
-    font-size: 0.95em;
-}
-
-.ingredientes-receta {
-    margin-bottom: 5px;
-}
-
-.etiquetas-receta {
-    margin-bottom: 5px;
-}
-
-.tag-categoria {
-    background-color: #e0e0e0;
-    border-radius: 12px;
-    margin-left: 3px;
-    padding: 2px 5px;
-    margin-right: 5px;
-    margin-top: 3px;
-    font-size: 0.85em;
-    display: inline-block;
-}
-
-.tag-ingrediente {
-    margin-left: 3px;
-}
-
-.ingredientes-receta strong {
-}
-
-.etiquetas-receta strong {
+    /* Los estilos de padding y margin ahora se manejan con `sx` en Receta.tsx */
 }
 
 /* Descripci�n de la receta */
 .descripcion-receta {
-    padding: 5px 15px 10px 15px;
-    font-size: 0.95em;
     line-height: 1.4;
 }
 

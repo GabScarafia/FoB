@@ -1,6 +1,6 @@
 ﻿﻿import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
-import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
 import './Receta.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -535,37 +535,40 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 )}
             </Box>
 
-            <div className="informacion-adicional">
+            <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
                 {receta.ingredientes && receta.ingredientes.length > 0 && (
-                    <div className="ingredientes-receta">
-                        <strong>Ingredientes:</strong>
-                        {receta.ingredientes.map((ingrediente, index) => (
-                            <span key={ingrediente.id} className="tag-ingrediente">
-                                {ingrediente.nombre} {ingrediente.cantidad} {ingrediente.unidadDeMedida}
-                                {index < receta.ingredientes.length - 1 ? ', ' : ''}
-                            </span>
-                        ))}
-                    </div>
+                    <Box className="ingredientes-receta" sx={{ mt: 1 }}>
+                        <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
+                        <Typography component="span" variant="body2">
+                            {receta.ingredientes.map((ingrediente, index) => (
+                                <span key={ingrediente.id}>
+                                    {`${ingrediente.nombre} ${ingrediente.cantidad} ${ingrediente.unidadDeMedida}${index < receta.ingredientes.length - 1 ? ', ' : ''}`}
+                                </span>
+                            ))}
+                        </Typography>
+                    </Box>
                 )}
                 {receta.etiquetas && receta.etiquetas.length > 0 && (
-                    <div className="etiquetas-receta">
-                        <strong>Etiquetas:</strong>
-                        {receta.etiquetas.map((etiquetas, index) => (
-                            <span key={index} className="tag-categoria">
-                                {etiquetas}
-                                {index < receta.etiquetas.length - 1 ? '' : ''}
-                            </span>
+                    <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                        <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
+                        {receta.etiquetas.map((etiqueta, index) => (
+                            <Chip
+                                key={index}
+                                label={etiqueta}
+                                size="small"
+                                variant="outlined" // El variant 'outlined' se ve genial en ambos temas
+                            />
                         ))}
-                    </div>
+                    </Box>
                 )}
                 {receta.pasos && receta.pasos.length > 0 && (
                     <div className="pasos-receta">
-                        <Button variant="contained" onClick={handleOpenModalPasos} sx={{ mt: 1, mb: 0.5 }}>
+                        <Button variant="contained" onClick={handleOpenModalPasos} sx={{ mt: 2, mb: 0.5 }}>
                             Ver Pasos
                         </Button>
                     </div>
                 )}
-            </div>
+            </Box>
 
             <div className="vista-previa-comentarios">
                 {comentarios && comentarios.length > 0 ? (

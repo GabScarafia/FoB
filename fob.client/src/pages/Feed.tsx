@@ -10,7 +10,7 @@ import SportsScoreIcon from '@mui/icons-material/SportsScore';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import KitchenIcon from '@mui/icons-material/Kitchen'
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress } from '@mui/material';
+import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
@@ -440,10 +440,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             <Box
                 sx={{
                     mt: 4,
-                    p: 4,
-                    borderRadius: "20px",
-                    background: "linear-gradient(135deg, #fff, #f3f6ff)",
-                    boxShadow: "0 8px 30px rgba(24, 41, 105, 0.15)",
+                    p: { xs: 2, sm: 4 },
+                    borderRadius: 4,
+                    bgcolor: 'background.default',
+                    boxShadow: 3, // Usamos el sistema de sombras de MUI
                     position: "relative",
                     overflow: "hidden",
                     "&::before": {
@@ -506,7 +506,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     variant="body1"
                     sx={{
                         mb: 3,
-                        color: "#1e293b",
+                        color: "text.secondary",
                         textAlign: "justify",
                         lineHeight: 1.6,
                     }}
@@ -521,21 +521,19 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         justifyContent: "center",
                         alignItems: "center",
                         gap: 1.2,
-                        backgroundColor: "#e8f0ff",
-                        borderRadius: "10px",
+                        backgroundColor: "action.hover",
+                        borderRadius: 2,
                         px: 2,
                         py: 1.5,
                         mb: 3,
-                        boxShadow: "inset 0 0 6px rgba(24, 41, 105, 0.1)",
                     }}
                 >
-                    <EventNoteIcon sx={{ color: "#182969", fontSize: 26 }} />
+                    <EventNoteIcon color="primary" sx={{ fontSize: 26 }} />
                     <Typography
                         variant="body1"
                         sx={{
-                            color: "#000",
                             fontWeight: 600,
-                            fontSize: "1rem",
+                            fontSize: "1rem"
                         }}
                     >
                         Duración:&nbsp;
@@ -548,23 +546,23 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 {/* Reglas */}
                 <Box
                     sx={{
-                        backgroundColor: "#ff572210",
-                        borderLeft: "4px solid #FF9800",
-                        borderRadius: "8px",
+                        backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.1),
+                        borderLeft: (theme) => `4px solid ${theme.palette.warning.main}`,
+                        borderRadius: 2,
                         p: 2,
                     }}
                 >
                     <Typography
                         variant="body2"
                         sx={{
-                            color: "#d84315",
+                            color: "warning.dark",
                             fontWeight: 600,
                             mb: 0.5,
                         }}
                     >
                         ⚠️ Importante:
                     </Typography>
-                    <Typography variant="body2" sx={{ color: "#4b5563" }}>
+                    <Typography variant="body2" color="text.secondary">
                         Tu receta debe llevar la etiqueta{" "}
                         <strong>Desafío</strong> y solo puedes participar con una
                         receta por semana.
@@ -592,25 +590,25 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     transform: 'translate(-50%, -50%)',
                     width: { xs: '90%', sm: 550 },
                     bgcolor: 'background.paper',
-                    borderRadius: '16px',
+                    borderRadius: 4,
                     boxShadow: 24,
                     p: 4,
                     outline: 'none',
                     maxHeight: '90vh',
                     overflowY: 'auto',
-                    border: '3px solid #182969',
-                    background: '#f8f9fa'
+                    border: (theme) => `3px solid ${theme.palette.primary.main}`
                 }}>
-                    <Typography id="modal-desafio-titulo" variant="h4" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: '#182969', textAlign: 'center' }}>
+                    <Typography id="modal-desafio-titulo" variant="h4" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                         Desafío de Coctelería Semanal
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
 
                     {/* Top 3 de la Semana Pasada */}
-                    <Typography variant="subtitle1" sx={{ mt: 1, pb: 1, fontWeight: '700', color: '#333' }}>
+                    <Typography variant="subtitle1" sx={{ mt: 1, pb: 1, fontWeight: '700', color: 'text.primary' }}>
                         <EmojiEventsIcon sx={{ verticalAlign: 'bottom', mr: 0.5 }} /> Top 3 de la Semana Anterior
                     </Typography>
-                    <Box sx={{ p: 2, bgcolor: '#f8f9fa', borderRadius: '8px', border: '1px solid #f8f9fa' }}>
+                    {/* Usamos un color de fondo sutil del tema */}
+                    <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                         {renderRankingAnterior()}
                     </Box>
 
@@ -621,8 +619,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 onClick={fetchCurrentRanking}
                                 variant="text"
                                 size="small"
-                                disabled={rankingCargando}
-                                sx={{ color: '#182969', fontWeight: 'bold' }}
+                                disabled={rankingCargando}                                
                             >
                                 {rankingCargando ? <CircularProgress size={20} /> : "Ver Ranking Actual Completo"}
                             </Button>
@@ -665,12 +662,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             variant="outlined"
                             size="large"
                             sx={{
-                                flexGrow: 1,
-                                borderColor: '#ccc',
-                                color: '#333',
-                                borderRadius: '8px',
-                                '&:hover': { borderColor: '#182969' }
+                                flexGrow: 1,                                
+                                borderRadius: '8px'
                             }}
+                            color="inherit" // Usa el color de texto por defecto del tema
                         >
                             Ver Feed
                         </Button>
@@ -681,9 +676,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             color="primary"
                             sx={{
                                 flexGrow: 1,
-                                bgcolor: '#FF5722',
+                                bgcolor: '#FF5722', // Mantenemos el color naranja
+                                color: 'white', // Forzamos el texto a ser blanco para asegurar contraste
                                 borderRadius: '8px',
-                                '&:hover': { bgcolor: '#E64A19' }
+                                '&:hover': { bgcolor: '#E64A19' },
                             }}
                             startIcon={<LocalBarIcon />}
                         >

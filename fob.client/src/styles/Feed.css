@@ -8,15 +8,12 @@
     flex-direction: column;
     /*background-color: #f9f9f9;*/
 }
-.css-c11htj{
-    /*background-color: #f9f9f9;*/
-}
 /* Estilos para el contenedor del mensaje del feed */
 .mensaje-feed {
     text-align: center;
     padding: 20px;
     margin: 50px auto;
-    max-width: 600px;    
+    max-width: 600px;
     border-radius: 10px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Considera usar el shadow del tema */
     font-size: 1.2em;    
