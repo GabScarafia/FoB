@@ -153,7 +153,11 @@ namespace FoB.Infrastructure.Service
             foreach (var participacion in participaciones)
             {
                 // 2. Obtener las estadísticas actuales de la receta
-                var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaActualDeCorte);
+
+                RecetaStatsDto statsReceta = null;
+
+                if(participacion.RecetaId.HasValue)
+                    statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaActualDeCorte);
 
                 // Si la receta no tiene stats o ya no existe, ignorarla (buena práctica)
                 if (statsReceta == null) continue;
