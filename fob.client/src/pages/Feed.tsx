@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
 import { useAuth } from "../context/AuthContext";
@@ -75,8 +75,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // Función para cerrar el diálogo de creación de receta
     const handleCloseCreateDialog = () => {
         setIsCreateDialogOpen(false);
-        setIngredienteDesafio(undefined);
-        setDesafioIdActivo(undefined);
+        // No es necesario resetear los estados aquí si se hace en onRecetaCreada
     };
 
 
@@ -156,42 +155,56 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
     }, [token]);
 
-    // EFECTO 2: Obtener las recetas 
-    useEffect(() => {
+    // useCallback para la función de obtener recetas, para poder reutilizarla
+    const recargarRecetas = useCallback(async () => {
         if (!token) {
             setCargando(false);
             return;
         }
-
-        const obtenerRecetas = async () => {
-            try {
-                const response = await fetch(`${BASE_URL}/Recetas/Feed?pageSize=1`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+        setCargando(true);
+        try {
+            const response = await fetch(`${BASE_URL}/Recetas/Feed?pageSize=1`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
+            });
 
-                const data = await response.json();
-                setMensaje(data.mensaje);
-                const recetasObtenidas: DatosReceta[] = data.recetas;
-
-                setRecetas(recetasObtenidas);
-                setRecetasFiltradas(recetasObtenidas);
-            } catch (err) {
-                setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
-                console.error("Error al obtener recetas:", err);
-            } finally {
-                setCargando(false);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
+
+            const data = await response.json();
+            setMensaje(data.mensaje);
+            const recetasObtenidas: DatosReceta[] = data.recetas;
+
+            setRecetas(recetasObtenidas);
+            setRecetasFiltradas(recetasObtenidas);
+        } catch (err) {
+            setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
+            console.error("Error al obtener recetas:", err);
+        } finally {
+            setCargando(false);
+        }
+    }, [token]);
+
+    // EFECTO 2: Obtener las recetas al montar el componente
+    useEffect(() => {
+        recargarRecetas();
+    }, [recargarRecetas]);
+
+    // EFECTO 3: Escuchar el evento personalizado para recargar el feed.
+    useEffect(() => {
+        const handleRecetaCreadaEvent = () => {
+            console.log('Evento "recetaCreada" recibido, recargando feed...');
+            recargarRecetas();
         };
 
-        obtenerRecetas();
-    }, [token]);
+        document.addEventListener('recetaCreada', handleRecetaCreadaEvent);
+
+        // Limpieza: es importante remover el listener cuando el componente se desmonte.
+        return () => document.removeEventListener('recetaCreada', handleRecetaCreadaEvent);
+    }, [recargarRecetas]); // La dependencia asegura que siempre usemos la última versión de recargarRecetas.
 
     // Lógica de eliminación
     const handleDeleteReceta = async (recetaId: number) => {
@@ -272,6 +285,15 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
 
         setIsCreateDialogOpen(true);
+    };
+
+    // Función que se llamará cuando una receta se cree exitosamente
+    const handleRecetaCreada = () => {
+        // Esta función ahora solo se usa para el flujo del Desafío.
+        handleCloseCreateDialog(); // Cierra el diálogo
+        setIngredienteDesafio(undefined); // Limpia el estado del desafío
+        setDesafioIdActivo(undefined);
+        // La recarga del feed se manejará por el evento global.
     };
 
 
@@ -876,6 +898,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 open={isCreateDialogOpen}
                 onClose={handleCloseCreateDialog}
                 // Pasar el ingrediente para que el componente lo use
+                onRecetaCreada={handleRecetaCreada}
                 ingrediente={ingredienteDesafio}
                 desafioId={desafioIdActivo}
             />

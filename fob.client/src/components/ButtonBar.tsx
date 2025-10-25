@@ -118,7 +118,7 @@ export default function ButtonBar() {
                 {renderBottomBar()}
             </Paper>
             <Dialog open={openDialog} onClose={handleCloseDialog} fullScreen>
-                <CreateRecetaDialog open={openDialog} onClose={handleCloseDialog} />
+                <CreateRecetaDialog open={openDialog} onClose={handleCloseDialog} onRecetaCreada={() => {}} />
             </Dialog>
         </>
     );
