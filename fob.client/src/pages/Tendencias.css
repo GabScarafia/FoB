@@ -1,6 +1,7 @@
 .tendencias-container {
   /* Use a consistent padding on both sides to create a small gutter */
   padding: 6px; /* Adjust this value as needed */
+  padding-bottom: 32px; /* Adjust this value as needed */
   width: 100%; /* Ensure it takes up the full width */
   box-sizing: border-box; /* This is key to include padding in the total width */
   overflow-x: hidden; /* Prevents horizontal scrolling */

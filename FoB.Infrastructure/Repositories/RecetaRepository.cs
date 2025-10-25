@@ -166,6 +166,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 .ThenInclude(ir => ir.Unidad)
             .Include(x => x.RecetaEtiquetas)
                 .ThenInclude(x => x.Etiquetas)
+            .AsSplitQuery()
             .Where(x => x.Activa == true  && x.UsuarioId != _currentUser.User.Id);
 
         // Sort by creation date (desc) and then by average rating (desc)
@@ -265,6 +266,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                         .Include(x => x.RecetaEtiquetas)
                              .ThenInclude(x => x.Etiquetas)
                         .Include(x => x.Paso)
+                        .AsSplitQuery()
                         .Where(x => x.Activa == true && followedUserIds.Contains(x.UsuarioId));
 
 
