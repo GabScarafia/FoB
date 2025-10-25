@@ -93,7 +93,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
-    const [modalPasosAbierto, setModalPasosAbierto] = useState(false);
     // Estado para la lógica de Seguir/Siguiendo, inicializado con la prop
     const [isFollowing, setIsFollowing] = useState(receta.seguido);
 
@@ -124,13 +123,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         onDeleteReceta(receta.id);
     };
 
-    const handleOpenModalPasos = () => {
-        setModalPasosAbierto(true);
-    };
 
-    const handleCloseModalPasos = () => {
-        setModalPasosAbierto(false);
-    };
 
     const handleComentarioAgregado = (nuevoComentario: Comentario) => {
         setComentarios([...comentarios, nuevoComentario]);
@@ -561,13 +554,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         ))}
                     </Box>
                 )}
-                {receta.pasos && receta.pasos.length > 0 && (
-                    <div className="pasos-receta">
-                        <Button variant="contained" onClick={handleOpenModalPasos} sx={{ mt: 2, mb: 0.5 }}>
-                            Ver Pasos
-                        </Button>
-                    </div>
-                )}
             </Box>
 
             <div className="vista-previa-comentarios">
@@ -586,26 +572,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 )}
             </div>
 
-            <Dialog open={modalPasosAbierto} onClose={handleCloseModalPasos} scroll="paper" fullWidth maxWidth="sm">
-                <DialogTitle>Pasos de la Receta</DialogTitle>
-                <DialogContent dividers>
-                    <Box component="div" className="lista-pasos">
-                        {receta.pasos.sort((a, b) => a.numero - b.numero).map((paso, index) => (
-                            <div key={index} className="paso-item">
-                                <Typography variant="h6" component="h4" className="paso-numero-titulo">
-                                    {paso.numero}- {paso.titulo}
-                                </Typography>
-                                <Typography variant="body2" className="paso-descripcion">
-                                    {paso.descripcion}
-                                </Typography>
-                            </div>
-                        ))}
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseModalPasos}>Cerrar</Button>
-                </DialogActions>
-            </Dialog>
 
             <DrawerComentarios
                 open={drawerAbierto}
