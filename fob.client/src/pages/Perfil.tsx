@@ -46,7 +46,7 @@ const Perfil: React.FC = () => {
     const [fetchAttempted, setFetchAttempted] = useState(false);
     const navigate = useNavigate();
 
-    // ***  Estado para manejar el seguimiento localmente ***
+    // *** Estado para manejar el seguimiento localmente ***
     const [isFollowing, setIsFollowing] = useState(false);
     // Estado para deshabilitar el botón mientras se procesa la solicitud
     const [isProcessingFollow, setIsProcessingFollow] = useState(false);
@@ -121,7 +121,7 @@ const Perfil: React.FC = () => {
         };
     }, [id, token, currentUserId]);
 
-    // --- Manejador de Seguimiento (Follow/Unfollow)  ---
+    // --- Manejador de Seguimiento (Follow/Unfollow)  ---
     const handleFollowClick = async () => {
         if (!datosPerfil || !currentUserId || isProcessingFollow) return;
 
@@ -184,6 +184,49 @@ const Perfil: React.FC = () => {
     };
 
 
+    // --- Manejador de Editar Perfil ---
+    const handleEditarPerfilClick = () => {
+        navigate('/editar-perfil');
+    };
+
+    // --- Manejador de Compartir Perfil ---
+    const handleShareProfileClick = async () => {
+        if (!datosPerfil) return;
+
+        // 1. Obtener la URL del perfil
+        const profileUrl = `${window.location.origin}/perfil/${datosPerfil.id}`;
+
+        // El texto a compartir
+        const shareText = `¡Mira el perfil de @${datosPerfil.nombreUsuario} en mi app de recetas!`;
+
+        // 2. Usar la API nativa de compartir si está disponible
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Compartir Perfil',
+                    text: shareText,
+                    url: profileUrl,
+                });
+                return;
+            } catch (error) {
+                // Si el usuario cancela, no hacemos nada.
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error('Error al usar la API de compartir:', error);
+                }
+            }
+        }
+
+        // 3. Fallback: Copiar al portapapeles
+        try {
+            await navigator.clipboard.writeText(profileUrl);
+            alert('¡Enlace copiado al portapapeles!');
+        } catch (err) {
+            console.error('Fallo al copiar el portapapeles:', err);
+            alert('Fallo al copiar el enlace. Por favor, cópialo manualmente.');
+        }
+    };
+
+
     // Renderizado según estado
     if (cargando) {
         return <Box className="cargando-perfil" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>Cargando perfil...</Box>;
@@ -224,12 +267,6 @@ const Perfil: React.FC = () => {
     } = datosPerfil;
 
     const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
-
-
-    const handleEditarPerfilClick = () => {
-        navigate('/editar-perfil');
-    };
-
 
     const tienePublicaciones = publicaciones && publicaciones.length > 0;
     const esPerfilPropio = currentUserId === datosPerfil.id;
@@ -301,7 +338,7 @@ const Perfil: React.FC = () => {
                 </Box>
             </Box>
 
-            {/* Botones condicionales *** */}
+            {/* Botones condicionales */}
             <Box className="perfil-botones">
                 {esPerfilPropio ? (
                     <>
@@ -316,6 +353,7 @@ const Perfil: React.FC = () => {
                         <Button
                             variant="outlined"
                             className="perfil-boton"
+                            onClick={handleShareProfileClick}
                             sx={{ flexGrow: 1 }}
                         >
                             Compartir perfil
@@ -331,20 +369,23 @@ const Perfil: React.FC = () => {
                         disabled={!token || isProcessingFollow}
                         sx={{
                             flexGrow: 1,
-                            // Fondo: Contained es primary, Outlined es transparente/claro
+                            // *** ESTILO DE FONDO RELLENO (Seguir) ***
                             backgroundColor: !isFollowing ? 'rgb(31 69 176)' : 'transparent',
                             color: !isFollowing ? 'white' : undefined,
-                            // Estilos de Hover (se ajustan mejor)
-                            '&:hover': {
-                                backgroundColor: isFollowing ? 'rgba(31, 69, 176, 0.08)' : 'primary.dark',
-                            },
-                            // *** ESTILOS PARA 'SIGUIENDO' (outlined) ***
-                            ...(isFollowing && {
-                                borderColor: 'rgb(31 69 176)',
-                                '&:hover': {
- 
-                                    borderColor: 'rgb(31 69 176)',
 
+                            '&:hover': {
+                                // Tono más oscuro para el hover del botón relleno
+                                backgroundColor: isFollowing ? 'rgba(31, 69, 176, 0.08)' : 'rgb(24 55 139)',
+                            },
+
+                            // *** ESTILOS DEL BORDE OUTLINED (Siguiendo) ***
+                            ...(isFollowing && {
+                                // Borde personalizado
+                                borderColor: 'rgb(31 69 176)',
+
+                                '&:hover': {
+                                    // Borde se mantiene en hover
+                                    borderColor: 'rgb(31 69 176)',
                                 }
                             })
                         }}
