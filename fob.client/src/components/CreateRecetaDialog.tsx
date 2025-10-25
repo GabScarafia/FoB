@@ -463,7 +463,7 @@ export default function CreateRecetaDialog({ open, onClose, ingrediente, desafio
         };
 
         try {
-            const response = await fetch("${BASE_URL}/Recetas", {
+            const response = await fetch(`${BASE_URL}/Recetas`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

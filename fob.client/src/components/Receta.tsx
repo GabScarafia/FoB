@@ -1,4 +1,4 @@
-﻿﻿import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
 import './Receta.css';
@@ -45,6 +45,14 @@ interface Paso {
     descripcion: string;
     numero: number;
     imagen?: string; // Agregado para tipar la imagen en el paso
+}
+
+// Nueva interfaz para un elemento del carrusel, incluyendo la imagen a mostrar
+// y la información del paso asociado (opcional).
+interface CarruselItem {
+    imagenUrl: string; // La imagen a mostrar (principal o de paso)
+    pasoInfo?: Paso;   // Información del paso (si es un slide de paso)
+    isMainImage: boolean; // Indica si es el slide principal de la receta
 }
 
 export interface PropsReceta {
@@ -138,7 +146,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
         return estrellas;
     };
-    
+
     const [isProcessingLike, setIsProcessingLike] = useState(false);
 
     const handleLikeClick = async () => {
@@ -151,15 +159,16 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     'Authorization': `Bearer ${authData?.token}`,
                     'Content-Type': 'application/json'
                 },
-                body:JSON.stringify({
+                body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 0,
-                    accion: Number(liked)
+                    tipo: 0, // Tipo 0: MeGusta
+                    accion: Number(liked) // Envía 1 (true) para quitar like, 0 (false) para dar like
                 })
 
             });
 
             if (response.ok) {
+                // Actualiza el estado local
                 if (liked) {
                     setLiked(false);
                     setLikesCount(prevCount => prevCount - 1);
@@ -179,21 +188,23 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         } catch (error) {
             console.error("Error de red al dar like:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
+        } finally {
+            setIsProcessingLike(false); // Permite futuros clics
         }
     };
-    
+
     // Función de seguimiento
     const handleFollowClick = async (usuarioId: number) => {
         if (!authData?.token) {
             alert("Debes iniciar sesión para seguir a un usuario.");
-            return; 
+            return;
         }
 
         const apiUrl = `${BASE_URL}/Follow/${usuarioId}`;
 
         try {
             const response = await fetch(apiUrl, {
-                method: 'POST', 
+                method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData.token}`,
                 },
@@ -206,13 +217,13 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
             // Si la respuesta es OK, actualiza el estado de seguimiento (toggle)
             setIsFollowing(prev => !prev);
-            
+
         } catch (error) {
             console.error("Fallo al ejecutar la acción de seguir:", error);
             alert("Ocurrió un error. Intenta de nuevo.");
         }
     };
-        
+
     const handleDisLikeClick = async () => {
         try {
 
@@ -222,10 +233,10 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     'Authorization': `Bearer ${authData?.token}`,
                     'Content-Type': 'application/json'
                 },
-                body:JSON.stringify({
+                body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 1,
-                    accion: Number(disliked)
+                    tipo: 1, // Tipo 1: NoMeGusta
+                    accion: Number(disliked) // Envía 1 (true) para quitar dislike, 0 (false) para dar dislike
                 })
 
             });
@@ -233,7 +244,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             if (response.ok) {
                 if (disliked) {
                     setDisliked(false);
-                    } else {
+                } else {
                     setDisliked(true);
                 }
                 // Si das Dislike, eliminas Like y bajas el contador de Likes
@@ -254,17 +265,17 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const handleFavoritoClick = async () => {
         try {
-            
+
             const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${authData?.token}`,
                     'Content-Type': 'application/json'
                 },
-                body:JSON.stringify({
+                body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 2,
-                    accion: (favorite)
+                    tipo: 2, // Tipo 2: Favorito
+                    accion: Number(favorite) // Envía 1 (true) para quitar favorito, 0 (false) para dar favorito
                 })
 
             });
@@ -344,16 +355,43 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    // Carrusel de imágenes (receta principal + imágenes de pasos)
-    const pasosConImagen = receta.pasos.filter(p => p.imagen && p.imagen !== '');
-    const imagenesCarrusel = [
-        receta.imagen ? `data:image/jpeg;base64,${receta.imagen}` : null,
-        ...pasosConImagen.map(p => {
-            if (p.imagen?.startsWith('data:image')) return p.imagen;
-            return `data:image/jpeg;base64,${p.imagen}`;
-        })
-    ].filter(Boolean) as string[];
-    
+    // --- LÓGICA DEL CARRUSEL CORREGIDA ---
+
+    // 1. Obtener la URL de la imagen principal (si existe), o el fallback local
+    const imagenPrincipalUrl = receta.imagen
+        ? (receta.imagen.startsWith('data:image') ? receta.imagen : `data:image/jpeg;base64,${receta.imagen}`)
+        : fotoPerfilLocal;
+
+    // 2. Crear la matriz de elementos del carrusel (CarruselItem[])
+
+    const carruselItems: CarruselItem[] = [];
+
+    // **Añadir el slide de la Imagen Principal (Portada)**
+    if (imagenPrincipalUrl) {
+        carruselItems.push({
+            imagenUrl: imagenPrincipalUrl,
+            isMainImage: true
+        });
+    }
+
+    // **Añadir un slide para CADA PASO**
+    receta.pasos.forEach(paso => {
+        let imagenPasoUrl = imagenPrincipalUrl; // Fallback: usa la imagen principal
+
+        // Si el paso TIENE una imagen, usa la imagen del paso
+        if (paso.imagen && paso.imagen !== '') {
+            imagenPasoUrl = paso.imagen.startsWith('data:image')
+                ? paso.imagen
+                : `data:image/jpeg;base64,${paso.imagen}`;
+        }
+
+        carruselItems.push({
+            imagenUrl: imagenPasoUrl,
+            pasoInfo: paso,
+            isMainImage: false, // Nunca es la imagen principal
+        });
+    });
+
     const [indiceImagen, setIndiceImagen] = useState(0);
 
     // Swipe handlers
@@ -367,8 +405,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         setIndiceImagen(prev => prev > 0 ? prev - 1 : prev);
     };
     const handleNextImagen = () => {
-        setIndiceImagen(prev => prev < imagenesCarrusel.length - 1 ? prev + 1 : prev);
+        setIndiceImagen(prev => prev < carruselItems.length - 1 ? prev + 1 : prev);
     };
+
+    const itemActual = carruselItems[indiceImagen];
+
+
 
     // Condición de renderizado del botón Seguir:
     // Muestra el botón 'Seguir' solo si:
@@ -379,15 +421,15 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     //console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
 
     return (
-        <Paper elevation={2} sx={{ 
-            maxWidth: '500px', 
-            mx: 'auto', 
-            mb: 3, 
+        <Paper elevation={2} sx={{
+            maxWidth: '500px',
+            mx: 'auto',
+            mb: 3,
             overflow: 'hidden',
             bgcolor: 'background.paper' // Usa el color de fondo del tema
         }}>
             <Box className="encabezado-receta" sx={{ p: 2 }}>
-                <div className="info-autor" onClick={handleUsuarioClick} style={{cursor: 'pointer'}}>
+                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
                     <div>
                         <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
@@ -439,12 +481,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
             {/* Imagen principal del carrusel con swipe */}
             <div className="carrusel-imagen" {...swipeHandlers}>
-                <img 
-                    src={imagenesCarrusel[indiceImagen]} 
-                    alt={`Receta paso ${indiceImagen}`} 
-                    className="imagen-receta" 
-                    draggable={false} 
-                />
+                {itemActual && (
+                    <img
+                        src={itemActual.imagenUrl}
+                        alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
+                        className="imagen-receta"
+                        draggable={false}
+                    />
+                )}
             </div>
 
             {/* Navegación y puntitos debajo de la imagen */}
@@ -453,33 +497,33 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     <ArrowBackIcon />
                 </IconButton>
                 <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
-                    {imagenesCarrusel.map((_, idx) => (
-                        <Box 
-                            key={idx} 
-                            component="span" 
-                            sx={{ 
-                                fontSize: 18, 
+                    {carruselItems.map((_, idx) => (
+                        <Box
+                            key={idx}
+                            component="span"
+                            sx={{
+                                fontSize: 18,
                                 color: idx === indiceImagen ? 'primary.main' : 'text.disabled' // Colores del tema
                             }}
                         >●</Box>
                     ))}
                 </div>
-                <IconButton onClick={handleNextImagen} disabled={indiceImagen === imagenesCarrusel.length - 1} color="primary">
+                <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary">
                     <ArrowForwardIcon />
                 </IconButton>
             </div>
 
-            {/* Info del paso si corresponde */}
-            {indiceImagen > 0 && pasosConImagen[indiceImagen - 1] && (
+            {/* Info del paso si corresponde (Sólo se muestra si NO es la imagen principal) */}
+            {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
                 <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
-                    <Typography variant="body2"><strong>Paso {pasosConImagen[indiceImagen - 1].numero}:</strong> {pasosConImagen[indiceImagen - 1].titulo}</Typography>
-                    <Typography variant="caption">{pasosConImagen[indiceImagen - 1].descripcion}</Typography>
+                    <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
+                    <Typography variant="caption">{itemActual.pasoInfo.descripcion}</Typography>
                 </div>
             )}
 
             <Box className="acciones-receta" sx={{ px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <IconButton onClick={handleLikeClick} size="small">
+                    <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
                         {liked ? (
                             <ThumbUpIcon sx={{ color: 'primary.main' }} />
                         ) : (
