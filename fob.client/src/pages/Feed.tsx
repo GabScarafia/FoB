@@ -414,42 +414,58 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
     };
 
-    const renderRankingAnterior = () => {
-        if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
-            return (
-                <Typography variant="body2" sx={{ mt: 1, color: '#666', textAlign: 'center' }}>
-                    Aún no hay datos de ranking de la semana pasada. ¡Sé el primero!
-                </Typography>
-            );
-        }
-
+   const renderRankingAnterior = () => {
+    if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
         return (
-            <List sx={{ p: 0 }}>
-                {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
-                    <ListItem
-                        key={item.usuarioId}
-                        sx={{
-                            p: 1,
-                            mb: 0.5,
-                            borderRadius: '6px',
-                            bgcolor: index === 0 ? '#fff8e1' : index === 1 ? '#f5f5f5' : index === 2 ? '#fbe9e7' : 'white',
-                            borderLeft: `4px solid ${index === 0 ? '#FFD700' : index === 1 ? '#C0C0C0' : '#CD7F32'}`,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                        }}
-                    >
-                        <ListItemIcon sx={{ minWidth: 35 }}>
-                            {getMedalIcon(index)}
-                        </ListItemIcon>
-                        <ListItemText
-                            primary={`@${item.nombreUsuario}`}
-                            secondary={`${item.puntos} Puntos`}
-                            primaryTypographyProps={{ fontWeight: index < 3 ? 'bold' : 'normal', color: index === 0 ? '#b79100' : 'text.primary' }}
-                        />
-                    </ListItem>
-                ))}
-            </List>
+            <Typography variant="body2" sx={{ mt: 1, color: '#666', textAlign: 'center' }}>
+                Aún no hay datos de ranking de la semana pasada. ¡Sé el primero!
+            </Typography>
         );
-    };
+    }
+
+    return (
+        <List sx={{ p: 0 }}>
+            {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
+                <ListItem
+                    key={item.usuarioId}
+                    // Usamos una función para acceder al 'theme'
+                    sx={(theme) => ({
+                        p: 1,
+                        mb: 0.5,
+                        borderRadius: '6px',
+                        // 1er puesto: Colores 'warning' (como el box de reglas)
+                        bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1)
+                               // 2do puesto: Color 'action.hover' (como el box de fechas)
+                               : index === 1 ? theme.palette.action.hover
+                               // 3er puesto: Color coral (como el box 'Ingrediente Clave')
+                               : index === 2 ? alpha('#ff7e5f', 0.1) 
+                               : 'white',
+                        borderLeft: `4px solid ${
+                               index === 0 ? theme.palette.warning.main // 1ro
+                               : index === 1 ? theme.palette.grey[500] // 2do (plata)
+                               : index === 2 ? '#ff7e5f' // 3ro (coral/bronze)
+                               : 'transparent'
+                        }`,
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                    })}
+                >
+                    <ListItemIcon sx={{ minWidth: 35 }}>
+                        {getMedalIcon(index)}
+                    </ListItemIcon>
+                    <ListItemText
+                        primary={`@${item.nombreUsuario}`}
+                        secondary={`${item.puntos} Puntos`}
+                        primaryTypographyProps={{ 
+                            fontWeight: index < 3 ? 'bold' : 'normal',
+                            // 1er puesto: Color 'warning.dark' (como el texto de reglas)
+                            color: index === 0 ? 'warning.dark' : 'text.primary' 
+                        }}
+                    />
+                </ListItem>
+            ))}
+        </List>
+    );
+};
 
     const renderDesafioActual = () => {
         if (!desafioSemanal) return null;
