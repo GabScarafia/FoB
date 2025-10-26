@@ -9,7 +9,7 @@
     z-index: 1000;
 }
 
-/* Sección del input y el icono de búsqueda */
+/* SecciÃ³n del input y el icono de bÃºsqueda */
 .barra-busqueda-input-seccion {
     display: flex;
     align-items: center;
@@ -58,71 +58,123 @@
         color: #f0f0f0;
     }
 
-/* Estilos para el menú desplegable de resultados */
-.resultados-dropdown {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    max-height: 300px;
-    overflow-y: auto;
-    margin-top: 5px;
-    z-index: 999;
-    animation: fadeIn 0.3s ease-out;
+/* --- AÃ‘ADIDO --- */
+
+/* Estilo para el icono de flecha "atrÃ¡s" */
+.icono-atras {
+    font-size: 1.8em;
+    color: white;
+    cursor: pointer;
+    margin-right: 15px; /* Reemplaza el margen del logo */
+    transition: color 0.3s ease;
+}
+.icono-atras:hover {
+    color: #f0f0f0;
 }
 
-/* Animación de aparición */
+/* AnimaciÃ³n de fundido para la transiciÃ³n */
 @keyframes fadeIn {
     from {
         opacity: 0;
-        transform: translateY(-10px);
     }
-
     to {
         opacity: 1;
-        transform: translateY(0);
     }
 }
 
-/* Estilos para cada resultado de usuario */
-.resultado-usuario {
-    padding: 12px 15px;
-    border-bottom: 1px solid #eee;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s ease;
+/* --- FIN DE LO AÃ‘ADIDO --- */
+
+
+/* * ESTILOS PARA LA LISTA DE RESULTADOS (MODO OSCURO)
+ */
+
+/* Contenedor para la lista de resultados de bÃºsqueda */
+.search-results-list {
+    background-color: #121212;
+    color: #ffffff;
+    flex-grow: 1;
+    padding-bottom: 80px;
+    
+    /* Aplicamos la animaciÃ³n */
+    animation: fadeIn 0.3s ease-out;
 }
 
-    .resultado-usuario:last-child {
+/* Estilo para CADA item de resultado (sea usuario o receta) */
+.resultado-usuario, .resultado-item {
+    padding: 10px 15px;
+    border-bottom: 1px solid #333;
+    cursor: pointer;
+    display: flex;
+    align-items: center; 
+    transition: background-color 0.2s ease;
+    gap: 12px; 
+}
+
+    .resultado-usuario:last-child, .resultado-item:last-child {
         border-bottom: none;
     }
 
-    .resultado-usuario:hover {
-        background-color: #f0f0f0;
+    .resultado-usuario:hover, .resultado-item:hover {
+        background-color: #282828;
     }
+
+/* Estilo para el avatar circular */
+.avatar-busqueda {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover; 
+    background-color: #555; 
+    flex-shrink: 0; 
+}
+
+/* Estilo para el placeholder si no hay imagen */
+.avatar-busqueda-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background-color: #333; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #aaa;
+    font-weight: bold;
+    font-size: 1.2em;
+    flex-shrink: 0; 
+}
+
+/* Contenedor para los textos (para alineaciÃ³n vertical) */
+.usuario-info-busqueda {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    flex-grow: 1; 
+    min-width: 0; 
+}
 
 .usuario-nombre {
     font-weight: bold;
-    color: #0b2553;
+    color: #ffffff;
     font-size: 1.05em;
-    margin-right: 5px;
+    margin-right: 0; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .usuario-nombre-completo {
-    color: #666;
+    color: #aaa;
     font-size: 0.85em;
-    flex-grow: 1;
+    flex-grow: 0; 
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-/* Estilos para el botón de seguir */
+/* Estilos para el botÃ³n de seguir (ajustado para modo oscuro) */
 .boton-seguir {
-    margin-left: auto;
     padding: 6px 12px;
-    background-color: #1a2a6c;
+    background-color: #3e82f7; 
     color: white;
     border: none;
     border-radius: 20px;
@@ -130,25 +182,28 @@
     font-weight: bold;
     transition: background-color 0.3s ease;
     white-space: nowrap;
+    flex-shrink: 0; 
 }
 
 .boton-seguir:hover {
-    background-color: #0b2553;
+    background-color: #1a68d9;
 }
 
-/* Estilo para el botón "Siguiendo" */
+/* Estilo para el botÃ³n "Siguiendo" (ajustado para modo oscuro) */
 .boton-seguir.siguiendo {
-    background-color: #24429c;
+    background-color: transparent;
+    border: 1px solid #aaa;
+    color: #aaa;
 }
 
 .boton-seguir.siguiendo:hover {
-    background-color: #1b317c;
+    background-color: #333;
 }
 
-/* Estilos para el mensaje de no resultados */
-.no-resultados-mensaje, .cargando-busqueda {
-    padding: 12px 15px;
-    color: #666;
+/* Estilos para el mensaje de no resultados (ajustado para modo oscuro) */
+.no-resultados-mensaje {
+    padding: 20px 15px;
+    color: #aaa;
     text-align: center;
     font-style: italic;
 }
