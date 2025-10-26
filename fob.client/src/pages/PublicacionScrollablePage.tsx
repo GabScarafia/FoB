@@ -179,10 +179,28 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
                 const data = await response.json();
 
-                const publicacionesPrevias: RecetaDto[] = data.publicaciones.map((p: any) => ({
+                // 1. Obtiene las publicaciones como antes
+                let publicacionesPrevias: RecetaDto[] = data.publicaciones.map((p: any) => ({
                     ...p,
                     imagen: p.imagenPrincipalBase64 ?? p.imagen ?? null,
                 }));
+
+                // 2. --- LÓGICA PARA REORDENAR ---
+                if (recetaIdInicial) {
+                    const targetId = Number(recetaIdInicial);
+                    const targetIndex = publicacionesPrevias.findIndex(p => p.id === targetId);
+
+                    // Si encontramos la receta y NO está ya en primer lugar
+                    if (targetIndex > 0) { 
+                        // Saca la receta de su posición original
+                        const [targetReceta] = publicacionesPrevias.splice(targetIndex, 1);
+                        // Insértala al principio del array
+                        publicacionesPrevias.unshift(targetReceta);
+                    }
+                }
+                // --- FIN DE LA LÓGICA ---
+
+                // 3. Guarda el array (posiblemente) reordenado
                 setPublicaciones(publicacionesPrevias);
             } catch (err) {
                 console.error('Error al cargar publicaciones:', err);
@@ -193,7 +211,8 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
         };
 
         fetchPublicaciones();
-    }, [perfilId, token]);
+    // Añade recetaIdInicial a las dependencias
+    }, [perfilId, token, recetaIdInicial]);
 
     // 2. Lógica para precargar y manejar el scroll
     useEffect(() => {

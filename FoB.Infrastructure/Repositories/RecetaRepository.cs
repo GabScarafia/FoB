@@ -426,78 +426,87 @@ internal sealed class RecetaRepository : IRecetaRepository
 
     public async Task<RecetaResponse> GetById(int idReceta)
     {
-        // Obtiene el ID del usuario actual para saber si le gusta la receta
-        var userId = _currentUser.User?.Id;
-
-        var receta = await _context.Receta
-            .Include(r => r.Usuario)
-                .ThenInclude(u => u.UsuarioImagen)
-            .Include(r => r.RecetaImagen)
-            .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
-            .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
-            .Include(r => r.Paso)
-            .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
-            .Include(r => r.Voto)
-            .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
-            .FirstOrDefaultAsync(r => r.Id == idReceta);
-
-        if (receta == null)
+        try
         {
-            return null;
-        }
+            // Obtiene el ID del usuario actual para saber si le gusta la receta
+            var userId = _currentUser.User?.Id;
 
-        var recetaResponse = new RecetaResponse
-        {
-            Id = receta.Id,
-            Titulo = receta.Titulo,
-            Descripcion = receta.Descripcion,
-            Dificultad = receta.Dificultad,
-            TiempoPreparacion = receta.TiempoPreparacion != null
-                ? new TimeSpan(receta.TiempoPreparacion.Value.Hour, receta.TiempoPreparacion.Value.Minute, receta.TiempoPreparacion.Value.Second)
-                : (TimeSpan?)null,
-            FechaCreacion = receta.FechaCreacion,
-            Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
-            Autor = receta.Usuario != null ? new UsuarioResponse
+            var receta = await _context.Receta
+                .Include(r => r.Usuario)
+                    .ThenInclude(u => u.UsuarioImagen)
+                .Include(r => r.RecetaImagen)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
+                .Include(r => r.Paso)
+                .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
+                .Include(r => r.Voto)
+                .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
+                .AsSplitQuery()
+                .FirstOrDefaultAsync(r => r.Id == idReceta);
+
+            if (receta == null)
             {
-                Id = receta.Usuario.Id,
-                Nombre = receta.Usuario.Nombre,
-                NombreUsuario = receta.Usuario.NombreUsuario,
-                Apellido = receta.Usuario.Apellido,
-                Imagen = receta.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen
-            } : null,
-            Ingredientes = receta.IngredienteReceta?.Select(ir => new IngredienteResponse
+                return null;
+            }
+
+            var recetaResponse = new RecetaResponse
             {
-                Id = ir.Ingrediente.Id,
-                Nombre = ir.Ingrediente.Nombre,
-                Cantidad = ir.Cantidad,
-                UnidadDeMedida = ir.Unidad.Nombre
-            }).ToList() ?? new List<IngredienteResponse>(),
-            Pasos = receta.Paso?.Select(p => new PasoResponse
-            {
-                Numero = p.Numero,
-                Titulo = p.Titulo,
-                Descripcion = p.Descripcion,
-                Imagen = p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
-                    ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
-                    : null
-            }).ToList() ?? new List<PasoResponse>(),
-            Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
-            CantidadVotos = receta.Voto.Count,
-            // Utiliza el ID del usuario para verificar si le gusta la receta
-            MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),
-            CantidadComentarios = receta.Comentario.Count,
-            VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
-                .OrderByDescending(c => c.Fecha)
-                .Take(3)
-                .Select(c => new ComentarioResponse
+                Id = receta.Id,
+                Titulo = receta.Titulo,
+                Descripcion = receta.Descripcion,
+                Dificultad = receta.Dificultad,
+                TiempoPreparacion = receta.TiempoPreparacion != null
+                    ? new TimeSpan(receta.TiempoPreparacion.Value.Hour, receta.TiempoPreparacion.Value.Minute, receta.TiempoPreparacion.Value.Second)
+                    : (TimeSpan?)null,
+                FechaCreacion = receta.FechaCreacion,
+                Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
+                Autor = receta.Usuario != null ? new UsuarioResponse
                 {
-                    Id = c.Id,
-                    Texto = c.Texto,
-                    Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
-                    Fecha = c.Fecha
-                }).ToList() ?? new List<ComentarioResponse>()
-        };
-        return recetaResponse;
+                    Id = receta.Usuario.Id,
+                    Nombre = receta.Usuario.Nombre,
+                    NombreUsuario = receta.Usuario.NombreUsuario,
+                    Apellido = receta.Usuario.Apellido,
+                    Imagen = receta.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen
+                } : null,
+                Ingredientes = receta.IngredienteReceta?.Select(ir => new IngredienteResponse
+                {
+                    Id = ir.Ingrediente.Id,
+                    Nombre = ir.Ingrediente.Nombre,
+                    Cantidad = ir.Cantidad,
+                    UnidadDeMedida = ir.Unidad.Nombre
+                }).ToList() ?? new List<IngredienteResponse>(),
+                Pasos = receta.Paso?.Select(p => new PasoResponse
+                {
+                    Numero = p.Numero,
+                    Titulo = p.Titulo,
+                    Descripcion = p.Descripcion,
+                    Imagen = p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                        ? Convert.ToBase64String(p.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen)
+                        : null
+                }).ToList() ?? new List<PasoResponse>(),
+                Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
+                CantidadVotos = receta.Voto.Count,
+                // Utiliza el ID del usuario para verificar si le gusta la receta
+                MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),
+                CantidadComentarios = receta.Comentario.Count,
+                VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
+                    .OrderByDescending(c => c.Fecha)
+                    .Take(3)
+                    .Select(c => new ComentarioResponse
+                    {
+                        Id = c.Id,
+                        Texto = c.Texto,
+                        Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
+                        Fecha = c.Fecha
+                    }).ToList() ?? new List<ComentarioResponse>()
+            };
+            return recetaResponse;
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+        
     }
 
     /// <summary>

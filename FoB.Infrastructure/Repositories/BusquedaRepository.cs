@@ -26,27 +26,34 @@ namespace FoB.Infrastructure.Repository
         public async Task<List<RecetaBusquedaDto>> BuscarRecetasAsync(string termino)
         {
             IQueryable<Receta> query = _contexto.Set<Receta>()
-            .Include(x => x.Usuario)
-            .Include(x => x.IngredienteReceta)
-                .ThenInclude(x=>x.Ingrediente)
-            .Where(x => x.Activa == true && x.UsuarioId != _currentUser.User.Id);
+                .Include(x => x.Usuario)
+                .Include(x => x.IngredienteReceta)
+                    .ThenInclude(x => x.Ingrediente)
+                .Where(x => x.Activa == true && x.UsuarioId != _currentUser.User.Id);
 
-            var terminoLimpioLower = termino.Trim().ToLower();
+            var terminoLimpio = termino.Trim();
+            string patronLike = $"%{terminoLimpio}%";
+
             query = query.Where(x =>
-                // 1. Coincidencia por Título de la receta
-                x.Titulo.ToLower().Contains(terminoLimpioLower) ||
+                // Coincidencia por Título
+                EF.Functions.Like(x.Titulo, patronLike) ||
 
-                // 2. Coincidencia por Nombre de Usuario del autor
-                x.Usuario.NombreUsuario.ToLower().Contains(terminoLimpioLower) ||
+                // Coincidencia por Nombre de Usuario
+                EF.Functions.Like(x.Usuario.NombreUsuario, patronLike) ||
 
-                // 3. Coincidencia por Nombre de Ingrediente
-                //    Usas .Any() (equivalente a .some() en JS)
-                x.IngredienteReceta.Any(ir => ir.Ingrediente.Descripcion.ToLower().Contains(terminoLimpioLower))
+                // Coincidencia por Nombre de Ingrediente
+                x.IngredienteReceta.Any(ir => EF.Functions.Like(ir.Ingrediente.Nombre, patronLike))
             );
-            // Sort by creation date (desc) and then by average rating (desc)
-            query = query.OrderByDescending(x => x.FechaCreacion)
-                         .ThenByDescending(x => x.PuntuacionPromedio)
-                         .ThenBy(x=>x.Titulo);
+
+            query = query.OrderByDescending(x =>
+                    EF.Functions.Like(x.Titulo, patronLike) ? 3 :
+                    x.IngredienteReceta.Any(ir => EF.Functions.Like(ir.Ingrediente.Nombre, patronLike)) ? 2 :
+                    EF.Functions.Like(x.Usuario.NombreUsuario, patronLike) ? 1 :
+                    0
+                )
+                .ThenByDescending(x => x.FechaCreacion)
+                .ThenByDescending(x => x.PuntuacionPromedio)
+                .ThenBy(x => x.Titulo); 
 
             var list = await query.Select(x => new RecetaBusquedaDto
             {
@@ -62,6 +69,7 @@ namespace FoB.Infrastructure.Repository
                 },
             })
             .ToListAsync();
+
             return list;
         }
 
