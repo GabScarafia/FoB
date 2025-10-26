@@ -17,8 +17,7 @@ import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 import CreateRecetaDialog from 'components/CreateRecetaDialog';
 import { BASE_URL } from '../apiConfig';
 import { getTheme } from '../theme';
-
-
+import fotoPerfilLocal from '../assets/images/avatar.png';
 interface DesafioDto {
     id: number;
     nombre: string;
@@ -29,9 +28,10 @@ interface DesafioDto {
 }
 
 interface RankingItemDto {
-    posicion?: number; // Opcional, ya que el backend lo calcula, pero lo usaremos para el renderizado
+    posicion?: number; 
     usuarioId: number;
     puntos: number;
+    nombreUsuario?: string;
 }
 
 interface DesafioSemanalDto {
@@ -57,6 +57,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const currentUserId = authData?.id;
     const navigate = useNavigate();
 
+    // === ESTADOS DE BÚSQUEDA ===
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchMessage, setSearchMessage] = useState<string | null>(null);
+    const [isSearchActive, setIsSearchActive] = useState(false); // <-- NUEVO ESTADO
+    // ===========================
+
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [ingredienteDesafio, setIngredienteDesafio] = useState<string | undefined>(undefined);
 
@@ -67,18 +73,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [modalRankingOpen, setModalRankingOpen] = useState(false);
     const [rankingCargando, setRankingCargando] = useState(false);
 
-
-    // Función para abrir el diálogo de creación de receta
-    const handleOpenCreateDialog = () => {
-        setIsCreateDialogOpen(true);
-    };
-    // Función para cerrar el diálogo de creación de receta
-    const handleCloseCreateDialog = () => {
-        setIsCreateDialogOpen(false);
-        // No es necesario resetear los estados aquí si se hace en onRecetaCreada
-    };
-
-
     // ESTADOS PARA LA LÓGICA DE DESAFÍO
     const [desafioSemanal, setDesafioSemanal] = useState<DesafioSemanalDto | null>(null);
     const [modalDesafioOpen, setModalDesafioOpen] = useState(false);
@@ -86,16 +80,18 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // Estados para el modal de confirmación de eliminación
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
-
+    interface BusquedaResponse {
+        usuarios: Usuario[]; // Asumiendo que UsuarioBusquedaDto es compatible con tu tipo Usuario
+        recetas: DatosReceta[]; // Usamos DatosReceta para que encaje con el estado, aunque sea un subconjunto
+    }
     // =========================================================================
-    // 1. LÓGICA DE RANKING SEMANAL ACTIVO
+    // LÓGICA DE RANKING
     // =========================================================================
 
     const fetchCurrentRanking = async () => {
         if (!token) return;
         setRankingCargando(true);
         try {
-            //  Endpoint real para obtener el ranking ACTIVO
             const response = await fetch(`${BASE_URL}/Desafios/Ranking`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -104,15 +100,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             });
 
             if (!response.ok) {
-                // Si no hay desafío activo, devuelve lista vacía
                 setCurrentRanking([]);
                 return;
             }
 
             const data: RankingItemDto[] = await response.json();
             setCurrentRanking(data);
-            setModalRankingOpen(true); // Abre el modal de ranking
-            handleCloseDesafioModal(); // Cierra el modal principal del desafío
+            setModalRankingOpen(true); 
+            handleCloseDesafioModal(); 
         } catch (err) {
             console.error("Error al obtener el ranking semanal:", err);
             setCurrentRanking([]);
@@ -122,13 +117,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
 
-    // EFECTO 1: Obtener el Desafío Semanal y mostrar el modal
+    // EFECTO 1: Obtener el Desafío Semanal
     useEffect(() => {
         if (!token) return;
 
         const obtenerDesafio = async () => {
             try {
-                // Endpoint simulado para obtener el desafío y el ranking anterior
                 const response = await fetch(`${BASE_URL}/Desafios/Actual`, {
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -142,8 +136,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 const data: DesafioSemanalDto = await response.json();
                 setDesafioSemanal(data);
-
-                // Mostrar siempre el modal del desafío al abrir la app/feed
                 setModalDesafioOpen(true);
 
             } catch (err) {
@@ -155,7 +147,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
     }, [token]);
 
-    // useCallback para la función de obtener recetas, para poder reutilizarla
+    // useCallback para la función de obtener recetas
     const recargarRecetas = useCallback(async () => {
         if (!token) {
             setCargando(false);
@@ -179,21 +171,24 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             const recetasObtenidas: DatosReceta[] = data.recetas;
 
             setRecetas(recetasObtenidas);
-            setRecetasFiltradas(recetasObtenidas);
+            // Solo actualiza las filtradas si no estamos en modo búsqueda
+            if (!isSearchActive) {
+                setRecetasFiltradas(recetasObtenidas);
+            }
         } catch (err) {
             setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
             console.error("Error al obtener recetas:", err);
         } finally {
             setCargando(false);
         }
-    }, [token]);
+    }, [token, isSearchActive]); // isSearchActive es dependencia
 
-    // EFECTO 2: Obtener las recetas al montar el componente
+    // EFECTO 2: Obtener las recetas al montar
     useEffect(() => {
         recargarRecetas();
     }, [recargarRecetas]);
 
-    // EFECTO 3: Escuchar el evento personalizado para recargar el feed.
+    // EFECTO 3: Escuchar evento de recarga
     useEffect(() => {
         const handleRecetaCreadaEvent = () => {
             console.log('Evento "recetaCreada" recibido, recargando feed...');
@@ -201,12 +196,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         };
 
         document.addEventListener('recetaCreada', handleRecetaCreadaEvent);
-
-        // Limpieza: es importante remover el listener cuando el componente se desmonte.
         return () => document.removeEventListener('recetaCreada', handleRecetaCreadaEvent);
-    }, [recargarRecetas]); // La dependencia asegura que siempre usemos la última versión de recargarRecetas.
+    }, [recargarRecetas]); 
 
-    // Lógica de eliminación
+    // ... (Lógica de eliminación: handleDeleteReceta, handleOpenModal, handleCloseModal, handleConfirmDelete) ...
     const handleDeleteReceta = async (recetaId: number) => {
         if (!token) {
             console.error("No hay token de autenticación para eliminar la receta.");
@@ -235,89 +228,90 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             handleCloseModal();
         }
     };
-
-    // Manejadores del modal de eliminación
     const handleOpenModal = async (recetaId: number) => {
         setRecetaAEliminarId(recetaId);
         setModalOpen(true);
     };
-
     const handleCloseModal = () => {
         setModalOpen(false);
         setRecetaAEliminarId(null);
     };
-
     const handleConfirmDelete = () => {
         if (recetaAEliminarId !== null) {
             handleDeleteReceta(recetaAEliminarId);
         }
     };
 
-    // Manejadores del modal de Desafío (Actualización para ranking)
+
+    // ... (Manejadores de modales de desafío y creación) ...
+    const handleOpenCreateDialog = () => {
+        setIsCreateDialogOpen(true);
+    };
+    const handleCloseCreateDialog = () => {
+        setIsCreateDialogOpen(false);
+    };
     const handleOpenDesafioModal = () => {
         if (desafioSemanal) {
             setModalDesafioOpen(true);
         }
     };
-
     const handleCloseDesafioModal = () => {
         setModalDesafioOpen(false);
     };
-
-    // Manejadores del modal de Ranking
     const handleCloseRankingModal = () => {
         setModalRankingOpen(false);
-        setCurrentRanking([]); // Limpiar ranking al cerrar
+        setCurrentRanking([]); 
     };
-
-
-    // Lógica para el botón Participar Ahora
     const handleCargarRecetaDesafio = () => {
         handleCloseDesafioModal();
         const ingrediente = desafioSemanal?.desafioActual?.ingrediente;
         const idDesafio = desafioSemanal?.desafioActual?.id;
-
-        if (ingrediente) {
-            setIngredienteDesafio(ingrediente);
-        }
-        if (idDesafio) {
-            setDesafioIdActivo(idDesafio);
-        }
-
+        if (ingrediente) setIngredienteDesafio(ingrediente);
+        if (idDesafio) setDesafioIdActivo(idDesafio);
         setIsCreateDialogOpen(true);
     };
-
-    // Función que se llamará cuando una receta se cree exitosamente
     const handleRecetaCreada = () => {
-        // Esta función ahora solo se usa para el flujo del Desafío.
-        handleCloseCreateDialog(); // Cierra el diálogo
-        setIngredienteDesafio(undefined); // Limpia el estado del desafío
+        handleCloseCreateDialog(); 
+        setIngredienteDesafio(undefined); 
         setDesafioIdActivo(undefined);
-        // La recarga del feed se manejará por el evento global.
     };
 
 
+    // =========================================================================
+    // LÓGICA DE BÚSQUEDA (MODIFICADA)
+    // =========================================================================
+
     const manejarBusqueda = async (termino: string) => {
+        // Actualiza el término
+        setSearchTerm(termino);
+        const terminoLimpio = termino.trim();
+
         if (!token) {
-            console.error("No hay token de autenticación para la búsqueda.");
+            console.error("No hay token de autenticación.");
             return;
         }
 
-        if (termino.trim() === '') {
-            setRecetasFiltradas(recetas);
+        // Caso 1: Término limpio está vacío (pero seguimos en modo búsqueda)
+        if (terminoLimpio === '') {
+            setRecetasFiltradas([]); // Limpia resultados
             setUsuariosFiltrados([]);
+            setSearchMessage(null); // No muestra "escribe más"
             return;
         }
 
-        const resultadosRecetas = recetas.filter(receta =>
-            receta.descripcion.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.autor?.nombreUsuario.toLowerCase().includes(termino.toLowerCase()) ||
-            receta.titulo.toLowerCase().includes(termino.toLowerCase())
-        );
-        setRecetasFiltradas(resultadosRecetas);
+        // Caso 2: Término es muy corto
+        if (terminoLimpio.length < 2) {
+            setRecetasFiltradas([]);
+            setUsuariosFiltrados([]);
+            setSearchMessage("Escribe al menos 2 caracteres para buscar.");
+            return;
+        }
+
+        // Caso 3: Buscar en la API
+        setSearchMessage(null);
 
         try {
-            const response = await fetch(`${BASE_URL}/Busqueda/usuarios?termino=${termino}`, {
+            const response = await fetch(`${BASE_URL}/Busqueda?termino=${terminoLimpio}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -325,30 +319,36 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             });
 
             if (response.ok) {
-                let usuariosObtenidos: Usuario[] = await response.json();
-                setUsuariosFiltrados(usuariosObtenidos);
-            } else {
-                try {
-                    const errorData = await response.json();
-                    console.error("Error al buscar usuarios:", errorData.message);
-                } catch {
-                    const errorText = await response.text();
-                    console.error("Error al buscar usuarios:", errorText);
+                const data: BusquedaResponse = await response.json();
+
+                // Actualiza ambos estados con los datos del servidor
+                setUsuariosFiltrados(data.usuarios);
+                
+                // Hacemos un 'cast' porque RecetaBusquedaDto es un subconjunto de DatosReceta,
+                // pero es seguro para la lista de resultados de búsqueda.
+                setRecetasFiltradas(data.recetas as DatosReceta[]);
+
+                // Comprueba si no hubo resultados
+                if (data.usuarios.length === 0 && data.recetas.length === 0) {
+                    setSearchMessage("No se encontraron resultados.");
                 }
+            } else {
+                // Maneja respuestas no-ok (ej. 404, 500)
                 setUsuariosFiltrados([]);
+                setRecetasFiltradas([]);
+                setSearchMessage("No se encontraron resultados.");
             }
         } catch (error) {
+            // Maneja errores de red
             setUsuariosFiltrados([]);
-            console.error("Error de red al buscar usuarios:", error);
+            setRecetasFiltradas([]);
+            console.error("Error de red al buscar:", error);
+            setSearchMessage("Error al conectar con el servidor.");
         }
     };
 
     const manejarSeguirUsuario = async (followedId: number, isCurrentlyFollowing: boolean) => {
-        if (!token) {
-            console.error("No hay token de autenticación.");
-            return;
-        }
-
+        if (!token) return;
         const method = isCurrentlyFollowing ? 'DELETE' : 'POST';
         try {
             const response = await fetch(`${BASE_URL}/Follow/${followedId}`, {
@@ -360,36 +360,69 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             });
 
             if (response.ok) {
-                try {
-                    const successData = await response.json();
-                    console.log(successData.message);
-                } catch {
-                    console.log(`Usuario ${isCurrentlyFollowing ? 'dejado de seguir' : 'seguido'} exitosamente.`);
-                }
                 setUsuariosFiltrados(prevUsuarios =>
                     prevUsuarios.map(u =>
                         u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
                     )
                 );
             } else {
-                try {
-                    const errorData = await response.json();
-                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorData.message);
-                } catch {
-                    const errorText = await response.text();
-                    console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario:`, errorText);
-                }
+                console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario.`);
             }
         } catch (error) {
             console.error('Error de red al seguir/dejar de seguir:', error);
         }
     };
 
+    // Al hacer clic en un resultado, salimos del modo búsqueda
     const handleUsuarioClick = (userId: number) => {
+        setIsSearchActive(false);
+        setSearchTerm('');
+        setUsuariosFiltrados([]);
+        setRecetasFiltradas(recetas); // Restaura el feed
         navigate(`/perfil/${userId}`);
     };
 
-    if (cargando) {
+    // --- FUNCIÓN MODIFICADA ---
+    const handleRecetaClick = (receta: DatosReceta) => {
+        // Asegurarse de que la receta tiene un autor con id
+        if (!receta.autor?.id) {
+            console.error("No se puede navegar a la receta, falta el ID del autor:", receta);
+            // Si no hay autor, llévalo a la página de receta genérica como fallback
+            setIsSearchActive(false);
+            setSearchTerm('');
+            setUsuariosFiltrados([]);
+            setRecetasFiltradas(recetas);
+            //navigate(`/receta/${receta.id}`);
+            return;
+        }
+
+        setIsSearchActive(false);
+        setSearchTerm('');
+        setUsuariosFiltrados([]);
+        //setRecetasFiltradas(recetas); // Restaura el feed
+        // Nueva URL de navegación
+        navigate(`/perfil/${receta.autor.id}/publicaciones?receta=${receta.id}`);
+    };
+    // --- FIN DE LA MODIFICACIÓN ---
+
+    // === NUEVAS FUNCIONES PARA CONTROLAR MODO BÚSQUEDA ===
+    const handleSearchFocus = () => {
+        setIsSearchActive(true);
+        // Resetea las recetas filtradas para que no muestre el feed
+        setRecetasFiltradas([]); 
+    };
+
+    const handleSearchBackClick = () => {
+        setIsSearchActive(false);
+        setSearchTerm('');
+        setSearchMessage(null);
+        setUsuariosFiltrados([]);
+        setRecetasFiltradas(recetas); // Restaura el feed principal
+    };
+    // ====================================================
+
+
+    if (cargando && !isSearchActive) {
         return <div className="feed-cargando">Cargando feed...</div>;
     }
 
@@ -403,14 +436,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
     const getMedalIcon = (index: number) => {
         switch (index) {
-            case 0:
-                return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; // Oro
-            case 1:
-                return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; // Plata
-            case 2:
-                return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; // Bronce
-            default:
-                return <SportsScoreIcon sx={{ color: '#666' }} />;
+            case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; // Oro
+            case 1: return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; // Plata
+            case 2: return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; // Bronce
+            default: return <SportsScoreIcon sx={{ color: '#666' }} />;
         }
     };
 
@@ -422,28 +451,21 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             </Typography>
         );
     }
-
     return (
         <List sx={{ p: 0 }}>
             {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
                 <ListItem
                     key={item.usuarioId}
-                    // Usamos una función para acceder al 'theme'
                     sx={(theme) => ({
-                        p: 1,
-                        mb: 0.5,
-                        borderRadius: '6px',
-                        // 1er puesto: Colores 'warning' (como el box de reglas)
+                        p: 1, mb: 0.5, borderRadius: '6px',
                         bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1)
-                               // 2do puesto: Color 'action.hover' (como el box de fechas)
                                : index === 1 ? theme.palette.action.hover
-                               // 3er puesto: Color coral (como el box 'Ingrediente Clave')
                                : index === 2 ? alpha('#ff7e5f', 0.1) 
                                : 'white',
                         borderLeft: `4px solid ${
-                               index === 0 ? theme.palette.warning.main // 1ro
-                               : index === 1 ? theme.palette.grey[500] // 2do (plata)
-                               : index === 2 ? '#ff7e5f' // 3ro (coral/bronze)
+                               index === 0 ? theme.palette.warning.main
+                               : index === 1 ? theme.palette.grey[500]
+                               : index === 2 ? '#ff7e5f'
                                : 'transparent'
                         }`,
                         boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
@@ -457,7 +479,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         secondary={`${item.puntos} Puntos`}
                         primaryTypographyProps={{ 
                             fontWeight: index < 3 ? 'bold' : 'normal',
-                            // 1er puesto: Color 'warning.dark' (como el texto de reglas)
                             color: index === 0 ? 'warning.dark' : 'text.primary' 
                         }}
                     />
@@ -470,258 +491,107 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const renderDesafioActual = () => {
         if (!desafioSemanal) return null;
         const desafio = desafioSemanal.desafioActual;
-
-        // Formatea fechas
         const inicio = new Date(desafio.fechaInicio).toLocaleDateString();
         const fin = new Date(desafio.fechaFin).toLocaleDateString();
 
         return (
-            <Box
-                sx={{
-                    mt: 4,
-                    p: { xs: 2, sm: 4 },
-                    borderRadius: 4,
-                    bgcolor: 'background.default',
-                    boxShadow: 3, // Usamos el sistema de sombras de MUI
-                    position: "relative",
-                    overflow: "hidden",
-                    "&::before": {
-                        content: '""',
-                        position: "absolute",
-                        top: 0,
-                        left: 0,
-                        width: "100%",
-                        height: "8px",
-                        background: "linear-gradient(90deg, #FF5722, #FF9800)",
-                    },
-                    animation: "fadeIn 0.6s ease-out",
-                    "@keyframes fadeIn": {
-                        from: { opacity: 0, transform: "translateY(10px)" },
-                        to: { opacity: 1, transform: "translateY(0)" },
-                    },
-                }}
-            >
-                {/* Ingrediente Clave */}
-                <Box
-                    sx={{
-                        textAlign: "center",
-                        background:
-                            "linear-gradient(135deg, #ff7e5f 10%, #feb47b 90%)",
-                        borderRadius: "12px",
-                        p: 2,
-                        mb: 3,
-                        color: "white",
-                        boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
-                    }}
-                >
-                    <Typography
-                        variant="h6"
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 1,
-                            fontWeight: 700,
-                            letterSpacing: "0.5px",
-                        }}
-                    >
-                        <KitchenIcon sx={{ fontSize: 26 }} />
-                        Ingrediente Clave
+            <Box sx={{
+                mt: 4, p: { xs: 2, sm: 4 }, borderRadius: 4, bgcolor: 'background.default', boxShadow: 3,
+                position: "relative", overflow: "hidden",
+                "&::before": {
+                    content: '""', position: "absolute", top: 0, left: 0, width: "100%", height: "8px",
+                    background: "linear-gradient(90deg, #FF5722, #FF9800)",
+                },
+                animation: "fadeIn 0.6s ease-out",
+                "@keyframes fadeIn": { from: { opacity: 0, transform: "translateY(10px)" }, to: { opacity: 1, transform: "translateY(0)" }, },
+            }}>
+                <Box sx={{
+                    textAlign: "center", background: "linear-gradient(135deg, #ff7e5f 10%, #feb47b 90%)",
+                    borderRadius: "12px", p: 2, mb: 3, color: "white", boxShadow: "0 4px 10px rgba(0,0,0,0.15)",
+                }}>
+                    <Typography variant="h6" sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, fontWeight: 700, letterSpacing: "0.5px", }}>
+                        <KitchenIcon sx={{ fontSize: 26 }} /> Ingrediente Clave
                     </Typography>
-                    <Typography
-                        variant="h4"
-                        sx={{
-                            fontWeight: 900,
-                            letterSpacing: 1,
-                            textShadow: "0 2px 4px rgba(0,0,0,0.2)",
-                        }}
-                    >
+                    <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 1, textShadow: "0 2px 4px rgba(0,0,0,0.2)", }}>
                         “{desafio.ingrediente?.toUpperCase() ?? desafio.nombre}”
                     </Typography>
                 </Box>
-
-                {/* Descripción */}
-                <Typography
-                    variant="body1"
-                    sx={{
-                        mb: 3,
-                        color: "text.secondary",
-                        textAlign: "justify",
-                        lineHeight: 1.6,
-                    }}
-                >
+                <Typography variant="body1" sx={{ mb: 3, color: "text.secondary", textAlign: "justify", lineHeight: 1.6, }}>
                     {desafio.descripcion}
                 </Typography>
-
-                {/* Fechas destacadas */}
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        gap: 1.2,
-                        backgroundColor: "action.hover",
-                        borderRadius: 2,
-                        px: 2,
-                        py: 1.5,
-                        mb: 3,
-                    }}
-                >
+                <Box sx={{
+                    display: "flex", justifyContent: "center", alignItems: "center", gap: 1.2,
+                    backgroundColor: "action.hover", borderRadius: 2, px: 2, py: 1.5, mb: 3,
+                }}>
                     <EventNoteIcon color="primary" sx={{ fontSize: 26 }} />
-                    <Typography
-                        variant="body1"
-                        sx={{
-                            fontWeight: 600,
-                            fontSize: "1rem"
-                        }}
-                    >
+                    <Typography variant="body1" sx={{ fontWeight: 600, fontSize: "1rem" }}>
                         Duración:&nbsp;
-                        <span style={{ fontWeight: "500" }}>
-                            del {inicio} al {fin}
-                        </span>
+                        <span style={{ fontWeight: "500" }}> del {inicio} al {fin} </span>
                     </Typography>
                 </Box>
-
-                {/* Reglas */}
-                <Box
-                    sx={{
-                        backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.1),
-                        borderLeft: (theme) => `4px solid ${theme.palette.warning.main}`,
-                        borderRadius: 2,
-                        p: 2,
-                    }}
-                >
-                    <Typography
-                        variant="body2"
-                        sx={{
-                            color: "warning.dark",
-                            fontWeight: 600,
-                            mb: 0.5,
-                        }}
-                    >
+                <Box sx={{
+                    backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.1),
+                    borderLeft: (theme) => `4px solid ${theme.palette.warning.main}`,
+                    borderRadius: 2, p: 2,
+                }}>
+                    <Typography variant="body2" sx={{ color: "warning.dark", fontWeight: 600, mb: 0.5, }}>
                         ⚠️ Importante:
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Tu receta debe llevar la etiqueta{" "}
-                        <strong>Desafío</strong> y solo puedes participar con una
-                        receta por semana.
+                        Tu receta debe llevar la etiqueta <strong>Desafío</strong> y solo puedes participar con una receta por semana.
                     </Typography>
                 </Box>
             </Box>
         );
     };
 
-
-
-
     const renderModalDesafio = () => {
         return (
-            <Modal
-                open={modalDesafioOpen}
-                onClose={handleCloseDesafioModal}
-                aria-labelledby="modal-desafio-titulo"
-                closeAfterTransition
-            >
+            <Modal open={modalDesafioOpen} onClose={handleCloseDesafioModal} aria-labelledby="modal-desafio-titulo" closeAfterTransition>
                 <Box sx={{
-                    position: 'absolute',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: { xs: '90%', sm: 550 },
-                    bgcolor: 'background.paper',
-                    borderRadius: 4,
-                    boxShadow: 24,
-                    p: 4,
-                    outline: 'none',
-                    maxHeight: '90vh',
-                    overflowY: 'auto',
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    width: { xs: '90%', sm: 550 }, bgcolor: 'background.paper', borderRadius: 4, boxShadow: 24,
+                    p: 4, outline: 'none', maxHeight: '90vh', overflowY: 'auto',
                     border: (theme) => `3px solid ${theme.palette.primary.main}`
                 }}>
                     <Typography id="modal-desafio-titulo" variant="h4" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                         Desafío de Coctelería Semanal
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
-
-                    {/* Top 3 de la Semana Pasada */}
                     <Typography variant="subtitle1" sx={{ mt: 1, pb: 1, fontWeight: '700', color: 'text.primary' }}>
                         <EmojiEventsIcon sx={{ verticalAlign: 'bottom', mr: 0.5 }} /> Top 3 de la Semana Anterior
                     </Typography>
-                    {/* Usamos un color de fondo sutil del tema */}
                     <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                         {renderRankingAnterior()}
                     </Box>
-                    {/* Botón para ver el ranking completo */}
                     {desafioSemanal?.desafioActual && (
                         <Box sx={{ mt: 2, textAlign: 'center' }}>
-                            <Button
-                                onClick={fetchCurrentRanking}
-                                variant="contained"
-                                color="primary"
-                                size="small"
-                                sx={{
-                                    fontWeight: 'bold',
-                                    textTransform: 'uppercase'
-                                }}
-                                disabled={rankingCargando}
+                            <Button onClick={fetchCurrentRanking} variant="contained" color="primary" size="small"
+                                sx={{ fontWeight: 'bold', textTransform: 'uppercase' }} disabled={rankingCargando}
                             >
                                 {rankingCargando ? <CircularProgress size={20} color="inherit" /> : "VER RANKING ACTUAL"}
                             </Button>
                         </Box>
                     )}
-
-
-                    <Typography
-                        variant="h5"
-                        sx={{
-                            mt: 4,
-                            pb: 1,
-                            fontWeight: 800,
-                            textAlign: "center",
-                            textTransform: "uppercase",
-                            letterSpacing: "0.8px",
-                            background: "linear-gradient(90deg, #FF5722, #FF9800)",
-                            WebkitBackgroundClip: "text",
-                            WebkitTextFillColor: "transparent",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            gap: 1,
-                        }}
-                    >
-                        <LocalBarIcon
-                            sx={{
-                                color: "#FF7043",
-                                fontSize: 30,
-                                filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))",
-                            }}
-                        />
+                    <Typography variant="h5" sx={{
+                        mt: 4, pb: 1, fontWeight: 800, textAlign: "center", textTransform: "uppercase",
+                        letterSpacing: "0.8px", background: "linear-gradient(90deg, #FF5722, #FF9800)",
+                        WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                        display: "flex", alignItems: "center", justifyContent: "center", gap: 1,
+                    }}>
+                        <LocalBarIcon sx={{ color: "#FF7043", fontSize: 30, filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.2))", }}/>
                         ¡A Mezclar! Desafío Actual
                     </Typography>
                     {renderDesafioActual()}
-
                     <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
-                        <Button
-                            onClick={handleCloseDesafioModal}
-                            variant="outlined"
-                            size="large"
-                            sx={{
-                                flexGrow: 1,                                
-                                borderRadius: '8px'
-                            }}
-                            color="inherit" // Usa el color de texto por defecto del tema
+                        <Button onClick={handleCloseDesafioModal} variant="outlined" size="large"
+                            sx={{ flexGrow: 1, borderRadius: '8px' }} color="inherit"
                         >
                             Ver Feed
                         </Button>
-                        <Button
-                            onClick={handleCargarRecetaDesafio}
-                            variant="contained"
-                            size="large"
-                            color="primary"
+                        <Button onClick={handleCargarRecetaDesafio} variant="contained" size="large" color="primary"
                             sx={{
-                                flexGrow: 1,
-                                bgcolor: '#FF5722', // Mantenemos el color naranja
-                                color: 'white', // Forzamos el texto a ser blanco para asegurar contraste
-                                borderRadius: '8px',
+                                flexGrow: 1, bgcolor: '#FF5722', color: 'white', borderRadius: '8px',
                                 '&:hover': { bgcolor: '#E64A19' },
                             }}
                             startIcon={<LocalBarIcon />}
@@ -734,88 +604,39 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         );
     };
 
-    // =========================================================================
-    // MODAL DE RANKING SEMANAL
-    // =========================================================================
-
     const renderModalRanking = () => {
         const hasRanking = currentRanking.length > 0;
         const nombreDesafio = desafioSemanal?.desafioActual?.nombre || "Desafío Semanal";
 
         return (
             <Modal
-                open={modalRankingOpen}
-                onClose={handleCloseRankingModal}
-                aria-labelledby="modal-ranking-titulo"
-                closeAfterTransition
-                sx={{
-                    p: 0,
-                    m: 0,
-                    display: 'flex',
-                    alignItems: { xs: 'flex-start', sm: 'center' },
-                    justifyContent: { xs: 'flex-start', sm: 'center' },
-                    backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' },
-                }}
-                slotProps={{
-                    backdrop: {
-                    sx: {
-                        backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' },
-                    },
-                    },
-                }}
-                >
-                <Box
-                    sx={(theme) => ({
-                        position: { xs: 'fixed', sm: 'fixed' },
-                        top: { xs: 0, sm: '50%' },
-                        left: { xs: 0, sm: '50%' },
-                        transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
-                        width: { xs: '100vw', sm: 400 },
-                        height: { xs: '100vh', sm: 'auto' },
-                        bgcolor: 'background.paper',
-                        borderRadius: { xs: 0, sm: '16px' },
-                        boxShadow: 24,
-                        p: { xs: 2, sm: 4 },
-                        outline: 'none',
-                        overflowY: 'auto',
-                        border: `3px solid ${theme.palette.warning.main}`,
-                        background: theme.palette.background.paper,
-                        maxHeight: { xs: 'none', sm: '90vh' },
-                    })}
-                >
+                open={modalRankingOpen} onClose={handleCloseRankingModal} aria-labelledby="modal-ranking-titulo" closeAfterTransition
+                sx={{ p: 0, m: 0, display: 'flex', alignItems: { xs: 'flex-start', sm: 'center' }, justifyContent: { xs: 'flex-start', sm: 'center' }, backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' }, }}
+                slotProps={{ backdrop: { sx: { backgroundColor: { xs: 'transparent', sm: 'rgba(0,0,0,0.5)' }, }, }, }}
+            >
+                <Box sx={(theme) => ({
+                    position: { xs: 'fixed', sm: 'fixed' }, top: { xs: 0, sm: '50%' }, left: { xs: 0, sm: '50%' },
+                    transform: { xs: 'none', sm: 'translate(-50%, -50%)' }, width: { xs: '100vw', sm: 400 }, height: { xs: '100vh', sm: 'auto' },
+                    bgcolor: 'background.paper', borderRadius: { xs: 0, sm: '16px' }, boxShadow: 24, p: { xs: 2, sm: 4 },
+                    outline: 'none', overflowY: 'auto', border: `3px solid ${theme.palette.warning.main}`,
+                    background: theme.palette.background.paper, maxHeight: { xs: 'none', sm: '90vh' },
+                })}>
                     <Typography id="modal-ranking-titulo" variant="h5" component="h2"
-                        sx={{
-                            mb: 1,
-                            fontWeight: 'bold',
-                            color: 'primary.main',
-                            textAlign: 'center'
-                        }}
+                        sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}
                     >
                         🏆 Ranking Actual
                     </Typography>
-                    <Typography variant="subtitle2"
-                        sx={{
-                            mb: 3,
-                            color: 'text.secondary',
-                            textAlign: 'center',
-                            fontStyle: 'italic'
-                        }}
-                    >
+                    <Typography variant="subtitle2" sx={{ mb: 3, color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }}>
                         {nombreDesafio}
                     </Typography>
                     <Divider sx={{ mb: 3 }} />
-
-
                     {hasRanking && (
                         <List sx={{ p: 0 }}>
                             {currentRanking.map((item, index) => (
                                 <ListItem
                                     key={item.usuarioId}
-                                    // Usamos una función para acceder al tema en estilos dinámicos de la lista
                                     sx={(theme) => ({
-                                        p: 1.5,
-                                        mb: 1,
-                                        borderRadius: '8px',
+                                        p: 1.5, mb: 1, borderRadius: '8px',
                                         bgcolor: index < 3 ? theme.palette.action.hover : 'background.paper',
                                         borderLeft: `5px solid ${index === 0 ? theme.palette.warning.main :
                                                 index === 1 ? theme.palette.info.main :
@@ -825,12 +646,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                     })}
                                 >
                                     <ListItemIcon sx={{ minWidth: 40 }}>
-                                        <Typography
-                                            variant="h6"
-                                            sx={{
-                                                fontWeight: 'bold',
-                                                color: index < 3 ? 'primary.main' : 'text.primary'
-                                            }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? 'primary.main' : 'text.primary' }}>
                                             {index + 1}°
                                         </Typography>
                                     </ListItemIcon>
@@ -844,23 +660,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             ))}
                         </List>
                     )}
-
                     <Box sx={{ mt: 4, textAlign: 'center' }}>
                         <Button
-                            onClick={handleCloseRankingModal}
-                            variant="contained"
-                            color="primary"
+                            onClick={handleCloseRankingModal} variant="contained" color="primary"
                             sx={(theme) => ({
-                               
                                 ...(theme.palette.mode === 'dark' && {
-                                    backgroundColor: '#90caf9',
-                                    
-                                    color: theme.palette.getContrastText('#90caf9'),
-                              
-                                    '&:hover': {
-
-                                        backgroundColor: '#79a5c6',
-                                    }
+                                    backgroundColor: '#90caf9', color: theme.palette.getContrastText('#90caf9'),
+                                    '&:hover': { backgroundColor: '#79a5c6', }
                                 }),
                             })}
                         >
@@ -872,33 +678,19 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         );
     };
     
-    // const storedMode = (localStorage.getItem("themeMode") as "light" | "dark") || "light";
-    // const [mode, setMode] = useState<"light" | "dark">(storedMode);
-    // const theme = useMemo(() => getTheme(mode), [mode]);
     return (
         <div className="feed-contenedor-principal">
             {/* Botón Flotante para el Desafío */}
-            {desafioSemanal && (
+            {desafioSemanal && !isSearchActive && ( // <-- Oculto si se está buscando
                 <button
                     className="boton-desafio-flotante"
                     onClick={handleOpenDesafioModal}
                     style={{
-                        position: 'fixed',
-                        bottom: '70px',
-                        right: '20px',
-                        zIndex: 1000,
-                        backgroundColor: '#FF5722',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '50%',
-                        width: '56px',
-                        height: '56px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 10px rgba(255, 87, 34, 0.6)',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.3s, transform 0.2s',
+                        position: 'fixed', bottom: '70px', right: '20px', zIndex: 1000,
+                        backgroundColor: '#FF5722', color: 'white', border: 'none', borderRadius: '50%',
+                        width: '56px', height: '56px', display: 'flex', alignItems: 'center',
+                        justifyContent: 'center', boxShadow: '0 4px 10px rgba(255, 87, 34, 0.6)',
+                        cursor: 'pointer', transition: 'background-color 0.3s, transform 0.2s',
                         transform: modalDesafioOpen || modalRankingOpen ? 'scale(0)' : 'scale(1)'
                     }}
                     onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#E64A19'}
@@ -913,92 +705,160 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             <CreateRecetaDialog
                 open={isCreateDialogOpen}
                 onClose={handleCloseCreateDialog}
-                // Pasar el ingrediente para que el componente lo use
                 onRecetaCreada={handleRecetaCreada}
                 ingrediente={ingredienteDesafio}
                 desafioId={desafioIdActivo}
             />
+            
+            {/* === BARRA BÚSQUEDA MODIFICADA === */}
             <BarraBusqueda
-                onSearch={manejarBusqueda}
-                usuarios={usuariosFiltrados}
-                onFollow={manejarSeguirUsuario}
-                currentUserId={currentUserId ?? null}
-                onUsuarioClick={handleUsuarioClick}
+                searchTerm={searchTerm}
+                onSearchChange={manejarBusqueda}
+                onSearchSubmit={() => manejarBusqueda(searchTerm)}
+                
+                // --- NUEVAS PROPS ---
+                isSearchActive={isSearchActive}
+                onFocus={handleSearchFocus}
+                onBackClick={handleSearchBackClick}
             />
+            
+            {/* === CONTENIDO CONDICIONAL === */}
             <div className="feed-contenido">
-                {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && mensaje && (
-                    <div className="mensaje-feed">
-                        {mensaje.includes('Sigue a gente') && (
-                            <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                {!isSearchActive ? (
+                    // ===================================
+                    // 1. MODO FEED NORMAL
+                    // ===================================
+                    <>
+                        {recetasFiltradas.length === 0 && mensaje && (
+                            <div className="mensaje-feed">
+                                {mensaje.includes('Sigue a gente') && (
+                                    <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                                )}
+                                {mensaje.includes('No hay publicaciones') && (
+                                    <NewspaperOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                                )}
+                                <p>{mensaje}</p>
+                            </div>
                         )}
-                        {mensaje.includes('No hay publicaciones') && (
-                            <NewspaperOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                        {recetasFiltradas.length === 0 && !mensaje && !cargando && !error && (
+                            <div className="no-resultados">No se encontraron recetas.</div>
                         )}
-                        <p>{mensaje}</p>
+
+                        {/* Mapea las recetas como POSTS COMPLETOS */}
+                        {recetasFiltradas.map(receta => {
+                            const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
+                                if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
+                                    return cat.nombre;
+                                }
+                                return cat;
+                            });
+                            const finalEtiquetas = [...etiquetasFormateadas];
+                            if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) {
+                                finalEtiquetas.push('DESAFIO');
+                            }
+                            return (
+                                <Receta
+                                    key={receta.id}
+                                    receta={{ ...receta, etiquetas: finalEtiquetas }}
+                                    onDrawerToggle={onDrawerToggle}
+                                    currentUserId={currentUserId ?? null}
+                                    onDeleteReceta={handleOpenModal}
+                                    onUsuarioClick={handleUsuarioClick}
+                                />
+                            );
+                        })}
+                    </>
+                ) : (
+                    // ==========================================
+                    // 2. MODO BÚSQUEDA ACTIVA
+                    // ==========================================
+                    <div className="search-results-list">
+                        
+                        {/* --- Sección de Usuarios --- */}
+                        {usuariosFiltrados.length > 0 && (
+                            usuariosFiltrados.map(usuario => (
+                                <div
+                                    key={usuario.id}
+                                    className="resultado-usuario"
+                                    onClick={() => handleUsuarioClick(usuario.id)}
+                                >
+                                    {usuario.imagen ? (
+                                        <img src={`data:image/jpeg;base64,${usuario.imagen}`} alt="avatar" className="avatar-busqueda" />
+                                    ) : (
+                                        <img src={`${fotoPerfilLocal}`} alt="avatar" className="avatar-busqueda" />
+                                    )}
+                                    <div className="usuario-info-busqueda">
+                                        <span className="usuario-nombre">{usuario.nombreUsuario}</span>
+                                        <span className="usuario-nombre-completo">{usuario.nombre} {usuario.apellido}</span>
+                                    </div>
+                                    {currentUserId !== usuario.id && (
+                                        <button
+                                            className={`boton-seguir ${usuario.isFollowing ? 'siguiendo' : ''}`}
+                                            onClick={e => {
+                                                e.stopPropagation();
+                                                manejarSeguirUsuario(usuario.id, usuario.isFollowing || false);
+                                            }}
+                                        >
+                                            {usuario.isFollowing ? 'Siguiendo' : 'Seguir'}
+                                        </button>
+                                    )}
+                                </div>
+                            ))
+                        )}
+
+                        {/* --- Sección de Recetas --- */}
+                        {recetasFiltradas.length > 0 && (
+                            recetasFiltradas.map(receta => (
+                                <div
+                                    key={receta.id}
+                                    className="resultado-item" 
+                                    onClick={() => handleRecetaClick(receta)} // <-- MODIFICADO
+                                >
+                                    <span className="usuario-nombre">{receta.titulo}</span>
+                                    <span className="usuario-nombre-completo">por @{receta.autor?.nombreUsuario}</span>
+                                </div>
+                            ))
+                        )}
+
+                        {/* --- Mensaje de estado de búsqueda --- */}
+                        {searchMessage && (
+                            <div className="no-resultados-mensaje">
+                                {searchMessage}
+                            </div>
+                        )}
+                        
+                        {/* Mensaje de bienvenida si está vacío */}
+                        {searchTerm.trim() === '' && !searchMessage && (
+                            <div className="no-resultados-mensaje">
+                                Busca usuarios o recetas.
+                            </div>
+                        )}
                     </div>
                 )}
-                {recetasFiltradas.length === 0 && usuariosFiltrados.length === 0 && !mensaje && !cargando && !error && (
-                    <div className="no-resultados">No se encontraron recetas ni usuarios que coincidan con la búsqueda.</div>
-                )}
-
-                {recetasFiltradas.map(receta => {
-                    const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
-                        if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
-                            return cat.nombre;
-                        }
-                        return cat;
-                    });
-
-                    const finalEtiquetas = [...etiquetasFormateadas];
-
-                    if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) {
-                        finalEtiquetas.push('DESAFIO');
-                    }
-
-
-                    return (
-                        <Receta
-                            key={receta.id}
-                            receta={{
-                                ...receta,
-                                etiquetas: finalEtiquetas
-                            }}
-                            onDrawerToggle={onDrawerToggle}
-                            currentUserId={currentUserId ?? null}
-                            onDeleteReceta={handleOpenModal}
-                            onUsuarioClick={handleUsuarioClick}
-                        />
-                    );
-                })}
             </div>
 
             {/* Modal de confirmación de eliminación */}
-            
-                <Modal
-                    open={modalOpen}
-                    onClose={handleCloseModal}
-                    aria-labelledby="modal-eliminar-receta"
-                >
-                    <Box sx={{
-                        position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                        width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: '8px'
-                    }}>
-                        <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
-                            Confirmar eliminación
-                        </Typography>
-                        <Typography className="modal-descripcion" sx={{ mt: 2 }}>
-                            ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
-                        </Typography>
-                        <Box className="modal-acciones" sx={{ mt: 3 }}>
-                            <Button onClick={handleCloseModal} variant="outlined" className="modal-btn-cancelar">
-                                Cancelar
-                            </Button>
-                            <Button onClick={handleConfirmDelete} variant="contained" className="modal-btn-eliminar">
-                                Eliminar
-                            </Button>
-                        </Box>
+            <Modal open={modalOpen} onClose={handleCloseModal} aria-labelledby="modal-eliminar-receta">
+                <Box sx={{
+                    position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                    width: 400, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: '8px'
+                }}>
+                    <Typography id="modal-eliminar-receta" className="modal-titulo" component="h2">
+                        Confirmar eliminación
+                    </Typography>
+                    <Typography className="modal-descripcion" sx={{ mt: 2 }}>
+                        ¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.
+                    </Typography>
+                    <Box className="modal-acciones" sx={{ mt: 3 }}>
+                        <Button onClick={handleCloseModal} variant="outlined" className="modal-btn-cancelar">
+                            Cancelar
+                        </Button>
+                        <Button onClick={handleConfirmDelete} variant="contained" className="modal-btn-eliminar">
+                            Eliminar
+                        </Button>
                     </Box>
-                </Modal>
+                </Box>
+            </Modal>
         </div>
     );
 };

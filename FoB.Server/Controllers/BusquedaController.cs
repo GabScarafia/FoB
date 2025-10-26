@@ -1,5 +1,6 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Infrastructure.Interface;
+using FoB.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FoB.Server.Controllers
@@ -31,6 +32,32 @@ namespace FoB.Server.Controllers
             }
 
             return Ok(usuarios);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Buscar([FromQuery] string termino)
+        {
+            if (string.IsNullOrWhiteSpace(termino))
+            {
+                return BadRequest("El término de búsqueda no puede estar vacío.");
+            }
+
+            var usuarios = await _busquedaRepository.BuscarUsuariosAsync(termino);
+
+            var recetas = await _busquedaRepository.BuscarRecetasAsync(termino);
+
+            BusquedaResponse response = new BusquedaResponse()
+            {
+                Usuarios = usuarios,
+                Recetas=recetas
+            };
+            return Ok(response);
+        }
+
+        public class BusquedaResponse
+        {
+            public List<UsuarioBusquedaDto> Usuarios { get; set; }
+            public List<RecetaBusquedaDto> Recetas { get; set; }
         }
     }
 }

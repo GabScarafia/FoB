@@ -1,13 +1,14 @@
-﻿using FoB.Application.Interfaces;
+﻿using FoB.Application.Dtos;
+using FoB.Application.Entities.Receta;
+using FoB.Application.Interfaces;
 using FoB.Infrastructure.Context;
-using FoB.Application.Dtos;
 using FoB.Infrastructure.Interface;
 using FoB.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
+using System; // Asegúrate de incluir esta importación
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System; // Asegúrate de incluir esta importación
 
 namespace FoB.Infrastructure.Repository
 {
@@ -20,6 +21,48 @@ namespace FoB.Infrastructure.Repository
         {
             _contexto = contexto;
             _currentUser = currentUser;
+        }
+
+        public async Task<List<RecetaBusquedaDto>> BuscarRecetasAsync(string termino)
+        {
+            IQueryable<Receta> query = _contexto.Set<Receta>()
+            .Include(x => x.Usuario)
+            .Include(x => x.IngredienteReceta)
+                .ThenInclude(x=>x.Ingrediente)
+            .Where(x => x.Activa == true && x.UsuarioId != _currentUser.User.Id);
+
+            var terminoLimpioLower = termino.Trim().ToLower();
+            query = query.Where(x =>
+                // 1. Coincidencia por Título de la receta
+                x.Titulo.ToLower().Contains(terminoLimpioLower) ||
+
+                // 2. Coincidencia por Nombre de Usuario del autor
+                x.Usuario.NombreUsuario.ToLower().Contains(terminoLimpioLower) ||
+
+                // 3. Coincidencia por Nombre de Ingrediente
+                //    Usas .Any() (equivalente a .some() en JS)
+                x.IngredienteReceta.Any(ir => ir.Ingrediente.Descripcion.ToLower().Contains(terminoLimpioLower))
+            );
+            // Sort by creation date (desc) and then by average rating (desc)
+            query = query.OrderByDescending(x => x.FechaCreacion)
+                         .ThenByDescending(x => x.PuntuacionPromedio)
+                         .ThenBy(x=>x.Titulo);
+
+            var list = await query.Select(x => new RecetaBusquedaDto
+            {
+                Id = x.Id,
+                Titulo = x.Titulo,
+                Autor = new UsuarioResponse
+                {
+                    Id = x.Usuario.Id,
+                    Imagen = x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
+                    NombreUsuario = x.Usuario.NombreUsuario,
+                    Nombre = x.Usuario.Nombre,
+                    Apellido = x.Usuario.Apellido,
+                },
+            })
+            .ToListAsync();
+            return list;
         }
 
         public async Task<List<UsuarioBusquedaDto>> BuscarUsuariosAsync(string termino)
