@@ -351,7 +351,7 @@ const EditarPerfil: React.FC = () => {
                     fullWidth
                 />
 
-                <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>Cambiar Contraseña (opcional)</Typography>
+                <Typography variant="subtitle1" sx={{ mt: 2, fontWeight: 'bold' }}>Cambiar Contraseña</Typography>
                 <TextField
                     label="Nueva contraseña"
                     type="password"
