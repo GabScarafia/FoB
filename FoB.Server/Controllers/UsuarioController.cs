@@ -26,9 +26,11 @@ namespace FoB.Server.Controllers
         [Authorize]
         public async Task<ActionResult<UsuarioPerfilDto>> GetPerfilDelUsuarioActual()
         {
+            // Extrae el ID del usuario de los claims del token JWT
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "id");
             if (userIdClaim == null || !int.TryParse(userIdClaim.Value, out int idUsuario))
             {
+                // Si el claim 'id' no existe o no es un número, es una solicitud no válida
                 return Unauthorized(new { message = "ID de usuario no encontrado en el token o formato inválido." });
             }
 
@@ -38,18 +40,19 @@ namespace FoB.Server.Controllers
         [HttpGet("{idUsuario}")]
         public async Task<ActionResult<UsuarioPerfilDto>> GetPerfilCompleto(int idUsuario)
         {
-            int? idUsuarioActual = null;
-            if (User.Identity.IsAuthenticated)
-            {
-                var idClaim = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
-                if (int.TryParse(idClaim, out int actualId))
-                {
-                    idUsuarioActual = actualId;
-                }
-            }
-
             try
             {
+                // Obtener el ID del usuario actual desde el token
+                int? idUsuarioActual = null;
+                if (User.Identity.IsAuthenticated)
+                {
+                    var idClaim = User.Claims.FirstOrDefault(c => c.Type == "id")?.Value;
+                    if (int.TryParse(idClaim, out int actualId))
+                    {
+                        idUsuarioActual = actualId;
+                    }
+                }
+
                 var usuario = await _context.Usuario
                     .Where(u => u.Id == idUsuario)
                     .Include(u => u.UsuarioImagen)
@@ -64,6 +67,7 @@ namespace FoB.Server.Controllers
                     return NotFound();
                 }
 
+                // Obtiene y convierte la imagen de perfil a Base64
                 var fotoPerfilBytes = usuario.UsuarioImagen.FirstOrDefault()?.Imagen;
                 string fotoPerfilBase64 = null;
                 if (fotoPerfilBytes != null && fotoPerfilBytes.Length > 0)
@@ -71,10 +75,12 @@ namespace FoB.Server.Controllers
                     fotoPerfilBase64 = Convert.ToBase64String(fotoPerfilBytes);
                 }
 
+                // Mapea la lista de recetas del usuario a los DTOs
                 var publicacionesDto = usuario.Receta.Select(r => new RecetaDto
                 {
                     Id = r.Id,
                     Titulo = r.Titulo,
+                    // primera imagen es la principal para la galería
                     ImagenPrincipalBase64 = r.RecetaImagen.FirstOrDefault(x => x.PasoId == null) != null
                         ? Convert.ToBase64String(r.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen)
                         : null
@@ -82,6 +88,7 @@ namespace FoB.Server.Controllers
                 .OrderByDescending(x => x.Id)
                 .ToList();
 
+                // *** DETERMINAR SI EL USUARIO ACTUAL SIGUE A ESTE USUARIO ***
                 bool esSeguido = false;
                 if (idUsuarioActual.HasValue && idUsuarioActual.Value != idUsuario)
                 {
@@ -89,6 +96,7 @@ namespace FoB.Server.Controllers
                         .Any(s => s.SeguidorId == idUsuarioActual.Value);
                 }
 
+                // Crea el DTO final con toda la información consolidada
                 var perfilDto = new UsuarioPerfilDto
                 {
                     Id = usuario.Id,
