@@ -10,6 +10,7 @@ import ButtonBar from "./components/ButtonBar";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import "./App.css"; 
+import ImagenRebotante from "components/ImagenRebotante";
 
 // ================================================================
 // 🌙 Componente principal que contiene la lógica del layout
@@ -97,6 +98,7 @@ export default function App() {
           bgcolor: "background.default", 
           transition: "background-color 0.4s ease, color 0.4s ease",
         }}>
+          <ImagenRebotante imageSrc="src\assets\images\ronaldinho.jpg" />
           <MainApp toggleTheme={toggleTheme} mode={mode} />
         </Box>
       </ThemeProvider>

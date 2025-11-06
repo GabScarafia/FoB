@@ -40,21 +40,24 @@ interface Ingrediente {
     unidadDeMedida: string;
 }
 
+// --- INTERFAZ ACTUALIZADA (como la pasaste) ---
 interface Paso {
     titulo: string;
     descripcion: string;
     numero: number;
-    imagen?: string; // Agregado para tipar la imagen en el paso
+    imagen?: string; 
+    contentType: string; // Campo clave
 }
 
-// Nueva interfaz para un elemento del carrusel, incluyendo la imagen a mostrar
-// y la información del paso asociado (opcional).
+// Interfaz para un elemento del carrusel
 interface CarruselItem {
-    imagenUrl: string; // La imagen a mostrar (principal o de paso)
+    mediaUrl: string; // La URL de la imagen O video
+    mediaType: 'image' | 'video'; // El tipo de medio
     pasoInfo?: Paso;   // Información del paso (si es un slide de paso)
     isMainImage: boolean; // Indica si es el slide principal de la receta
 }
 
+// --- INTERFAZ ACTUALIZADA (como la pasaste) ---
 export interface PropsReceta {
     receta: {
         id: number;
@@ -62,7 +65,8 @@ export interface PropsReceta {
         fechaCreacion: string;
         tipoContenido: string;
         dificultad: string;
-        imagen: string;
+        imagen: string; // URL o Base64 crudo
+        contentType: string; // Campo clave (ej. "image/jpeg", "video/mp4")
         cantidadVotos: number;
         meGusta: boolean;
         noMeGusta: boolean;
@@ -76,15 +80,14 @@ export interface PropsReceta {
         tiempoPreparacion: string;
         ingredientes: Ingrediente[];
         etiquetas: string[];
-        pasos: Paso[];
+        pasos: Paso[]; // Array de la interfaz Paso actualizada
     };
     onDrawerToggle: (open: boolean) => void;
-    // Nueva prop para el ID del usuario actual
     currentUserId: number | null;
-    // Nueva prop para la función de eliminar receta
     onDeleteReceta: (recetaId: number) => Promise<void>;
     onUsuarioClick?: (userId: number) => void;
 }
+
 
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
     const navigate = useNavigate();
@@ -94,30 +97,25 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return <div>Error: La receta no se pudo cargar.</div>;
     }
 
-
+    // ... (El resto de tus estados: disliked, favorite, liked, etc. no cambian)
     const [disliked, setDisliked] = useState(receta.noMeGusta);
     const [favorite, setFavorito] = useState(receta.esFavorito);
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
     const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
-    // Estado para la lógica de Seguir/Siguiendo, inicializado con la prop
     const [isFollowing, setIsFollowing] = useState(receta.seguido);
-
-
     const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
     const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
-
     const { authData } = useAuth();
-
     const [drawerAbierto, setDrawerAbierto] = useState(false);
-
     const LIMITE_CARACTERES = 100;
-
-    // Estado y manejadores para el menú de opciones 
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openMenu = Boolean(anchorEl);
+    const [isProcessingLike, setIsProcessingLike] = useState(false);
 
+
+    // ... (El resto de tus manejadores: handleClickMenu, handleCloseMenu, etc. no cambian)
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -130,8 +128,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         handleCloseMenu();
         onDeleteReceta(receta.id);
     };
-
-
 
     const handleComentarioAgregado = (nuevoComentario: Comentario) => {
         setComentarios([...comentarios, nuevoComentario]);
@@ -147,10 +143,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return estrellas;
     };
 
-    const [isProcessingLike, setIsProcessingLike] = useState(false);
-
     const handleLikeClick = async () => {
-        if (isProcessingLike) return; // Evita múltiples clics rápidos
+        if (isProcessingLike) return; 
         setIsProcessingLike(true);
         try {
             const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
@@ -161,14 +155,13 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 0, // Tipo 0: MeGusta
-                    accion: Number(liked) // Envía 1 (true) para quitar like, 0 (false) para dar like
+                    tipo: 0, 
+                    accion: Number(liked)
                 })
 
             });
 
             if (response.ok) {
-                // Actualiza el estado local
                 if (liked) {
                     setLiked(false);
                     setLikesCount(prevCount => prevCount - 1);
@@ -176,7 +169,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     setLiked(true);
                     setLikesCount(prevCount => prevCount + 1);
                 }
-                // Si das Like, eliminas Dislike
                 if (disliked) {
                     setDisliked(false);
                 }
@@ -189,11 +181,10 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             console.error("Error de red al dar like:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
         } finally {
-            setIsProcessingLike(false); // Permite futuros clics
+            setIsProcessingLike(false);
         }
     };
 
-    // Función de seguimiento
     const handleFollowClick = async (usuarioId: number) => {
         if (!authData?.token) {
             alert("Debes iniciar sesión para seguir a un usuario.");
@@ -215,7 +206,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 throw new Error(`Error: ${response.status} - ${errorText}`);
             }
 
-            // Si la respuesta es OK, actualiza el estado de seguimiento (toggle)
             setIsFollowing(prev => !prev);
 
         } catch (error) {
@@ -235,8 +225,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 1, // Tipo 1: NoMeGusta
-                    accion: Number(disliked) // Envía 1 (true) para quitar dislike, 0 (false) para dar dislike
+                    tipo: 1, 
+                    accion: Number(disliked)
                 })
 
             });
@@ -247,7 +237,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 } else {
                     setDisliked(true);
                 }
-                // Si das Dislike, eliminas Like y bajas el contador de Likes
                 if (liked) {
                     setLiked(false);
                     setLikesCount(prevCount => prevCount - 1);
@@ -274,8 +263,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 2, // Tipo 2: Favorito
-                    accion: Number(favorite) // Envía 1 (true) para quitar favorito, 0 (false) para dar favorito
+                    tipo: 2, 
+                    accion: Number(favorite)
                 })
 
             });
@@ -343,7 +332,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const fechaFormateada = formatoTiempoRelativo(receta.fechaCreacion);
 
-    // Determina si la receta es del usuario actual
     const esRecetaPropia = currentUserId === receta.autor.id;
 
     const handleUsuarioClick = (e: React.MouseEvent) => {
@@ -355,42 +343,97 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    // --- LÓGICA DEL CARRUSEL CORREGIDA ---
+    // --- LÓGICA DEL CARRUSEL MODIFICADA (Usa contentType) ---
 
-    // 1. Obtener la URL de la imagen principal (si existe), o el fallback local
-    const imagenPrincipalUrl = receta.imagen
-        ? (receta.imagen.startsWith('data:image') ? receta.imagen : `data:image/jpeg;base64,${receta.imagen}`)
-        : fotoPerfilLocal;
+    // 1. Helper para determinar 'image' o 'video' desde el contentType
+    const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
+        // Si el contentType existe y empieza con "video/", es un video.
+        if (contentType && contentType.startsWith('video/')) {
+            return 'video';
+        }
+        // En cualquier otro caso (ej. "image/jpeg", "image/png", o nulo), es imagen.
+        return 'image';
+    };
 
-    // 2. Crear la matriz de elementos del carrusel (CarruselItem[])
+    // 2. Helper para normalizar la URL (AHORA RECIBE contentType)
+    // Esto es crucial si 'imagen' es solo el string base64 crudo.
+    const getNormalizedUrl = (
+        mediaStr: string | undefined | null, 
+        contentType: string, // <-- Parámetro clave
+        fallback: string
+    ): string => {
+        if (!mediaStr || mediaStr === '') return fallback;
+        
+        // Si ya es un Data URL (video o imagen) o una URL http, está lista.
+        if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
+            return mediaStr;
+        }
+        
+        // Si es el fallback (fotoPerfilLocal), está lista.
+        if (mediaStr === fallback) return fallback;
 
+        // NUEVA LÓGICA:
+        // Si es base64 crudo, construye el Data URI usando el contentType.
+        // Ej: 'data:video/mp4;base64,SGF...
+        // Ej: 'data:image/jpeg;base64,SGF...
+        return `data:${contentType};base64,${mediaStr}`;
+    }
+
+    // 3. Obtener la media principal (Portada)
+    const tipoMediaPrincipal = getMediaTypeFromContentType(receta.contentType);
+    const mediaPrincipalUrl = getNormalizedUrl(
+        receta.imagen, 
+        receta.contentType, 
+        fotoPerfilLocal
+    );
+
+    // 4. Crear la matriz de elementos del carrusel (CarruselItem[])
     const carruselItems: CarruselItem[] = [];
 
-    // **Añadir el slide de la Imagen Principal (Portada)**
-    if (imagenPrincipalUrl) {
+    // **Añadir el slide de la Media Principal (Portada)**
+    if (mediaPrincipalUrl) {
         carruselItems.push({
-            imagenUrl: imagenPrincipalUrl,
+            mediaUrl: mediaPrincipalUrl,
+            mediaType: tipoMediaPrincipal,
             isMainImage: true
         });
     }
 
     // **Añadir un slide para CADA PASO**
     receta.pasos.forEach(paso => {
-        let imagenPasoUrl = imagenPrincipalUrl; // Fallback: usa la imagen principal
+        let mediaPasoUrl = mediaPrincipalUrl; // Fallback: usa la media principal
+        let mediaPasoType = tipoMediaPrincipal; // Fallback: usa el tipo principal
 
-        // Si el paso TIENE una imagen, usa la imagen del paso
-        if (paso.imagen && paso.imagen !== '') {
-            imagenPasoUrl = paso.imagen.startsWith('data:image')
-                ? paso.imagen
-                : `data:image/jpeg;base64,${paso.imagen}`;
+        // Si el paso TIENE una imagen/video, usa la del paso
+        // Nos aseguramos que el paso tenga su propio 'imagen' y 'contentType'
+        if (paso.imagen && paso.imagen !== '' && paso.contentType) {
+            mediaPasoType = getMediaTypeFromContentType(paso.contentType);
+            mediaPasoUrl = getNormalizedUrl(
+                paso.imagen, 
+                paso.contentType, 
+                fotoPerfilLocal // Fallback por si acaso
+            );
+        } else if (paso.imagen && paso.imagen !== '' && !paso.contentType) {
+             // Fallback si el paso tiene imagen pero no contentType (usará el de la receta)
+             console.warn("Paso tiene imagen pero no contentType. Usando el de la receta.");
+             mediaPasoType = getMediaTypeFromContentType(receta.contentType);
+             mediaPasoUrl = getNormalizedUrl(
+                paso.imagen, 
+                receta.contentType, 
+                fotoPerfilLocal
+             );
         }
 
         carruselItems.push({
-            imagenUrl: imagenPasoUrl,
+            mediaUrl: mediaPasoUrl,
+            mediaType: mediaPasoType,
             pasoInfo: paso,
-            isMainImage: false, // Nunca es la imagen principal
+            isMainImage: false,
         });
     });
+
+    // --- FIN DE LA LÓGICA MODIFICADA ---
+
 
     const [indiceImagen, setIndiceImagen] = useState(0);
 
@@ -410,15 +453,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const itemActual = carruselItems[indiceImagen];
 
-
-
-    // Condición de renderizado del botón Seguir:
-    // Muestra el botón 'Seguir' solo si:
-    // 1. El autor de la receta NO está siendo seguido (`!isFollowing`).
-    // 2. La receta NO es del usuario actual (`!esRecetaPropia`).
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
-    //console.log(receta);
-    //console.log("Receta seguido:", receta.seguido, "isFollowing estado:", isFollowing, "debeMostrarBotonSeguir:", debeMostrarBotonSeguir);
 
     return (
         <Paper elevation={2} sx={{
@@ -426,7 +461,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             mx: 'auto',
             mb: 3,
             overflow: 'hidden',
-            bgcolor: 'background.paper' // Usa el color de fondo del tema
+            bgcolor: 'background.paper'
         }}>
             <Box className="encabezado-receta" sx={{ p: 2 }}>
                 <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
@@ -436,7 +471,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
                     </div>
                 </div>
-                {/* Contenedor para la dificultad y el menú de opciones */}
                 <div className="meta-receta-y-menu">
                     <div className="meta-receta">
                         <span className="tipo-contenido">{receta.dificultad}</span>
@@ -444,7 +478,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                             {renderizarEstrellas(receta.dificultad)}
                         </div>
                     </div>
-                    {/* Menú de opciones visible solo para recetas propias */}
                     {esRecetaPropia && (
                         <>
                             <IconButton
@@ -454,7 +487,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 aria-haspopup="true"
                                 aria-expanded={openMenu ? 'true' : undefined}
                                 onClick={handleClickMenu}
-                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }} // Usa color del tema
+                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
                             >
                                 <MoreVertIcon />
                             </IconButton>
@@ -479,17 +512,36 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
             </Box>
 
-            {/* Imagen principal del carrusel con swipe */}
+            {/* --- BLOQUE DE RENDERIZADO (Este no cambió) --- */}
+            {/* Imagen/Video principal del carrusel con swipe */}
+            {/* La lógica aquí sigue funcionando porque depende de itemActual.mediaType */}
             <div className="carrusel-imagen" {...swipeHandlers}>
-                {itemActual && (
+                {itemActual && itemActual.mediaType === 'image' && (
                     <img
-                        src={itemActual.imagenUrl}
+                        src={itemActual.mediaUrl}
                         alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
                         className="imagen-receta"
                         draggable={false}
                     />
                 )}
+                {itemActual && itemActual.mediaType === 'video' && (
+                    <video
+                        src={itemActual.mediaUrl}
+                        className="imagen-receta"
+                        controls
+                        autoPlay
+                        muted
+                        controlsList="nodownload"
+                        loop
+                        playsInline
+                        draggable={false}
+                    >
+                        Tu navegador no soporta el tag de video.
+                    </video>
+                )}
             </div>
+            {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
+
 
             {/* Navegación y puntitos debajo de la imagen */}
             <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
@@ -503,7 +555,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                             component="span"
                             sx={{
                                 fontSize: 18,
-                                color: idx === indiceImagen ? 'primary.main' : 'text.disabled' // Colores del tema
+                                color: idx === indiceImagen ? 'primary.main' : 'text.disabled'
                             }}
                         >●</Box>
                     ))}
@@ -521,6 +573,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
             )}
 
+            {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
             <Box className="acciones-receta" sx={{ px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
@@ -590,38 +643,33 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
                         {receta.etiquetas
                             .sort((a, b) => {
-                                // Convertimos a minúsculas para asegurarnos que "desafio" o "Desafio" funcionen
                                 const aEsDesafio = a.toLowerCase() === 'desafio';
                                 const bEsDesafio = b.toLowerCase() === 'desafio';
 
-                                if (aEsDesafio) return -1; // 'a' ("Desafio") va primero
-                                if (bEsDesafio) return 1;  // 'b' ("Desafio") va primero
+                                if (aEsDesafio) return -1;
+                                if (bEsDesafio) return 1;
                                 
-                                return 0; // Mantiene el orden relativo de las demás
-                                // Opcional: si querés que el resto se ordene alfabéticamente:
-                                // return a.localeCompare(b);
+                                return 0;
                             }).map((etiqueta, index) => (
-                            <Chip
-                                key={index}
-                                label={etiqueta}
-                                size="small"
-                                variant="outlined" // El variant 'outlined' se ve genial en ambos temas,
-                                sx={{
-                                    // Estilos base para todos los chips
-                                    color: 'text.primary', // Color de texto por defecto del tema
-                                    borderColor: 'divider', // Color del borde por defecto del tema
-                                    // Condición para el chip "Desafío"
-                                    ...(etiqueta === 'Desafio' && {
-                                        background: 'linear-gradient(to right, #FF7B00, #FFD700)', // Gradiente naranja a dorado
-                                        color: 'white', // Texto blanco para que contraste
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            opacity: 0.9 // Un ligero efecto al pasar el mouse
-                                        }
-                                    }),
-                                }}
-                            />
-                        ))}
+                                <Chip
+                                    key={index}
+                                    label={etiqueta}
+                                    size="small"
+                                    variant="outlined" 
+                                    sx={{
+                                        color: 'text.primary',
+                                        borderColor: 'divider',
+                                        ...(etiqueta === 'Desafio' && {
+                                            background: 'linear-gradient(to right, #FF7B00, #FFD700)',
+                                            color: 'white',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                opacity: 0.9
+                                            }
+                                        }),
+                                    }}
+                                />
+                            ))}
                     </Box>
                 )}
             </Box>

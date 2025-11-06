@@ -83,7 +83,10 @@ namespace FoB.Server.Controllers
                     // primera imagen es la principal para la galería
                     ImagenPrincipalBase64 = r.RecetaImagen.FirstOrDefault(x => x.PasoId == null) != null
                         ? Convert.ToBase64String(r.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen)
-                        : null
+                        : null,
+                    ContentType = r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                            ? r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().ContentType
+                            : null
                 })
                 .OrderByDescending(x => x.Id)
                 .ToList();

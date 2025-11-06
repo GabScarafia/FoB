@@ -11,6 +11,8 @@ public class RecetaResponse
     public string Estado { get; set; }
     public byte[] Imagen { get; set; }
 
+    public string? ContentType { get; set; }
+
     public DateTime FechaCreacion { get; set; }
 
     public DateTime? FechaModificacion { get; set; }
@@ -49,6 +51,7 @@ public class PasoResponse
     public string Titulo { get; set; }
     public string Descripcion { get; set; }
     public string Imagen { get; set; }
+    public string? ContentType { get; set; }
 }
 
 public class ComentarioResponse

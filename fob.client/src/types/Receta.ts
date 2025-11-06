@@ -18,6 +18,7 @@ export interface RecetaType {
   tipoContenido: string;
   dificultad: string;
   imagen: string;
+  contentType: string;
   cantidadVotos: number;
   meGusta: boolean;
   noMeGusta: boolean;

@@ -10,13 +10,43 @@ import LogoApp from '../assets/images/logo-blanco.png';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
-import CircularProgress from '@mui/material/CircularProgress'; // Agregué el import de CircularProgress para la carga
+import CircularProgress from '@mui/material/CircularProgress';
 import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import './Tendencias.css'; 
 
 import type { RecetaType, Usuario } from '../types/Receta';
+
+// --- INICIO DE CÓDIGO NUEVO ---
+// 1. Helper para determinar 'image' o 'video' desde el contentType
+const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
+    // Si el contentType existe y empieza con "video/", es un video.
+    if (contentType && contentType.startsWith('video/')) {
+        return 'video';
+    }
+    // En cualquier otro caso (ej. "image/jpeg", "image/png", o nulo), es imagen.
+    return 'image';
+};
+
+// 2. Helper para normalizar la URL (AHORA RECIBE contentType)
+const getNormalizedUrl = (
+    mediaStr: string | undefined | null, 
+    contentType: string, 
+): string => {
+    // Si no hay media, retornamos un string vacío.
+    if (!mediaStr || mediaStr === '') return ''; 
+    
+    // Si ya es un Data URL (video o imagen) o una URL http, está lista.
+    if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
+        return mediaStr;
+    }
+    
+    // Si es base64 crudo, construye el Data URI usando el contentType.
+    return `data:${contentType};base64,${mediaStr}`;
+}
+// --- FIN DE CÓDIGO NUEVO ---
+
 
 const Tendencias = () => {
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
@@ -28,14 +58,12 @@ const Tendencias = () => {
     const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false);
     const navigate = useNavigate();
     
-    // Estado para el diálogo
     const [openDialog, setOpenDialog] = useState(false);
     
-    // Ref para el elemento main
     const mainRef = useRef<HTMLElement | null>(null);
 
+    // ... (Tu useEffect para la clase 'tendencias-page' no cambia)
     useEffect(() => {
-        // Lógica para agregar y quitar la clase al elemento main
         const mainElement = document.querySelector('main');
         if (mainElement) {
             mainElement.classList.add('tendencias-page');
@@ -49,6 +77,7 @@ const Tendencias = () => {
         };
     }, []);
 
+    // ... (Tu useEffect para fetchTendencias no cambia)
     useEffect(() => {
         const fetchTendencias = async () => {
             if (!authData?.token || seEjecutoUnaVez) {
@@ -74,6 +103,7 @@ const Tendencias = () => {
         fetchTendencias();
     }, [obtenerTendencias, authData, seEjecutoUnaVez]);
 
+    // ... (Tus manejadores handleRecetaClick, handleCloseDialog, handleUsuarioClick no cambian)
     const handleRecetaClick = (receta: RecetaType) => {
         setRecetaSeleccionada(receta);
         setOpenDialog(true);
@@ -88,7 +118,7 @@ const Tendencias = () => {
         navigate(`/perfil/${userId}`);
     };
 
-    // FUNCIÓN PARA RENDERIZAR LA GALERÍA (se mantiene la cuadrícula)
+    // --- FUNCIÓN PARA RENDERIZAR LA GALERÍA (MODIFICADA) ---
     const renderGaleriaTendencias = () => {
         if (!tendencias || tendencias.length === 0) {
             return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
@@ -97,26 +127,55 @@ const Tendencias = () => {
         return (
             <div className="grilla-tendencias">
                 {tendencias.map((receta) => {
-                    // console.log("Receta en tendencias:", receta);
-                    const imageData = `data:image/jpeg;base64,${receta.imagen}`;
+                    
+                    // --- INICIO DE LÓGICA MODIFICADA ---
+                    // Aplicamos los helpers a cada receta de la grilla
+                    const mediaType = getMediaTypeFromContentType(receta.contentType);
+                    const mediaUrl = getNormalizedUrl(receta.imagen, receta.contentType);
+
+                    // Si por alguna razón no hay URL, mostramos un fallback
+                    if (!mediaUrl) {
+                        return (
+                            <div key={receta.id} className="galeria-item galeria-item-fallback">
+                                <span>Error</span>
+                            </div>
+                        )
+                    }
+
                     return (
                         <div 
                             key={receta.id} 
                             className="galeria-item" 
                             onClick={() => handleRecetaClick(receta)}
                         >
-                            <img
-                                src={imageData}
-                                alt={receta.titulo ?? `Receta-${receta.id}`}
-                            />
+                            {/* Renderizado condicional: <img /> o <video /> */}
+                            {mediaType === 'image' ? (
+                                <img
+                                    src={mediaUrl}
+                                    alt={receta.titulo ?? `Receta-${receta.id}`}
+                                />
+                            ) : (
+                                <video
+                                    src={mediaUrl}
+                                    // alt no es un prop válido para video, pero lo dejamos por si React lo maneja
+                                    muted
+                                    playsInline
+                                    preload="metadata" // <-- Clave para cargar solo el 1er frame
+                                    // Omitimos 'controls', 'autoPlay' y 'loop'
+                                >
+                                    Tu navegador no soporta videos.
+                                </video>
+                            )}
                         </div>
                     );
+                    // --- FIN DE LÓGICA MODIFICADA ---
                 })}
             </div>
         );
     };
     // FIN DE LA FUNCIÓN DE RENDERIZADO
 
+    // ... (El resto de tu componente: cargando, error, return, Dialog... no cambia)
     if (cargando) {
         return (
             <div className="cargando-tendencias">
@@ -133,11 +192,9 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {/* La vista principal sigue siendo la cuadrícula */}
                 {renderGaleriaTendencias()}
             </div>
 
-            {/* Diálogo para mostrar la receta completa */}
             <Dialog
                 fullScreen
                 open={openDialog}
@@ -152,7 +209,6 @@ const Tendencias = () => {
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center', 
-                            // Esta clase en el paper controla el ancho máximo del Dialog
                             '& .receta-container': { 
                                 width: '100%',
                                 maxWidth: 500, 
@@ -163,7 +219,6 @@ const Tendencias = () => {
                 }}
             >
 
-                {/* Encabezado fijo */}
                 <Box className="header-contenedor-principal ">
                     <Box className="header-input-seccion ">
                         <Box
@@ -179,12 +234,11 @@ const Tendencias = () => {
                     </Box>
                 </Box>
 
-                {/* Contenido desplazable (scrollable) */}
                 <Box
                     sx={{
                         flexGrow: 1, 
                         overflowY: 'auto', 
-                        p: 0, // ⬅️ CAMBIO CLAVE: Quitamos el padding para que la receta ocupe el 100% del ancho
+                        p: 0, 
                         backgroundColor: 'background.default', 
                     }}
                 >
@@ -193,7 +247,6 @@ const Tendencias = () => {
                         <Receta
                         receta={{
                             ...recetaSeleccionada,
-                            // Aseguramos que los booleanos tengan valores por defecto para el componente Receta
                             noMeGusta: recetaSeleccionada.noMeGusta ?? false,
                             esFavorito: recetaSeleccionada.esFavorito ?? false,
                             seguido: recetaSeleccionada.seguido ?? false,
@@ -207,8 +260,7 @@ const Tendencias = () => {
                     )}
 
                 </Box>
-                    
-                {/* Pie de página fijo */}
+                        
                 <Box sx={{
                     width: '100%',
                     height: 55,

@@ -5,6 +5,7 @@ public class RecetaRequest
     public string Titulo { get; set; }
     public string Descripcion { get; set; }
     public byte[] Imagen { get; set; }
+    public string? ContentType { get; set; }
     public DificultadEnum Dificultad { get; set; }
 
     //public EstadoEnum Estado { get; set; }
@@ -25,6 +26,7 @@ public class PasoRequest
     public string Titulo { get; set; }
     public string Descripcion { get; set; }
     public string? Imagen { get; set; }
+    public string? ContentType { get; set; }
 }
 
 public class IngredienteRecetaRequest

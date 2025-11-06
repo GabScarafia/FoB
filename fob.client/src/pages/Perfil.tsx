@@ -1,10 +1,10 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useMemo } from 'react'; // Importar useMemo
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import '../styles/Perfil.css';
 import { useAuth } from '../context/AuthContext';
 import { Box, Typography, Button, Divider } from '@mui/material';
 
-// Íconos de Material UI
+// Íconos
 import AppsIcon from '@mui/icons-material/Apps';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 
@@ -12,11 +12,13 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import fotoPerfilDefault from '../assets/images/avatar.png';
 import { BASE_URL } from '../apiConfig';
 
+// --- INTERFACES (Asegúrate que contentType pueda ser null) ---
 interface RecetaDto {
     id: number;
     titulo?: string;
     imagenPrincipalBase64?: string | null;
     imagen?: string | null;
+    contentType: string | null; // <-- Marcado como opcional/nullable
 }
 
 interface UsuarioPerfilDto {
@@ -34,6 +36,28 @@ interface UsuarioPerfilDto {
     esSeguido: boolean;
 }
 
+// --- HELPERS DE MEDIA (Robustos) ---
+const getMediaTypeFromContentType = (contentType: string | null | undefined): 'image' | 'video' => {
+    if (contentType && contentType.startsWith('video/')) {
+        return 'video';
+    }
+    return 'image';
+};
+
+const getNormalizedUrl = (
+    mediaStr: string | undefined | null, 
+    contentType: string | null | undefined, 
+): string => {
+    if (!mediaStr || mediaStr === '') return '';
+    if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
+        return mediaStr;
+    }
+    const type = contentType || 'image/jpeg'; // Fallback a imagen si no hay contentType
+    return `data:${type};base64,${mediaStr}`;
+}
+
+// --- INICIO DEL COMPONENTE ---
+
 const Perfil: React.FC = () => {
     const { id } = useParams<{ id?: string }>();
     const { authData } = useAuth();
@@ -46,16 +70,41 @@ const Perfil: React.FC = () => {
     const [fetchAttempted, setFetchAttempted] = useState(false);
     const navigate = useNavigate();
 
-    // *** Estado para manejar el seguimiento localmente ***
+    const [activeTab, setActiveTab] = useState<'imagenes' | 'videos'>('imagenes');
     const [isFollowing, setIsFollowing] = useState(false);
-    // Estado para deshabilitar el botón mientras se procesa la solicitud
     const [isProcessingFollow, setIsProcessingFollow] = useState(false);
 
+    // --- HOOK MOVIDO AQUÍ ---
+    // Movemos el useMemo al inicio, junto con los otros Hooks.
+    // Ahora se llamará en CADA render, cumpliendo las reglas.
+    const { publicacionesImagen, publicacionesVideo } = useMemo(() => {
+        if (!datosPerfil?.publicaciones) {
+            return { publicacionesImagen: [], publicacionesVideo: [] };
+        }
+
+        const imagenes: RecetaDto[] = [];
+        const videos: RecetaDto[] = [];
+
+        datosPerfil.publicaciones.forEach(pub => {
+            const mediaType = getMediaTypeFromContentType(pub.contentType);
+            
+            if (mediaType === 'video') {
+                videos.push(pub);
+            } else {
+                imagenes.push(pub);
+            }
+        });
+
+        return { publicacionesImagen: imagenes, publicacionesVideo: videos };
+
+    }, [datosPerfil?.publicaciones]);
+    // --- FIN DEL BLOQUE MOVIDO ---
+
+
+    // ... (Tu useEffect de fetch no cambia) ...
     useEffect(() => {
         if (id === undefined && currentUserId == null) return;
-
         const perfilId = id ? Number(id) : currentUserId;
-
         if (!perfilId) {
             setError('Debes iniciar sesión para ver tu perfil.');
             setDatosPerfil(null);
@@ -63,43 +112,33 @@ const Perfil: React.FC = () => {
             setFetchAttempted(true);
             return;
         }
-
         const controller = new AbortController();
         const signal = controller.signal;
         let isMounted = true;
-
         const fetchDatosPerfil = async () => {
             setFetchAttempted(true);
             setCargando(true);
             setError(null);
-
             try {
                 const headers: Record<string, string> = {};
                 if (token) headers['Authorization'] = `Bearer ${token}`;
-
                 const response = await fetch(`${BASE_URL}/Usuario/${perfilId}`, {
                     headers,
                     signal,
                 });
-
                 if (!isMounted) return;
-
                 if (response.status === 401) {
                     setError('La sesión ha expirado o el token no es válido.');
                     setDatosPerfil(null);
                     return;
                 }
-
                 if (!response.ok) throw new Error(`Error HTTP: ${response.status}`);
-
                 const data: UsuarioPerfilDto = await response.json();
                 if (!isMounted) return;
-
                 setIsFollowing(data.esSeguido);
                 setDatosPerfil(data);
             } catch (err: any) {
                 if (err?.name === 'AbortError') return;
-
                 console.error('Error al cargar el perfil:', err);
                 if (!isMounted) return;
                 setError('Ocurrió un error al cargar tu perfil.');
@@ -109,31 +148,22 @@ const Perfil: React.FC = () => {
                 setCargando(false);
             }
         };
-
         fetchDatosPerfil();
-
         return () => {
             isMounted = false;
             controller.abort();
         };
     }, [id, token, currentUserId]);
 
-    // --- Manejador de Seguimiento (Follow/Unfollow) ---
+    // ... (Tus handlers no cambian) ...
     const handleFollowClick = async () => {
         if (!datosPerfil || !currentUserId || isProcessingFollow) return;
-
-        // Bloquear múltiples clics
         setIsProcessingFollow(true);
-
         const usuarioId = datosPerfil.id;
         const apiUrl = `${BASE_URL}/Follow/${usuarioId}`;
-
-        // Determinar el método y la acción basados en el estado actual
         const method = isFollowing ? 'DELETE' : 'POST';
         const previousIsFollowing = isFollowing;
         const newFollowerCount = isFollowing ? datosPerfil.cantidadSeguidores - 1 : datosPerfil.cantidadSeguidores + 1;
-
-        // 1. Actualización optimista del UI
         setIsFollowing(prev => !prev);
         setDatosPerfil(prev => {
             if (!prev) return null;
@@ -143,7 +173,6 @@ const Perfil: React.FC = () => {
                 esSeguido: !previousIsFollowing,
             };
         });
-
         try {
             const response = await fetch(apiUrl, {
                 method: method,
@@ -151,15 +180,9 @@ const Perfil: React.FC = () => {
                     'Authorization': `Bearer ${token}`,
                 },
             });
-
             if (!response.ok) {
-                // Si falla, revertir el cambio de estado optimista
                 alert(`Ocurrió un error al intentar ${previousIsFollowing ? 'dejar de seguir' : 'seguir'}. Se revertirá el cambio.`);
-
-                // Revertir el estado de seguimiento local
                 setIsFollowing(previousIsFollowing);
-
-                // Revertir el contador de seguidores
                 setDatosPerfil(prev => {
                     if (!prev) return null;
                     const originalCount = previousIsFollowing ? prev.cantidadSeguidores + 1 : prev.cantidadSeguidores - 1;
@@ -169,12 +192,8 @@ const Perfil: React.FC = () => {
                         esSeguido: previousIsFollowing,
                     };
                 });
-
                 throw new Error(`Error: ${response.status}`);
             }
-
-            // Si la respuesta es exitosa (200, 204, etc.), la actualización optimista se mantiene.
-
         } catch (error) {
             console.error("Fallo al ejecutar la acción de seguir/dejar de seguir:", error);
         } finally {
@@ -182,17 +201,10 @@ const Perfil: React.FC = () => {
         }
     };
 
-    // --- Manejador de Compartir Perfil ---
     const handleShareProfileClick = async () => {
         if (!datosPerfil) return;
-
-        // 1. Obtener la URL del perfil
         const profileUrl = `${window.location.origin}/perfil/${datosPerfil.id}`;
-
-        // El texto a compartir
         const shareText = `¡Mira el perfil de @${datosPerfil.nombreUsuario} en mi app de recetas!`;
-
-        // 2. Usar la API nativa de compartir si está disponible
         if (navigator.share) {
             try {
                 await navigator.share({
@@ -202,14 +214,11 @@ const Perfil: React.FC = () => {
                 });
                 return;
             } catch (error) {
-                // Si el usuario cancela, no hacemos nada.
                 if (error instanceof Error && error.name !== 'AbortError') {
                     console.error('Error al usar la API de compartir:', error);
                 }
             }
         }
-
-        // 3. Fallback: Copiar al portapapeles
         try {
             await navigator.clipboard.writeText(profileUrl);
             alert('¡Enlace copiado al portapapeles!');
@@ -218,16 +227,17 @@ const Perfil: React.FC = () => {
             alert('Fallo al copiar el enlace. Por favor, cópialo manualmente.');
         }
     };
-
+    
     const handleEditarPerfilClick = () => {
         navigate('/editar-perfil');
     };
 
-    // Renderizado según estado
+    // --- LÓGICA DE RENDERIZADO ---
+    // Ahora los 'if' de retorno temprano pueden ir aquí,
+    // después de que TODOS los hooks se hayan llamado.
     if (cargando) {
         return <Box className="cargando-perfil" sx={{ color: 'text.secondary' }}>Cargando perfil...</Box>;
     }
-
     if (error) {
         return (
             <Box className="error-perfil" sx={{ color: 'error.main', textAlign: 'center', mt: 4 }}>
@@ -236,8 +246,6 @@ const Perfil: React.FC = () => {
             </Box>
         );
     }
-
-    // Solo mostramos "No se encontraron..." si ya intentamos hacer el fetch
     if (!cargando && !datosPerfil && fetchAttempted) {
         return (
             <Box className="error-perfil" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
@@ -245,10 +253,11 @@ const Perfil: React.FC = () => {
             </Box>
         );
     }
-
     if (!datosPerfil) {
-        return null;
+        return null; // O un estado de 'no encontrado' si prefieres
     }
+
+    // --- El useMemo ya no está aquí ---
 
     const {
         nombre,
@@ -259,39 +268,62 @@ const Perfil: React.FC = () => {
         cantidadPublicaciones,
         cantidadSeguidores,
         cantidadSeguidos,
-        publicaciones
     } = datosPerfil;
 
     const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
-
-
-    const tienePublicaciones = publicaciones && publicaciones.length > 0;
     const esPerfilPropio = currentUserId === datosPerfil.id;
 
+    // ... (Tu renderGaleria no cambia) ...
     const renderGaleria = () => {
-        if (!tienePublicaciones) {
+        const listaAMostrar = activeTab === 'imagenes' ? publicacionesImagen : publicacionesVideo;
+        const tabName = activeTab === 'imagenes' ? 'publicaciones' : 'videos';
+
+        if (listaAMostrar.length === 0) {
             return (
                 <Typography className="sin-recetas" sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-                    Aún no has publicado ninguna receta.
+                    {esPerfilPropio 
+                        ? `Aún no tienes ${tabName}.`
+                        : `Este usuario no tiene ${tabName}.`
+                    }
                 </Typography>
             );
         }
-        return publicaciones.map((receta) => {
+        
+        return listaAMostrar.map((receta) => {
             const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
-            if (!imagen) return null;
+            
+            if (!imagen) {
+                 return null;
+            }
+
+            const mediaUrl = getNormalizedUrl(imagen, receta.contentType);
+            const mediaType = getMediaTypeFromContentType(receta.contentType);
+
             return (
                 <div key={receta.id} className="galeria-item">
                     <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
-                        <img
-                            src={`data:image/jpeg;base64,${imagen}`}
-                            alt={receta.titulo ?? `Receta-${receta.id}`}
-                        />
+                        {mediaType === 'image' ? (
+                            <img
+                                src={mediaUrl}
+                                alt={receta.titulo ?? `Receta-${receta.id}`}
+                            />
+                        ) : (
+                            <video
+                                src={mediaUrl}
+                                muted
+                                playsInline
+                                preload="metadata" 
+                            >
+                              Tu navegador no soporta videos.
+                            </video>
+                        )}
                     </Link>
                 </div>
             );
         });
     };
 
+    // ... (El JSX de retorno no cambia) ...
     return (
         <Box className="perfil-contenedor">
             <Box component="header" className="perfil-header">
@@ -318,15 +350,12 @@ const Perfil: React.FC = () => {
                     </Box>
                     <Box className="perfil-info">
                         <Typography variant="h6" className="perfil-nombre-usuario">@{nombreUsuario}</Typography>
-
                         <Typography variant="body1" className="perfil-nombre-completo" fontWeight="bold">{nombreCompletoDisplay}</Typography>
-
                         <Typography variant="body2" className="perfil-bio" color="text.secondary">{biografia}</Typography>
                     </Box>
                 </Box>
             </Box>
 
-            {/* Botones condicionales */}
             <Box className="perfil-botones">
                 {esPerfilPropio ? (
                     <>
@@ -338,7 +367,6 @@ const Perfil: React.FC = () => {
                         </Button>
                     </>
                 ) : (
-                    // Botón Seguir/Siguiendo para perfiles de terceros
                     <Button
                         variant={isFollowing ? 'outlined' : 'contained'}
                         color={isFollowing ? 'primary' : 'primary'}
@@ -368,15 +396,31 @@ const Perfil: React.FC = () => {
             <Divider sx={{ my: 2 }} />
 
             <Box component="nav" className="perfil-navegacion">
-                <Box className="perfil-navegacion-item" sx={{
-                    cursor: 'pointer',
-                    borderBottom: '2px solid',
-                    borderColor: 'primary.main'
-                }}>
-                    <AppsIcon className="perfil-navegacion-icono" color="primary" />
+                <Box 
+                    className="perfil-navegacion-item"
+                    onClick={() => setActiveTab('imagenes')}
+                    sx={{
+                        cursor: 'pointer',
+                        borderBottom: '2px solid',
+                        borderColor: activeTab === 'imagenes' ? 'primary.main' : 'transparent'
+                    }}>
+                    <AppsIcon 
+                        className="perfil-navegacion-icono" 
+                        color={activeTab === 'imagenes' ? 'primary' : 'disabled'} 
+                    />
                 </Box>
-                <Box className="perfil-navegacion-item" sx={{ cursor: 'pointer' }}>
-                    <VideoLibraryIcon className="perfil-navegacion-icono" sx={{ color: 'text.secondary' }} />
+                <Box 
+                    className="perfil-navegacion-item" 
+                    onClick={() => setActiveTab('videos')}
+                    sx={{ 
+                        cursor: 'pointer',
+                        borderBottom: '2px solid',
+                        borderColor: activeTab === 'videos' ? 'primary.main' : 'transparent'
+                    }}>
+                    <VideoLibraryIcon 
+                        className="perfil-navegacion-icono" 
+                        color={activeTab === 'videos' ? 'primary' : 'disabled'} 
+                    />
                 </Box>
             </Box>
 

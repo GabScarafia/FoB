@@ -17,6 +17,8 @@ public partial class RecetaImagen
 
     public byte[] Imagen { get; set; }
 
+    public string ContentType { get; set; }
+
     public virtual Paso Paso { get; set; }
 
     public virtual Receta Receta { get; set; }

@@ -413,6 +413,9 @@ public partial class fobContext : DbContext
             entity.HasIndex(e => e.RecetaId, "receta_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ContentType)
+                .HasMaxLength(255)
+                .HasColumnName("contentType");
             entity.Property(e => e.Imagen).HasColumnName("imagen");
             entity.Property(e => e.PasoId).HasColumnName("paso_id");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
