@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useTendenciasService } from '../services/tendenciasService';
+import React, { useState, useEffect, useRef, useCallback } from 'react'; // <-- AÑADIDO useCallback
+// import { useTendenciasService } from '../services/tendenciasService'; // <-- No lo usamos para poder paginar
 import Receta from 'components/Receta';
 import { useNavigate } from 'react-router-dom'; 
 
@@ -14,38 +14,40 @@ import CircularProgress from '@mui/material/CircularProgress';
 import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../apiConfig';
+import fotoPerfilLocal from '../assets/images/avatar.png'; // <-- IMPORT NECESARIO
+
 import './Tendencias.css'; 
 
 import type { RecetaType, Usuario } from '../types/Receta';
 
 // --- INICIO DE CÓDIGO NUEVO ---
-// 1. Helper para determinar 'image' o 'video' desde el contentType
+// (Estas funciones helper están bien)
 const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
-    // Si el contentType existe y empieza con "video/", es un video.
     if (contentType && contentType.startsWith('video/')) {
         return 'video';
     }
-    // En cualquier otro caso (ej. "image/jpeg", "image/png", o nulo), es imagen.
     return 'image';
 };
 
-// 2. Helper para normalizar la URL (AHORA RECIBE contentType)
 const getNormalizedUrl = (
     mediaStr: string | undefined | null, 
     contentType: string, 
+    fallback: string
 ): string => {
-    // Si no hay media, retornamos un string vacío.
-    if (!mediaStr || mediaStr === '') return ''; 
+    if (!mediaStr || mediaStr === '') return fallback;
     
-    // Si ya es un Data URL (video o imagen) o una URL http, está lista.
-    if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
+    if (mediaStr.startsWith('http') || mediaStr.startsWith('data:')) {
         return mediaStr;
     }
     
-    // Si es base64 crudo, construye el Data URI usando el contentType.
+    if (mediaStr.startsWith('/')) {
+        return `${BASE_URL}${mediaStr}`;
+    }
+    
     return `data:${contentType};base64,${mediaStr}`;
 }
-// --- FIN DE CÓDIGO NUEVO ---
+// --- FIN DE LA CORRECCIÓN ---
 
 
 const Tendencias = () => {
@@ -53,16 +55,22 @@ const Tendencias = () => {
     const [recetaSeleccionada, setRecetaSeleccionada] = useState<RecetaType | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const { obtenerTendencias } = useTendenciasService();
+    // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
     const { authData } = useAuth(); 
-    const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false);
+    // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
     
     const [openDialog, setOpenDialog] = useState(false);
     
     const mainRef = useRef<HTMLElement | null>(null);
 
-    // ... (Tu useEffect para la clase 'tendencias-page' no cambia)
+    // === NUEVOS ESTADOS DE PAGINACIÓN ===
+    const [page, setPage] = useState(1);
+    const [cargandoMas, setCargandoMas] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const PAGE_SIZE = 15; // <-- Tamaño de página 15
+
+    // useEffect para la clase 'tendencias-page' (Sin cambios)
     useEffect(() => {
         const mainElement = document.querySelector('main');
         if (mainElement) {
@@ -77,33 +85,123 @@ const Tendencias = () => {
         };
     }, []);
 
-    // ... (Tu useEffect para fetchTendencias no cambia)
-    useEffect(() => {
-        const fetchTendencias = async () => {
-            if (!authData?.token || seEjecutoUnaVez) {
-                if (!authData?.token) {
-                    setCargando(false);
+    // === LÓGICA DE CARGA DE DATOS MODIFICADA ===
+    const cargarTendencias = useCallback(async (isInitialLoad = false) => {
+        if (!authData?.token) {
+            setCargando(false);
+            return;
+        }
+
+        if (isInitialLoad) {
+            setCargando(true);
+            setPage(1);
+            setHasMore(true);
+        } else {
+            // Ya estamos cargando más, no hacer nada
+            if (cargandoMas) return; 
+            setCargandoMas(true);
+        }
+
+        const currentPage = isInitialLoad ? 1 : page;
+
+        try {
+            const response = await fetch(`${BASE_URL}/Recetas/Tendencias?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`, { 
+                headers: {
+                    'Authorization': `Bearer ${authData.token}`,
+                    'Content-Type': 'application/json'
                 }
-                return;
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-            try {
-                setCargando(true);
-                const data = await obtenerTendencias();
-                setTendencias(Array.isArray(data) ? data : []);
-                setError(null);
-            } catch (err) {
-                console.error("Error al cargar las tendencias:", err);
-                setError("No se pudieron cargar las tendencias.");
-                setTendencias([]);
-            } finally {
-                setCargando(false);
-                setSeEjecutoUnaVez(true);
+
+            const data = await response.json(); // <-- El backend wrapper { Mensaje, Recetas }
+            const recetasObtenidas: RecetaType[] = data.recetas;
+
+            if (isInitialLoad) {
+                setTendencias(recetasObtenidas);
+                if (recetasObtenidas.length === 0) {
+                    setError("No hay tendencias para mostrar.");
+                }
+            } else {
+                setTendencias(prev => [...prev, ...recetasObtenidas]);
+            }
+
+            if (recetasObtenidas.length < PAGE_SIZE) {
+                setHasMore(false);
+            }
+
+            setPage(currentPage + 1);
+
+        } catch (err) {
+            console.error("Error al cargar las tendencias:", err);
+            if (isInitialLoad) {
+                 setError("No se pudieron cargar las tendencias.");
+            }
+            setHasMore(false);
+        } finally {
+            setCargando(false);
+            setCargandoMas(false);
+        }
+    }, [authData?.token, page, cargandoMas, hasMore]); // Dependencias
+
+    // useEffect para carga inicial (MODIFICADO)
+    useEffect(() => {
+        if(authData?.token) {
+             cargarTendencias(true);
+        }
+    }, [authData?.token]); // Se dispara solo cuando el token está listo
+
+    // useEffect para scroll infinito (NUEVO)
+   useEffect(() => {
+        const mainElement = mainRef.current; // Capturamos el elemento 'main'
+
+        const handleScroll = () => {
+            if (!mainElement) return; // Si no hay 'main', no hagas nada
+
+            // (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300)
+            if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300 && 
+                !cargandoMas && 
+                hasMore
+            ) {
+                cargarTendencias(false); // Carga la siguiente página
             }
         };
-        fetchTendencias();
-    }, [obtenerTendencias, authData, seEjecutoUnaVez]);
 
-    // ... (Tus manejadores handleRecetaClick, handleCloseDialog, handleUsuarioClick no cambian)
+        // Escuchamos el scroll DENTRO del elemento 'main'
+        mainElement?.addEventListener('scroll', handleScroll);
+        return () => mainElement?.removeEventListener('scroll', handleScroll);
+        
+    }, [cargandoMas, hasMore, cargarTendencias]);
+
+    useEffect(() => {
+        // Esta función revisa si el contenido llena la pantalla
+        const checkForMore = () => {
+            // Si no estamos cargando, y SÍ hay más páginas, Y la altura total
+            // del documento es MENOR o IGUAL a la altura de la ventana...
+            if (!cargando && !cargandoMas && hasMore && mainRef.current) { 
+                
+                // Usamos el 'mainRef' (el contenedor con scroll)
+                const contentHeight = mainRef.current.scrollHeight; 
+                const viewportHeight = mainRef.current.clientHeight;
+
+                if (contentHeight <= viewportHeight) {
+                    // ...entonces cargamos la siguiente página automáticamente.
+                    console.log("No hay scroll, cargando más...");
+                    cargarTendencias(false);
+                }
+            }
+        };
+
+        // Lo ejecutamos un instante después del renderizado para que el DOM se actualice
+        const timer = setTimeout(checkForMore, 100);
+
+        return () => clearTimeout(timer);
+
+    }, [cargando, cargandoMas, hasMore, tendencias, cargarTendencias]);
+    
+    // ... (Manejadores de Dialog y Navegación - Sin cambios)
     const handleRecetaClick = (receta: RecetaType) => {
         setRecetaSeleccionada(receta);
         setOpenDialog(true);
@@ -120,7 +218,11 @@ const Tendencias = () => {
 
     // --- FUNCIÓN PARA RENDERIZAR LA GALERÍA (MODIFICADA) ---
     const renderGaleriaTendencias = () => {
-        if (!tendencias || tendencias.length === 0) {
+        // Ahora usa 'tendencias' que es la lista que se actualiza con el scroll
+        if (tendencias.length === 0) {
+            // No muestra nada si está cargando, el spinner principal se encarga
+            if (cargando) return null; 
+            // Si no está cargando y no hay tendencias, muestra el mensaje
             return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
         }
 
@@ -128,27 +230,20 @@ const Tendencias = () => {
             <div className="grilla-tendencias">
                 {tendencias.map((receta) => {
                     
-                    // --- INICIO DE LÓGICA MODIFICADA ---
-                    // Aplicamos los helpers a cada receta de la grilla
+                    // --- INICIO DE LÓGICA CORREGIDA (Bug) ---
                     const mediaType = getMediaTypeFromContentType(receta.contentType);
-                    const mediaUrl = getNormalizedUrl(receta.imagen, receta.contentType);
-
-                    // Si por alguna razón no hay URL, mostramos un fallback
-                    if (!mediaUrl) {
-                        return (
-                            <div key={receta.id} className="galeria-item galeria-item-fallback">
-                                <span>Error</span>
-                            </div>
-                        )
-                    }
-
+                    // Pasamos 'fotoPerfilLocal' como fallback, por si 'imagenUrl' es nula
+                    const mediaUrl = getNormalizedUrl(receta.imagenUrl, receta.contentType, fotoPerfilLocal); 
+                    // --- FIN DE LÓGICA CORREGIDA ---
+                    
+                    // (Si la mediaUrl sigue siendo el fallback, se mostrará el avatar)
+                    
                     return (
                         <div 
                             key={receta.id} 
                             className="galeria-item" 
                             onClick={() => handleRecetaClick(receta)}
                         >
-                            {/* Renderizado condicional: <img /> o <video /> */}
                             {mediaType === 'image' ? (
                                 <img
                                     src={mediaUrl}
@@ -157,26 +252,23 @@ const Tendencias = () => {
                             ) : (
                                 <video
                                     src={mediaUrl}
-                                    // alt no es un prop válido para video, pero lo dejamos por si React lo maneja
                                     muted
                                     playsInline
-                                    preload="metadata" // <-- Clave para cargar solo el 1er frame
-                                    // Omitimos 'controls', 'autoPlay' y 'loop'
+                                    preload="metadata" 
                                 >
                                     Tu navegador no soporta videos.
                                 </video>
                             )}
                         </div>
                     );
-                    // --- FIN DE LÓGICA MODIFICADA ---
                 })}
             </div>
         );
     };
     // FIN DE LA FUNCIÓN DE RENDERIZADO
 
-    // ... (El resto de tu componente: cargando, error, return, Dialog... no cambia)
-    if (cargando) {
+    // MODIFICADO: Muestra spinner solo en carga inicial
+    if (cargando && tendencias.length === 0) {
         return (
             <div className="cargando-tendencias">
                 <CircularProgress color="primary" />
@@ -185,7 +277,8 @@ const Tendencias = () => {
         );
     }
 
-    if (error) {
+    // MODIFICADO: Muestra error solo si no hay tendencias
+    if (error && tendencias.length === 0) {
         return <div className="error-container">{error}</div>;
     }
 
@@ -193,8 +286,23 @@ const Tendencias = () => {
         <>
             <div className="tendencias-container">
                 {renderGaleriaTendencias()}
+                
+                {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
+                {cargandoMas && (
+                    <div className="cargando-tendencias" style={{ height: '100px', marginTop: '20px' }}>
+                        <CircularProgress color="primary" />
+                    </div>
+                )}
+
+                {/* --- NUEVO: MENSAJE DE FIN DE SCROLL --- */}
+                {!hasMore && tendencias.length > 0 && (
+                    <div style={{ textAlign: 'center', padding: '40px', color: '#888', fontWeight: 'bold' }}>
+                        Fin de las tendencias.
+                    </div>
+                )}
             </div>
 
+            {/* ... (Tu Dialog y su contenido no cambian) ... */}
             <Dialog
                 fullScreen
                 open={openDialog}
@@ -239,24 +347,24 @@ const Tendencias = () => {
                         flexGrow: 1, 
                         overflowY: 'auto', 
                         p: 0, 
+                        width: '100%', // Asegura que ocupe todo el ancho
                         backgroundColor: 'background.default', 
                     }}
                 >
                     {recetaSeleccionada && (
-                    <div className="receta-contenido">
+                        // No necesitas 'receta-contenido', el 'Receta' ya está centrado por 'paper.sx'
                         <Receta
-                        receta={{
-                            ...recetaSeleccionada,
-                            noMeGusta: recetaSeleccionada.noMeGusta ?? false,
-                            esFavorito: recetaSeleccionada.esFavorito ?? false,
-                            seguido: recetaSeleccionada.seguido ?? false,
-                        }}
-                        onDrawerToggle={() => {}}
-                        currentUserId={authData?.id ?? null}
-                        onDeleteReceta={async () => {}}
-                        onUsuarioClick={handleUsuarioClick}
+                            receta={{
+                                ...recetaSeleccionada,
+                                noMeGusta: recetaSeleccionada.noMeGusta ?? false,
+                                esFavorito: recetaSeleccionada.esFavorito ?? false,
+                                seguido: recetaSeleccionada.seguido ?? false,
+                            }}
+                            onDrawerToggle={() => {}}
+                            currentUserId={authData?.id ?? null}
+                            onDeleteReceta={async () => {}} // No se puede borrar desde tendencias
+                            onUsuarioClick={handleUsuarioClick}
                         />
-                    </div>
                     )}
 
                 </Box>
@@ -270,21 +378,21 @@ const Tendencias = () => {
                     alignItems: 'center',
                     p: 2, 
                 }}>
-                <IconButton
-                    edge="start"
-                    color="inherit"
-                    onClick={handleCloseDialog}
-                    aria-label="close"
-                    sx={{ color: '#ffffffff' }}
-                >
-                    <ArrowBackIcon />
-                </IconButton>
-                
-                <WhatshotIcon sx={{ color: '#ffffffff' }}/> 
-                
-                <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
-                    <ArrowBackIcon />
-                </IconButton>
+                    <IconButton
+                        edge="start"
+                        color="inherit"
+                        onClick={handleCloseDialog}
+                        aria-label="close"
+                        sx={{ color: '#ffffffff' }}
+                    >
+                        <ArrowBackIcon />
+                    </IconButton>
+                    
+                    <WhatshotIcon sx={{ color: '#ffffffff' }}/> 
+                    
+                    <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
+                        <ArrowBackIcon />
+                    </IconButton>
                 </Box>
             </Dialog>
         </>

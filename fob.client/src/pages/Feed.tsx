@@ -18,6 +18,10 @@ import CreateRecetaDialog from 'components/CreateRecetaDialog';
 import { BASE_URL } from '../apiConfig';
 import { getTheme } from '../theme';
 import fotoPerfilLocal from '../assets/images/avatar.png';
+
+// --- NUEVOS ESTADOS PARA PAGINACIÓN ---
+const PAGE_SIZE = 5; // <-- DEFINIMOS EL TAMAÑO DE PÁGINA
+
 interface DesafioDto {
     id: number;
     nombre: string;
@@ -46,8 +50,8 @@ interface FeedProps {
 
 
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
-    const [recetas, setRecetas] = useState<DatosReceta[]>([]);
-    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]);
+    const [recetas, setRecetas] = useState<DatosReceta[]>([]); // <-- Recetas del Feed
+    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // <-- Recetas de BÚSQUEDA
     const [usuariosFiltrados, setUsuariosFiltrados] = useState<Usuario[]>([]);
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -57,10 +61,15 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const currentUserId = authData?.id;
     const navigate = useNavigate();
 
+    // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
+    const [page, setPage] = useState(1);
+    const [cargandoMas, setCargandoMas] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+
     // === ESTADOS DE BÚSQUEDA ===
     const [searchTerm, setSearchTerm] = useState('');
     const [searchMessage, setSearchMessage] = useState<string | null>(null);
-    const [isSearchActive, setIsSearchActive] = useState(false); // <-- NUEVO ESTADO
+    const [isSearchActive, setIsSearchActive] = useState(false); 
     // ===========================
 
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -81,11 +90,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
     interface BusquedaResponse {
-        usuarios: Usuario[]; // Asumiendo que UsuarioBusquedaDto es compatible con tu tipo Usuario
-        recetas: DatosReceta[]; // Usamos DatosReceta para que encaje con el estado, aunque sea un subconjunto
+        usuarios: Usuario[]; 
+        recetas: DatosReceta[]; 
     }
     // =========================================================================
-    // LÓGICA DE RANKING
+    // LÓGICA DE RANKING (Sin cambios)
     // =========================================================================
 
     const fetchCurrentRanking = async () => {
@@ -117,7 +126,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
 
-    // EFECTO 1: Obtener el Desafío Semanal
+    // EFECTO 1: Obtener el Desafío Semanal (Sin cambios)
     useEffect(() => {
         if (!token) return;
 
@@ -147,15 +156,33 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
     }, [token]);
 
+
+    // =========================================================================
+    // LÓGICA DE CARGA DE RECETAS (MODIFICADA PARA SCROLL INFINITO)
+    // =========================================================================
+
     // useCallback para la función de obtener recetas
-    const recargarRecetas = useCallback(async () => {
+    const recargarRecetas = useCallback(async (isInitialLoad = false) => {
         if (!token) {
             setCargando(false);
             return;
         }
-        setCargando(true);
+
+        // Si es la carga inicial, mostramos el spinner grande
+        if (isInitialLoad) {
+            setCargando(true);
+            setPage(1); // Resetea la página
+            setHasMore(true); // Resetea si hay más
+        } else {
+            // Si no es carga inicial (es scroll), mostramos spinner pequeño
+            setCargandoMas(true);
+        }
+
+        const currentPage = isInitialLoad ? 1 : page; // Usa la página 1 si es carga inicial
+
         try {
-            const response = await fetch(`${BASE_URL}/Recetas/Feed?pageSize=1`, {
+            // Pide la página y tamaño correctos
+            const response = await fetch(`${BASE_URL}/Recetas/Feed?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -167,37 +194,71 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             }
 
             const data = await response.json();
-            setMensaje(data.mensaje);
             const recetasObtenidas: DatosReceta[] = data.recetas;
 
-            setRecetas(recetasObtenidas);
-            // Solo actualiza las filtradas si no estamos en modo búsqueda
-            if (!isSearchActive) {
-                setRecetasFiltradas(recetasObtenidas);
+            if (isInitialLoad) {
+                setMensaje(data.mensaje); // Solo setea el mensaje en la carga inicial
+                setRecetas(recetasObtenidas); // Reemplaza las recetas
+            } else {
+                // AÑADE las nuevas recetas a las existentes
+                setRecetas(prevRecetas => [...prevRecetas, ...recetasObtenidas]);
             }
+
+            // Si el backend devuelve menos recetas que las pedidas (o 0), ya no hay más.
+            if (recetasObtenidas.length < PAGE_SIZE) {
+                setHasMore(false);
+            }
+
+            // Actualiza el número de página para la *siguiente* llamada
+            setPage(currentPage + 1); 
+
         } catch (err) {
             setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
             console.error("Error al obtener recetas:", err);
+            setHasMore(false); // Detiene intentos futuros si hay error
         } finally {
-            setCargando(false);
+            setCargando(false); // Oculta spinner grande
+            setCargandoMas(false); // Oculta spinner pequeño
         }
-    }, [token, isSearchActive]); // isSearchActive es dependencia
+    }, [token, page]); // 'page' es ahora una dependencia clave
 
-    // EFECTO 2: Obtener las recetas al montar
+
+    // EFECTO 2: Obtener las recetas al montar (MODIFICADO)
     useEffect(() => {
-        recargarRecetas();
-    }, [recargarRecetas]);
+        // Llama a la función con 'true' para indicar que es la carga inicial
+        recargarRecetas(true);
+    }, []); // <-- Se ejecuta SOLO al montar
 
-    // EFECTO 3: Escuchar evento de recarga
+    // EFECTO 3: Escuchar evento de recarga (MODIFICADO)
     useEffect(() => {
         const handleRecetaCreadaEvent = () => {
             console.log('Evento "recetaCreada" recibido, recargando feed...');
-            recargarRecetas();
+            recargarRecetas(true); // Recarga todo desde la página 1
         };
 
         document.addEventListener('recetaCreada', handleRecetaCreadaEvent);
         return () => document.removeEventListener('recetaCreada', handleRecetaCreadaEvent);
     }, [recargarRecetas]); 
+
+    // --- NUEVO EFECTO 4: DETECTOR DE SCROLL ---
+    useEffect(() => {
+        const handleScroll = () => {
+            // Si el usuario está a 300px del fondo Y no estamos cargando Y hay más por cargar Y no estamos en búsqueda
+            if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 300 && 
+                !cargandoMas && 
+                hasMore && 
+                !isSearchActive
+            ) {
+                recargarRecetas(false); // Carga la siguiente página (no es carga inicial)
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        // Limpiamos el listener al desmontar
+        return () => window.removeEventListener('scroll', handleScroll);
+        
+    }, [cargandoMas, hasMore, isSearchActive, recargarRecetas]); // Depende de estos estados
+
 
     // ... (Lógica de eliminación: handleDeleteReceta, handleOpenModal, handleCloseModal, handleConfirmDelete) ...
     const handleDeleteReceta = async (recetaId: number) => {
@@ -214,8 +275,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 }
             });
             if (response.status === 204) {
+                // MODIFICADO: Ahora solo borra de 'recetas'
                 setRecetas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
-                setRecetasFiltradas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
+                // setRecetasFiltradas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId)); // (Se mantiene por si borra desde la búsqueda)
                 console.log(`Receta con ID ${recetaId} eliminada exitosamente.`);
             } else {
                 const errorData = await response.json();
@@ -243,7 +305,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
 
-    // ... (Manejadores de modales de desafío y creación) ...
+    // ... (Manejadores de modales de desafío y creación - Sin cambios) ...
     const handleOpenCreateDialog = () => {
         setIsCreateDialogOpen(true);
     };
@@ -278,11 +340,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
 
     // =========================================================================
-    // LÓGICA DE BÚSQUEDA (MODIFICADA)
+    // LÓGICA DE BÚSQUEDA (Sin cambios)
     // =========================================================================
 
     const manejarBusqueda = async (termino: string) => {
-        // Actualiza el término
         setSearchTerm(termino);
         const terminoLimpio = termino.trim();
 
@@ -291,15 +352,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             return;
         }
 
-        // Caso 1: Término limpio está vacío (pero seguimos en modo búsqueda)
         if (terminoLimpio === '') {
-            setRecetasFiltradas([]); // Limpia resultados
+            setRecetasFiltradas([]); 
             setUsuariosFiltrados([]);
-            setSearchMessage(null); // No muestra "escribe más"
+            setSearchMessage(null); 
             return;
         }
 
-        // Caso 2: Término es muy corto
         if (terminoLimpio.length < 2) {
             setRecetasFiltradas([]);
             setUsuariosFiltrados([]);
@@ -307,7 +366,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             return;
         }
 
-        // Caso 3: Buscar en la API
         setSearchMessage(null);
 
         try {
@@ -320,26 +378,18 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
             if (response.ok) {
                 const data: BusquedaResponse = await response.json();
-
-                // Actualiza ambos estados con los datos del servidor
                 setUsuariosFiltrados(data.usuarios);
-                
-                // Hacemos un 'cast' porque RecetaBusquedaDto es un subconjunto de DatosReceta,
-                // pero es seguro para la lista de resultados de búsqueda.
                 setRecetasFiltradas(data.recetas as DatosReceta[]);
 
-                // Comprueba si no hubo resultados
                 if (data.usuarios.length === 0 && data.recetas.length === 0) {
                     setSearchMessage("No se encontraron resultados.");
                 }
             } else {
-                // Maneja respuestas no-ok (ej. 404, 500)
                 setUsuariosFiltrados([]);
                 setRecetasFiltradas([]);
                 setSearchMessage("No se encontraron resultados.");
             }
         } catch (error) {
-            // Maneja errores de red
             setUsuariosFiltrados([]);
             setRecetasFiltradas([]);
             console.error("Error de red al buscar:", error);
@@ -378,38 +428,31 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         setIsSearchActive(false);
         setSearchTerm('');
         setUsuariosFiltrados([]);
-        setRecetasFiltradas(recetas); // Restaura el feed
+        setRecetasFiltradas([]); // Limpia resultados
         navigate(`/perfil/${userId}`);
     };
 
-    // --- FUNCIÓN MODIFICADA ---
     const handleRecetaClick = (receta: DatosReceta) => {
-        // Asegurarse de que la receta tiene un autor con id
         if (!receta.autor?.id) {
             console.error("No se puede navegar a la receta, falta el ID del autor:", receta);
-            // Si no hay autor, llévalo a la página de receta genérica como fallback
             setIsSearchActive(false);
             setSearchTerm('');
             setUsuariosFiltrados([]);
-            setRecetasFiltradas(recetas);
-            //navigate(`/receta/${receta.id}`);
+            setRecetasFiltradas([]);
             return;
         }
 
         setIsSearchActive(false);
         setSearchTerm('');
         setUsuariosFiltrados([]);
-        //setRecetasFiltradas(recetas); // Restaura el feed
-        // Nueva URL de navegación
+        setRecetasFiltradas([]);
         navigate(`/perfil/${receta.autor.id}/publicaciones?receta=${receta.id}`);
     };
-    // --- FIN DE LA MODIFICACIÓN ---
-
+    
     // === NUEVAS FUNCIONES PARA CONTROLAR MODO BÚSQUEDA ===
     const handleSearchFocus = () => {
         setIsSearchActive(true);
-        // Resetea las recetas filtradas para que no muestre el feed
-        setRecetasFiltradas([]); 
+        // setRecetasFiltradas([]); // Ya no es necesario, el render lo maneja
     };
 
     const handleSearchBackClick = () => {
@@ -417,12 +460,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         setSearchTerm('');
         setSearchMessage(null);
         setUsuariosFiltrados([]);
-        setRecetasFiltradas(recetas); // Restaura el feed principal
+        setRecetasFiltradas([]); // Limpia resultados
+        // No es necesario restaurar el feed, el estado 'recetas' nunca se tocó
     };
     // ====================================================
 
 
-    if (cargando && !isSearchActive) {
+    // MODIFICADO: Muestra el spinner grande solo si está cargando Y no hay recetas
+    if (cargando && recetas.length === 0) {
         return <div className="feed-cargando">Cargando feed...</div>;
     }
 
@@ -430,10 +475,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         return <div className="feed-error">{error}</div>;
     }
 
-    // ----------------------------------------------------------------------
-    // Funciones de renderizado para el Modal de Desafío y Ranking
-    // ----------------------------------------------------------------------
-
+    // ... (El resto de tus funciones 'renderModal' no cambian) ...
+    // ...
     const getMedalIcon = (index: number) => {
         switch (index) {
             case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; // Oro
@@ -443,50 +486,50 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
     };
 
-   const renderRankingAnterior = () => {
-    if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
+    const renderRankingAnterior = () => {
+        if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
+            return (
+                <Typography variant="body2" sx={{ mt: 1, color: '#666', textAlign: 'center' }}>
+                    Aún no hay datos de ranking de la semana pasada. ¡Sé el primero!
+                </Typography>
+            );
+        }
         return (
-            <Typography variant="body2" sx={{ mt: 1, color: '#666', textAlign: 'center' }}>
-                Aún no hay datos de ranking de la semana pasada. ¡Sé el primero!
-            </Typography>
+            <List sx={{ p: 0 }}>
+                {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
+                    <ListItem
+                        key={item.usuarioId}
+                        sx={(theme) => ({
+                            p: 1, mb: 0.5, borderRadius: '6px',
+                            bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1)
+                                : index === 1 ? theme.palette.action.hover
+                                : index === 2 ? alpha('#ff7e5f', 0.1) 
+                                : 'white',
+                            borderLeft: `4px solid ${
+                                index === 0 ? theme.palette.warning.main
+                                : index === 1 ? theme.palette.grey[500]
+                                : index === 2 ? '#ff7e5f'
+                                : 'transparent'
+                            }`,
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        })}
+                    >
+                        <ListItemIcon sx={{ minWidth: 35 }}>
+                            {getMedalIcon(index)}
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={`@${item.nombreUsuario}`}
+                            secondary={`${item.puntos} Puntos`}
+                            primaryTypographyProps={{ 
+                                fontWeight: index < 3 ? 'bold' : 'normal',
+                                color: index === 0 ? 'warning.dark' : 'text.primary' 
+                            }}
+                        />
+                    </ListItem>
+                ))}
+            </List>
         );
-    }
-    return (
-        <List sx={{ p: 0 }}>
-            {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
-                <ListItem
-                    key={item.usuarioId}
-                    sx={(theme) => ({
-                        p: 1, mb: 0.5, borderRadius: '6px',
-                        bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1)
-                               : index === 1 ? theme.palette.action.hover
-                               : index === 2 ? alpha('#ff7e5f', 0.1) 
-                               : 'white',
-                        borderLeft: `4px solid ${
-                               index === 0 ? theme.palette.warning.main
-                               : index === 1 ? theme.palette.grey[500]
-                               : index === 2 ? '#ff7e5f'
-                               : 'transparent'
-                        }`,
-                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                    })}
-                >
-                    <ListItemIcon sx={{ minWidth: 35 }}>
-                        {getMedalIcon(index)}
-                    </ListItemIcon>
-                    <ListItemText
-                        primary={`@${item.nombreUsuario}`}
-                        secondary={`${item.puntos} Puntos`}
-                        primaryTypographyProps={{ 
-                            fontWeight: index < 3 ? 'bold' : 'normal',
-                            color: index === 0 ? 'warning.dark' : 'text.primary' 
-                        }}
-                    />
-                </ListItem>
-            ))}
-        </List>
-    );
-};
+    };
 
     const renderDesafioActual = () => {
         if (!desafioSemanal) return null;
@@ -722,14 +765,15 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 onBackClick={handleSearchBackClick}
             />
             
-            {/* === CONTENIDO CONDICIONAL === */}
+            {/* === CONTENIDO CONDICIONAL (MODIFICADO) === */}
             <div className="feed-contenido">
                 {!isSearchActive ? (
                     // ===================================
                     // 1. MODO FEED NORMAL
+                    // AHORA RENDERIZA DESDE 'recetas'
                     // ===================================
                     <>
-                        {recetasFiltradas.length === 0 && mensaje && (
+                        {recetas.length === 0 && mensaje && (
                             <div className="mensaje-feed">
                                 {mensaje.includes('Sigue a gente') && (
                                     <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
@@ -740,12 +784,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 <p>{mensaje}</p>
                             </div>
                         )}
-                        {recetasFiltradas.length === 0 && !mensaje && !cargando && !error && (
+                        {recetas.length === 0 && !mensaje && !cargando && !error && (
                             <div className="no-resultados">No se encontraron recetas.</div>
                         )}
 
-                        {/* Mapea las recetas como POSTS COMPLETOS */}
-                        {recetasFiltradas.map(receta => {
+                        {/* Mapea las recetas del estado 'recetas' */}
+                        {recetas.map(receta => {
                             const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
                                 if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
                                     return cat.nombre;
@@ -767,10 +811,25 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 />
                             );
                         })}
+
+                        {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
+                        {cargandoMas && (
+                            <div style={{ textAlign: 'center', padding: '20px' }}>
+                                <CircularProgress />
+                            </div>
+                        )}
+
+                        {/* --- NUEVO: MENSAJE DE FIN DE FEED --- */}
+                        {!hasMore && recetas.length > 0 && (
+                            <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                                Fin de las recetas.
+                            </div>
+                        )}
                     </>
                 ) : (
                     // ==========================================
-                    // 2. MODO BÚSQUEDA ACTIVA
+                    // 2. MODO BÚSQUEDA ACTIVA (Usa 'recetasFiltradas')
+                    // (Sin cambios)
                     // ==========================================
                     <div className="search-results-list">
                         
@@ -782,8 +841,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                     className="resultado-usuario"
                                     onClick={() => handleUsuarioClick(usuario.id)}
                                 >
-                                    {usuario.imagen ? (
-                                        <img src={`data:image/jpeg;base64,${usuario.imagen}`} alt="avatar" className="avatar-busqueda" />
+                                    {usuario.imagenUrl ? (
+                                        <img src={`data:image/jpeg;base64,${usuario.imagenUrl}`} alt="avatar" className="avatar-busqueda" />
                                     ) : (
                                         <img src={`${fotoPerfilLocal}`} alt="avatar" className="avatar-busqueda" />
                                     )}
@@ -812,7 +871,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 <div
                                     key={receta.id}
                                     className="resultado-item" 
-                                    onClick={() => handleRecetaClick(receta)} // <-- MODIFICADO
+                                    onClick={() => handleRecetaClick(receta)}
                                 >
                                     <span className="usuario-nombre">{receta.titulo}</span>
                                     <span className="usuario-nombre-completo">por @{receta.autor?.nombreUsuario}</span>

@@ -9,7 +9,11 @@ public class RecetaResponse
     public string Dificultad { get; set; }
 
     public string Estado { get; set; }
-    public byte[] Imagen { get; set; }
+
+    // --- CAMBIO AQUÍ ---
+    // public byte[] Imagen { get; set; }
+    public string ImagenUrl { get; set; }
+    // --- FIN CAMBIO ---
 
     public string? ContentType { get; set; }
 
@@ -23,12 +27,11 @@ public class RecetaResponse
 
     public string Titulo { get; set; }
 
-    //public int UsuarioId { get; set; }
     public int CantidadVotos { get; set; }
-    public bool MeGusta { get; set; } 
-    public bool Seguido { get; set; } 
-    public bool NoMeGusta { get; set; } 
-    public bool EsFavorito { get; set; } 
+    public bool MeGusta { get; set; }
+    public bool Seguido { get; set; }
+    public bool NoMeGusta { get; set; }
+    public bool EsFavorito { get; set; }
     public int CantidadComentarios { get; set; }
 
     public virtual List<ComentarioResponse> VistaPreviaComentarios { get; set; } = new List<ComentarioResponse>();
@@ -36,8 +39,6 @@ public class RecetaResponse
     public virtual List<IngredienteResponse> Ingredientes { get; set; } = new List<IngredienteResponse>();
 
     public virtual List<string> Etiquetas { get; set; } = new List<string>();
-
-    //public virtual List<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 
     public virtual UsuarioResponse Autor { get; set; }
 
@@ -50,7 +51,12 @@ public class PasoResponse
     public int Numero { get; set; }
     public string Titulo { get; set; }
     public string Descripcion { get; set; }
-    public string Imagen { get; set; }
+
+    // --- CAMBIO AQUÍ ---
+    // public string Imagen { get; set; } // Esto era un Base64, ahora es URL
+    public string ImagenUrl { get; set; }
+    // --- FIN CAMBIO ---
+
     public string? ContentType { get; set; }
 }
 
@@ -61,14 +67,20 @@ public class ComentarioResponse
     public DateTime Fecha { get; set; }
     public UsuarioResponse Usuario { get; set; }
 }
+
 public class UsuarioResponse
 {
     public int Id { get; set; }
-    public byte[] Imagen { get; set; }
+
+    // --- CAMBIO AQUÍ ---
+    // public byte[] Imagen { get; set; }
+    public string ImagenUrl { get; set; }
+    // public string Foto { get; set; } // Redundante, lo quito
+    // --- FIN CAMBIO ---
+
     public string NombreUsuario { get; set; }
     public string Nombre { get; set; }
     public string Apellido { get; set; }
-    public string Foto { get; set; } 
 }
 
 public class IngredienteResponse
@@ -77,5 +89,4 @@ public class IngredienteResponse
     public string Nombre { get; set; }
     public float? Cantidad { get; set; }
     public string? UnidadDeMedida { get; set; }
-    //public int Cantidad { get; set; }
 }

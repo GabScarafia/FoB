@@ -62,7 +62,7 @@ namespace FoB.Infrastructure.Repository
                 Autor = new UsuarioResponse
                 {
                     Id = x.Usuario.Id,
-                    Imagen = x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Imagen,
+                    ImagenUrl = x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null ? $"/api/archivos/usuario/{x.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Id}" : null,
                     NombreUsuario = x.Usuario.NombreUsuario,
                     Nombre = x.Usuario.Nombre,
                     Apellido = x.Usuario.Apellido,

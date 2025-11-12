@@ -7,7 +7,7 @@ export interface Usuario {
   nombreUsuario: string;
   texto?: string;
   tiempo?: string;
-  imagen?: string;
+  imagenUrl?: string;
   isFollowing: boolean;
 }
 
@@ -17,7 +17,7 @@ export interface RecetaType {
   fechaCreacion: string;
   tipoContenido: string;
   dificultad: string;
-  imagen: string;
+  imagenUrl: string;
   contentType: string;
   cantidadVotos: number;
   meGusta: boolean;

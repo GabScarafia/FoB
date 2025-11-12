@@ -33,12 +33,20 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Feed")]
-    public async Task<IActionResult> Feed([FromQuery] int pageSize = 1)
+    public async Task<IActionResult> Feed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5) // <-- PARÁMETROS CORREGIDOS
     {
-        var recetas = await _recetaRepository.FeedAsync(pageSize);
+        // Pasamos ambos parámetros al repositorio
+        var recetas = await _recetaRepository.FeedAsync(pageNumber, pageSize);
 
         if (recetas == null || !recetas.Any())
         {
+            // Si pageNumber > 1, significa que simplemente no hay más recetas para cargar
+            if (pageNumber > 1)
+            {
+                return Ok(new { Mensaje = "No hay más publicaciones.", Recetas = new List<RecetaResponse>() });
+            }
+
+            // Si es la primera página (pageNumber = 1) y no hay nada, mostramos los mensajes de bienvenida
             bool estaSiguiendo = await _recetaRepository.EstaSiguiendoAlguienAsync();
 
             if (estaSiguiendo)
@@ -54,9 +62,25 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Tendencias")]
-    public async Task<IActionResult> Tendencias([FromQuery] int pageSize = 1)
+    public async Task<IActionResult> Tendencias([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 15) // <-- PARÁMETROS CORREGIDOS
     {
-        return Ok(await _recetaRepository.TendenciasAsync(pageSize));
+        // Pasamos ambos parámetros al repositorio
+        var recetas = await _recetaRepository.TendenciasAsync(pageNumber, pageSize);
+
+        // Añadimos la misma lógica de respuesta que el Feed
+        if (recetas == null || !recetas.Any())
+        {
+            if (pageNumber > 1)
+            {
+                // Si pide la página 2 y no hay nada, es que se acabaron
+                return Ok(new { Mensaje = "No hay más tendencias.", Recetas = new List<RecetaResponse>() });
+            }
+            // Si es la página 1 y no hay nada
+            return Ok(new { Mensaje = "No hay tendencias para mostrar.", Recetas = new List<RecetaResponse>() });
+        }
+
+        // Devuelve el wrapper { Mensaje, Recetas } que el frontend espera
+        return Ok(new { Mensaje = "Tendencias cargadas.", Recetas = recetas });
     }
 
     [HttpPost]
@@ -140,7 +164,7 @@ public class RecetasController : ControllerBase
                                        receta.TiempoPreparacion.Value.Second)
                         : (TimeSpan?)null,
                     FechaCreacion = receta.FechaCreacion,
-                    Imagen = receta.RecetaImagen.FirstOrDefault()?.Imagen,
+                    ImagenUrl = receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null ? $"/api/archivos/receta/{receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null).Id}" : null,
                     Autor = receta.Usuario != null ? new UsuarioResponse
                     {
                         Id = receta.Usuario.Id,

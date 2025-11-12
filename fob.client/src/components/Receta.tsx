@@ -26,12 +26,47 @@ import fotoPerfilLocal from '../assets/images/avatar.png';
 
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';
-import type { Usuario } from '../types/Receta'
+// ⚠️ NOTA: Asegúrate de que tu tipo 'Usuario' también use 'imagenUrl'
+import type { Usuario } from '../types/Receta' 
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BASE_URL } from '../apiConfig';
+
+// --- ¡CORRECCIÓN AQUÍ! ---
+// MOVIMOS LAS FUNCIONES HELPER FUERA DEL COMPONENTE
+// Ahora estarán definidas antes de que 'Receta' se ejecute.
+
+// 1. Helper para determinar 'image' o 'video' desde el contentType
+const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
+    if (contentType && contentType.startsWith('video/')) {
+        return 'video';
+    }
+    return 'image';
+};
+
+// 2. Helper para normalizar la URL (Esta función ya estaba bien)
+const getNormalizedUrl = (
+    mediaStr: string | undefined | null, 
+    contentType: string, 
+    fallback: string
+): string => {
+    if (!mediaStr || mediaStr === '') return fallback;
+    
+    if (mediaStr.startsWith('http') || mediaStr.startsWith('data:')) {
+        return mediaStr;
+    }
+    
+    if (mediaStr.startsWith('/')) {
+        return `${BASE_URL}${mediaStr}`;
+    }
+    
+    // Si es base64 crudo (legacy), lo arma
+    return `data:${contentType};base64,${mediaStr}`;
+}
+// --- FIN DE LA CORRECCIÓN ---
+
 
 interface Ingrediente {
     id: number;
@@ -40,33 +75,33 @@ interface Ingrediente {
     unidadDeMedida: string;
 }
 
-// --- INTERFAZ ACTUALIZADA (como la pasaste) ---
+// --- INTERFAZ ACTUALIZADA ---
 interface Paso {
     titulo: string;
     descripcion: string;
     numero: number;
-    imagen?: string; 
-    contentType: string; // Campo clave
+    imagenUrl?: string; // <-- CAMBIO AQUÍ
+    contentType: string;
 }
 
 // Interfaz para un elemento del carrusel
 interface CarruselItem {
-    mediaUrl: string; // La URL de la imagen O video
-    mediaType: 'image' | 'video'; // El tipo de medio
-    pasoInfo?: Paso;   // Información del paso (si es un slide de paso)
-    isMainImage: boolean; // Indica si es el slide principal de la receta
+    mediaUrl: string; 
+    mediaType: 'image' | 'video';
+    pasoInfo?: Paso; 
+    isMainImage: boolean;
 }
 
-// --- INTERFAZ ACTUALIZADA (como la pasaste) ---
+// --- INTERFAZ ACTUALIZADA ---
 export interface PropsReceta {
     receta: {
         id: number;
-        autor: Usuario;
+        autor: Usuario; // <-- Asegúrate que 'Usuario' tenga 'imagenUrl'
         fechaCreacion: string;
         tipoContenido: string;
         dificultad: string;
-        imagen: string; // URL o Base64 crudo
-        contentType: string; // Campo clave (ej. "image/jpeg", "video/mp4")
+        imagenUrl: string; // <-- CAMBIO AQUÍ
+        contentType: string; 
         cantidadVotos: number;
         meGusta: boolean;
         noMeGusta: boolean;
@@ -143,6 +178,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return estrellas;
     };
 
+    // ... (El resto de tus manejadores de 'likes' no cambian)
     const handleLikeClick = async () => {
         if (isProcessingLike) return; 
         setIsProcessingLike(true);
@@ -306,14 +342,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const debeMostrarBotonLeerMas = receta.descripcion.length > LIMITE_CARACTERES;
 
-    const fotoPerfilUrl = receta.autor?.imagen
-        ? `data:image/jpeg;base64,${receta.autor.imagen}`
-        : fotoPerfilLocal;
+
+    // --- LÓGICA DE FOTO DE PERFIL CORREGIDA ---
+    // Esta línea (la 315) ahora funciona porque 'getNormalizedUrl' está definida arriba
+    const fotoPerfilUrl = getNormalizedUrl(
+        receta.autor?.imagenUrl, 
+        'image/jpeg', // Asumimos jpeg para fotos de perfil o el backend debe enviarlo
+        fotoPerfilLocal
+    );
+    // --- FIN DE LÓGICA CORREGIDA ---
+
 
     const formatearTiempo = (tiempo: string): string => {
+        if (!tiempo) return 'N/A'; // Guarda por si 'tiempo' es nulo
         const partes = tiempo.split(':').map(part => parseInt(part, 10));
-        const horas = partes[0];
-        const minutos = partes[1];
+        const horas = partes[0] || 0;
+        const minutos = partes[1] || 0;
         const resultado: string[] = [];
 
         if (horas > 0) {
@@ -343,46 +387,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    // --- LÓGICA DEL CARRUSEL MODIFICADA (Usa contentType) ---
-
-    // 1. Helper para determinar 'image' o 'video' desde el contentType
-    const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
-        // Si el contentType existe y empieza con "video/", es un video.
-        if (contentType && contentType.startsWith('video/')) {
-            return 'video';
-        }
-        // En cualquier otro caso (ej. "image/jpeg", "image/png", o nulo), es imagen.
-        return 'image';
-    };
-
-    // 2. Helper para normalizar la URL (AHORA RECIBE contentType)
-    // Esto es crucial si 'imagen' es solo el string base64 crudo.
-    const getNormalizedUrl = (
-        mediaStr: string | undefined | null, 
-        contentType: string, // <-- Parámetro clave
-        fallback: string
-    ): string => {
-        if (!mediaStr || mediaStr === '') return fallback;
-        
-        // Si ya es un Data URL (video o imagen) o una URL http, está lista.
-        if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
-            return mediaStr;
-        }
-        
-        // Si es el fallback (fotoPerfilLocal), está lista.
-        if (mediaStr === fallback) return fallback;
-
-        // NUEVA LÓGICA:
-        // Si es base64 crudo, construye el Data URI usando el contentType.
-        // Ej: 'data:video/mp4;base64,SGF...
-        // Ej: 'data:image/jpeg;base64,SGF...
-        return `data:${contentType};base64,${mediaStr}`;
-    }
+    // --- LÓGICA DEL CARRUSEL (Ahora usa las funciones globales) ---
 
     // 3. Obtener la media principal (Portada)
     const tipoMediaPrincipal = getMediaTypeFromContentType(receta.contentType);
     const mediaPrincipalUrl = getNormalizedUrl(
-        receta.imagen, 
+        receta.imagenUrl, // <-- CAMBIO AQUÍ
         receta.contentType, 
         fotoPerfilLocal
     );
@@ -391,7 +401,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const carruselItems: CarruselItem[] = [];
 
     // **Añadir el slide de la Media Principal (Portada)**
-    if (mediaPrincipalUrl) {
+    if (mediaPrincipalUrl && (mediaPrincipalUrl !== fotoPerfilLocal || receta.pasos.length === 0)) {
         carruselItems.push({
             mediaUrl: mediaPrincipalUrl,
             mediaType: tipoMediaPrincipal,
@@ -405,20 +415,18 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         let mediaPasoType = tipoMediaPrincipal; // Fallback: usa el tipo principal
 
         // Si el paso TIENE una imagen/video, usa la del paso
-        // Nos aseguramos que el paso tenga su propio 'imagen' y 'contentType'
-        if (paso.imagen && paso.imagen !== '' && paso.contentType) {
+        if (paso.imagenUrl && paso.imagenUrl !== '' && paso.contentType) { // <-- CAMBIO AQUÍ
             mediaPasoType = getMediaTypeFromContentType(paso.contentType);
             mediaPasoUrl = getNormalizedUrl(
-                paso.imagen, 
+                paso.imagenUrl, // <-- CAMBIO AQUÍ
                 paso.contentType, 
-                fotoPerfilLocal // Fallback por si acaso
+                fotoPerfilLocal
             );
-        } else if (paso.imagen && paso.imagen !== '' && !paso.contentType) {
-             // Fallback si el paso tiene imagen pero no contentType (usará el de la receta)
+        } else if (paso.imagenUrl && paso.imagenUrl !== '' && !paso.contentType) { // <-- CAMBIO AQUÍ
              console.warn("Paso tiene imagen pero no contentType. Usando el de la receta.");
              mediaPasoType = getMediaTypeFromContentType(receta.contentType);
              mediaPasoUrl = getNormalizedUrl(
-                paso.imagen, 
+                paso.imagenUrl, // <-- CAMBIO AQUÍ
                 receta.contentType, 
                 fotoPerfilLocal
              );
@@ -431,6 +439,15 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             isMainImage: false,
         });
     });
+    
+    // Si después de todo, el carrusel está vacío (raro), ponemos el fallback
+    if (carruselItems.length === 0) {
+        carruselItems.push({
+            mediaUrl: fotoPerfilLocal,
+            mediaType: 'image',
+            isMainImage: true
+        });
+    }
 
     // --- FIN DE LA LÓGICA MODIFICADA ---
 
@@ -451,7 +468,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         setIndiceImagen(prev => prev < carruselItems.length - 1 ? prev + 1 : prev);
     };
 
-    const itemActual = carruselItems[indiceImagen];
+    // Asegurarnos de que itemActual nunca sea indefinido
+    const itemActual = carruselItems[indiceImagen] || carruselItems[0]; 
 
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
 
@@ -512,9 +530,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
             </Box>
 
-            {/* --- BLOQUE DE RENDERIZADO (Este no cambió) --- */}
-            {/* Imagen/Video principal del carrusel con swipe */}
-            {/* La lógica aquí sigue funcionando porque depende de itemActual.mediaType */}
+            {/* --- BLOQUE DE RENDERIZADO --- */}
+            {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
             <div className="carrusel-imagen" {...swipeHandlers}>
                 {itemActual && itemActual.mediaType === 'image' && (
                     <img
@@ -565,7 +582,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </IconButton>
             </div>
 
-            {/* Info del paso si corresponde (Sólo se muestra si NO es la imagen principal) */}
+            {/* Info del paso si corresponde */}
             {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
                 <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
                     <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
