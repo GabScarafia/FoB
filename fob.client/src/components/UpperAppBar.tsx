@@ -1,4 +1,4 @@
-import React from "react";
+import React from "react"; // <-- Importa 'React' completo
 import { useNavigate } from "react-router-dom";
 import { AppBar, Toolbar, IconButton, Typography, Box, Tooltip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
@@ -11,7 +11,12 @@ interface UpperAppBarProps {
     toggleTheme: () => void;
 }
 
-export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
+// ================================================================
+// 1. ENVUELVE EL COMPONENTE CON React.forwardRef
+// ================================================================
+const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(
+    ({ mode, toggleTheme }, ref) => { // 2. EL 'ref' SE PASA AQUÍ
+    
     const { authData, clearAuthData } = useAuth();
     const navigate = useNavigate();
     const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
@@ -25,16 +30,24 @@ export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
     };
 
     const handleConfirmLogout = () => {
-        clearAuthData(); // Limpia los datos de autenticación del contexto
-        navigate("/iniciar-sesion"); // Redirige al usuario
-        handleCloseLogoutDialog(); // Cierra el diálogo
+        clearAuthData(); 
+        navigate("/iniciar-sesion"); 
+        handleCloseLogoutDialog(); 
     };
 
     return (
-        <AppBar position="fixed" sx={{ width: "100%" }}>
+        <AppBar 
+            position="fixed" 
+            ref={ref} // 3. PASA EL 'ref' AL AppBar DE MUI
+            sx={{ 
+                width: "100%",
+                backgroundColor: 'transparent' , 
+                boxShadow: 'none' 
+            }}
+        >
             <Toolbar>
                 <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                    {authData?.email ? authData.email : "FondoBlanco"}
+                    Bienvenido {authData?.nombre}
                 </Typography>
 
                 {authData?.email && (
@@ -46,7 +59,7 @@ export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
                             </IconButton>
                         </Tooltip>
                         {/* Botón de cerrar sesión con margen */}
-                        <IconButton color="inherit" onClick={handleOpenLogoutDialog} aria-label="clear auth data" sx={{ ml: '3px' }}>
+                        <IconButton color="inherit" onClick={handleOpenLogoutDialog} aria-label="clear auth data" >
                             <CloseIcon />
                         </IconButton>
                     </Box>
@@ -72,4 +85,6 @@ export default function UpperAppBar({ mode, toggleTheme }: UpperAppBarProps) {
             </Toolbar>
         </AppBar>
     );
-}
+}); // 4. CIERRA EL forwardRef
+
+export default UpperAppBar;
