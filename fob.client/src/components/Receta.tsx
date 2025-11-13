@@ -1,6 +1,7 @@
 ﻿import React, { useState } from 'react';
 import { useSwipeable } from 'react-swipeable';
-import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip } from '@mui/material';
+// En Receta.tsx (arriba de todo)
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material';
 import './Receta.css';
 import { useNavigate } from 'react-router-dom';
 
@@ -26,7 +27,6 @@ import fotoPerfilLocal from '../assets/images/avatar.png';
 
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';
-// ⚠️ NOTA: Asegúrate de que tu tipo 'Usuario' también use 'imagenUrl'
 import type { Usuario } from '../types/Receta' 
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
@@ -34,9 +34,6 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BASE_URL } from '../apiConfig';
 
-// --- ¡CORRECCIÓN AQUÍ! ---
-// MOVIMOS LAS FUNCIONES HELPER FUERA DEL COMPONENTE
-// Ahora estarán definidas antes de que 'Receta' se ejecute.
 
 // 1. Helper para determinar 'image' o 'video' desde el contentType
 const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
@@ -474,247 +471,291 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
 
     return (
-        <Paper elevation={2} sx={{
+    <Paper
+        // 'sx' ahora es una FUNCIÓN (theme) => ({...})
+        // que DEVUELVE el objeto de estilos.
+        sx={(theme) => ({
             maxWidth: '500px',
             mx: 'auto',
             mb: 3,
             overflow: 'hidden',
-            bgcolor: 'background.paper'
+            borderRadius: '16px', 
+            transition: 'background 0.3s, border 0.3s, box-shadow 0.3s', // Transición suave
+
+            // --- LÓGICA DE TEMA ---
+            // Ahora 'theme' SÍ está definido aquí
+            ...(theme.palette.mode === 'light' ? 
+            {
+                // --- MODO CLARO (Blanco) ---
+                bgcolor: 'background.paper', // Fondo blanco
+                // Borde gris sutil
+                border: `1px solid ${theme.palette.divider}`, 
+                // Sombra más fuerte para "peso visual"
+                boxShadow: theme.shadows[3], // Esto es como un "elevation={3}"
+            } : {
+                // --- MODO OSCURO (Oscuro) ---
+                // El "Glassmorphism" que te gustó
+                background: 'rgba(255, 255, 255, 0.08)', // Vidrio semi-transparente
+                backdropFilter: 'blur(12px)',
+                WebkitBackdropFilter: 'blur(12px)', // Safari
+                border: '1px solid rgba(255, 255, 255, 0.15)', // Borde de vidrio
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            })
+        })}
+    >
+        <Box className="encabezado-receta" sx={{ 
+            p: 2,
+            // Este borde también usa la función (theme) para adaptarse
+            borderBottom: (theme) => `1px solid ${
+                theme.palette.mode === 'light' 
+                ? theme.palette.divider         // Borde gris en claro
+                : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
+            }`
         }}>
-            <Box className="encabezado-receta" sx={{ p: 2 }}>
-                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
-                    <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
-                    <div>
-                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
-                        <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
-                    </div>
+            <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
+                <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
+                <div>
+                    <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                    <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
                 </div>
-                <div className="meta-receta-y-menu">
-                    <div className="meta-receta">
-                        <span className="tipo-contenido">{receta.dificultad}</span>
-                        <div className="estrellas-calificacion">
-                            {renderizarEstrellas(receta.dificultad)}
-                        </div>
-                    </div>
-                    {esRecetaPropia && (
-                        <>
-                            <IconButton
-                                aria-label="más opciones"
-                                id="basic-button"
-                                aria-controls={openMenu ? 'basic-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={openMenu ? 'true' : undefined}
-                                onClick={handleClickMenu}
-                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
-                            >
-                                <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                                id="basic-menu"
-                                anchorEl={anchorEl}
-                                open={openMenu}
-                                onClose={handleCloseMenu}
-                                MenuListProps={{
-                                    'aria-labelledby': 'basic-button',
-                                }}
-                            >
-                                <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
-                                    <ListItemIcon>
-                                        <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
-                                    </ListItemIcon>
-                                    <ListItemText>Eliminar</ListItemText>
-                                </MenuItem>
-                            </Menu>
-                        </>
-                    )}
-                </div>
-            </Box>
-
-            {/* --- BLOQUE DE RENDERIZADO --- */}
-            {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
-            <div className="carrusel-imagen" {...swipeHandlers}>
-                {itemActual && itemActual.mediaType === 'image' && (
-                    <img
-                        src={itemActual.mediaUrl}
-                        alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
-                        className="imagen-receta"
-                        draggable={false}
-                    />
-                )}
-                {itemActual && itemActual.mediaType === 'video' && (
-                    <video
-                        src={itemActual.mediaUrl}
-                        className="imagen-receta"
-                        controls
-                        autoPlay
-                        muted
-                        controlsList="nodownload"
-                        loop
-                        playsInline
-                        draggable={false}
-                    >
-                        Tu navegador no soporta el tag de video.
-                    </video>
-                )}
             </div>
-            {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
-
-
-            {/* Navegación y puntitos debajo de la imagen */}
-            <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
-                    <ArrowBackIcon />
-                </IconButton>
-                <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
-                    {carruselItems.map((_, idx) => (
-                        <Box
-                            key={idx}
-                            component="span"
-                            sx={{
-                                fontSize: 18,
-                                color: idx === indiceImagen ? 'primary.main' : 'text.disabled'
+            <div className="meta-receta-y-menu">
+                <div className="meta-receta">
+                    <span className="tipo-contenido">{receta.dificultad}</span>
+                    <div className="estrellas-calificacion">
+                        {renderizarEstrellas(receta.dificultad)}
+                    </div>
+                </div>
+                {esRecetaPropia && (
+                    <>
+                        <IconButton
+                            aria-label="más opciones"
+                            id="basic-button"
+                            aria-controls={openMenu ? 'basic-menu' : undefined}
+                            aria-haspopup="true"
+                            aria-expanded={openMenu ? 'true' : undefined}
+                            onClick={handleClickMenu}
+                            sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
+                        >
+                            <MoreVertIcon />
+                        </IconButton>
+                        <Menu
+                            id="basic-menu"
+                            anchorEl={anchorEl}
+                            open={openMenu}
+                            onClose={handleCloseMenu}
+                            MenuListProps={{
+                                'aria-labelledby': 'basic-button',
                             }}
-                        >●</Box>
-                    ))}
-                </div>
-                <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary">
-                    <ArrowForwardIcon />
+                        >
+                            <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
+                                <ListItemIcon>
+                                    <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
+                                </ListItemIcon>
+                                <ListItemText>Eliminar</ListItemText>
+                            </MenuItem>
+                        </Menu>
+                    </>
+                )}
+            </div>
+        </Box>
+
+        {/* --- BLOQUE DE RENDERIZADO --- */}
+        {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
+        <div className="carrusel-imagen" {...swipeHandlers}>
+            {itemActual && itemActual.mediaType === 'image' && (
+                <img
+                    src={itemActual.mediaUrl}
+                    alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
+                    className="imagen-receta"
+                    draggable={false}
+                />
+            )}
+            {itemActual && itemActual.mediaType === 'video' && (
+                <video
+                    src={itemActual.mediaUrl}
+                    className="imagen-receta"
+                    controls
+                    autoPlay
+                    muted
+                    controlsList="nodownload"
+                    loop
+                    playsInline
+                    draggable={false}
+                >
+                    Tu navegador no soporta el tag de video.
+                </video>
+            )}
+        </div>
+        {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
+
+
+        {/* Navegación y puntitos debajo de la imagen */}
+        <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
+            <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
+                <ArrowBackIcon />
+            </IconButton>
+            <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
+                {carruselItems.map((_, idx) => (
+                    <Box
+                        key={idx}
+                        component="span"
+                        sx={{
+                            fontSize: 18,
+                            color: idx === indiceImagen ? 'primary.main' : 'text.disabled'
+                        }}
+                    >●</Box>
+                ))}
+            </div>
+            <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary">
+                <ArrowForwardIcon />
+            </IconButton>
+        </div>
+
+        {/* Info del paso si corresponde */}
+        {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
+            <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
+                <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
+                <Typography variant="caption">{itemActual.pasoInfo.descripcion}</Typography>
+            </div>
+        )}
+
+        {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
+        <Box className="acciones-receta" sx={{ 
+            px: 2, 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            // Este borde también usa la función (theme)
+            borderTop: (theme) => `1px solid ${
+                theme.palette.mode === 'light' 
+                ? theme.palette.divider         // Borde gris en claro
+                : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
+            }`
+        }}>
+            <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
+                    {liked ? (
+                        <ThumbUpIcon sx={{ color: 'primary.main' }} />
+                    ) : (
+                        <ThumbUpAltOutlinedIcon />
+                    )}
+                </IconButton>
+                <span className="conteo-me-gusta">{likesCount}</span>
+
+                <IconButton onClick={handleDisLikeClick} size="small">
+                    {disliked ? (
+                        <ThumbDownIcon sx={{ color: 'primary.main' }} />
+                    ) : (
+                        <ThumbDownAltOutlinedIcon />
+                    )}
+                </IconButton>
+
+                <IconButton onClick={handleOpenDrawer} size="small">
+                    <ChatBubbleOutlineIcon />
+                </IconButton>
+                <span className="conteo-comentarios">{comentariosCount}</span>
+
+                <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
+                <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
+            </Box>
+            <div className="acciones-derecha">
+                <IconButton onClick={handleFavoritoClick} size="small">
+                    {favorite ? (
+                        <StarIcon sx={{ color: 'primary.main' }} />
+                    ) : (
+                        <StarBorderIcon />
+                    )}
                 </IconButton>
             </div>
+        </Box>
 
-            {/* Info del paso si corresponde */}
-            {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
-                <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
-                    <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
-                    <Typography variant="caption">{itemActual.pasoInfo.descripcion}</Typography>
-                </div>
+        <Box sx={{ px: 2, mt: 1 }}>
+            <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography>
+        </Box>
+
+        <Box sx={{ px: 2, mt: 1 }}>
+            <Typography variant="body2">{descripcionMostrada}</Typography>
+            {debeMostrarBotonLeerMas && (
+                <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}>
+                    {mostrarMas ? 'Leer menos' : 'Leer más'}
+                </Button>
             )}
+        </Box>
 
-            {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
-            <Box className="acciones-receta" sx={{ px: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
-                        {liked ? (
-                            <ThumbUpIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <ThumbUpAltOutlinedIcon />
-                        )}
-                    </IconButton>
-                    <span className="conteo-me-gusta">{likesCount}</span>
-
-                    <IconButton onClick={handleDisLikeClick} size="small">
-                        {disliked ? (
-                            <ThumbDownIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <ThumbDownAltOutlinedIcon />
-                        )}
-                    </IconButton>
-
-                    <IconButton onClick={handleOpenDrawer} size="small">
-                        <ChatBubbleOutlineIcon />
-                    </IconButton>
-                    <span className="conteo-comentarios">{comentariosCount}</span>
-
-                    <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
-                    <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
-                </Box>
-                <div className="acciones-derecha">
-                    <IconButton onClick={handleFavoritoClick} size="small">
-                        {favorite ? (
-                            <StarIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <StarBorderIcon />
-                        )}
-                    </IconButton>
-                </div>
-            </Box>
-
-            <Box sx={{ px: 2, mt: 1 }}>
-                <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography>
-            </Box>
-
-            <Box sx={{ px: 2, mt: 1 }}>
-                <Typography variant="body2">{descripcionMostrada}</Typography>
-                {debeMostrarBotonLeerMas && (
-                    <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}>
-                        {mostrarMas ? 'Leer menos' : 'Leer más'}
-                    </Button>
-                )}
-            </Box>
-
-            <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
-                {receta.ingredientes && receta.ingredientes.length > 0 && (
-                    <Box className="ingredientes-receta" sx={{ mt: 1 }}>
-                        <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
-                        <Typography component="span" variant="body2">
-                            {receta.ingredientes.map((ingrediente, index) => (
-                                <span key={ingrediente.id}>
-                                    {`${ingrediente.nombre} ${ingrediente.cantidad} ${ingrediente.unidadDeMedida}${index < receta.ingredientes.length - 1 ? ', ' : ''}`}
-                                </span>
-                            ))}
-                        </Typography>
-                    </Box>
-                )}
-                {receta.etiquetas && receta.etiquetas.length > 0 && (
-                    <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
-                        <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
-                        {receta.etiquetas
-                            .sort((a, b) => {
-                                const aEsDesafio = a.toLowerCase() === 'desafio';
-                                const bEsDesafio = b.toLowerCase() === 'desafio';
-
-                                if (aEsDesafio) return -1;
-                                if (bEsDesafio) return 1;
-                                
-                                return 0;
-                            }).map((etiqueta, index) => (
-                                <Chip
-                                    key={index}
-                                    label={etiqueta}
-                                    size="small"
-                                    variant="outlined" 
-                                    sx={{
-                                        color: 'text.primary',
-                                        borderColor: 'divider',
-                                        ...(etiqueta === 'Desafio' && {
-                                            background: 'linear-gradient(to right, #FF7B00, #FFD700)',
-                                            color: 'white',
-                                            fontWeight: 'bold',
-                                            '&:hover': {
-                                                opacity: 0.9
-                                            }
-                                        }),
-                                    }}
-                                />
-                            ))}
-                    </Box>
-                )}
-            </Box>
-
-            <div className="vista-previa-comentarios">
-                {comentarios && comentarios.length > 0 ? (
-                    comentarios.slice(0, 3).map((comentario, index) => (
-                        <div key={comentario.id || index} className="item-comentario">
-                            <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
-                            <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
-                            <span className="tiempo-comentario">
-                                • {formatoTiempoRelativo(comentario.fecha)}
+        <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
+            {receta.ingredientes && receta.ingredientes.length > 0 && (
+                <Box className="ingredientes-receta" sx={{ mt: 1 }}>
+                    <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
+                    <Typography component="span" variant="body2">
+                        {receta.ingredientes.map((ingrediente, index) => (
+                            <span key={ingrediente.id}>
+                                {`${ingrediente.nombre} ${ingrediente.cantidad} ${ingrediente.unidadDeMedida}${index < receta.ingredientes.length - 1 ? ', ' : ''}`}
                             </span>
-                        </div>
-                    ))
-                ) : (
-                    <div className="sin-comentarios">Sé el primero en comentar...</div>
-                )}
-            </div>
+                        ))}
+                    </Typography>
+                </Box>
+            )}
+            {receta.etiquetas && receta.etiquetas.length > 0 && (
+                <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                    <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
+                    {receta.etiquetas
+                        .sort((a, b) => {
+                            const aEsDesafio = a.toLowerCase() === 'desafio';
+                            const bEsDesafio = b.toLowerCase() === 'desafio';
+
+                            if (aEsDesafio) return -1;
+                            if (bEsDesafio) return 1;
+                            
+                            return 0;
+                        }).map((etiqueta, index) => (
+                            <Chip
+                                key={index}
+                                label={etiqueta}
+                                size="small"
+                                variant="outlined" 
+                                sx={{
+                                    color: 'text.primary',
+                                    borderColor: 'divider',
+                                    ...(etiqueta === 'Desafio' && {
+                                        background: 'linear-gradient(to right, #FF7B00, #FFD700)',
+                                        color: 'white',
+                                        fontWeight: 'bold',
+                                        '&:hover': {
+                                            opacity: 0.9
+                                        }
+                                    }),
+                                }}
+                            />
+                        ))}
+                </Box>
+            )}
+        </Box>
+
+        <div className="vista-previa-comentarios">
+            {comentarios && comentarios.length > 0 ? (
+                comentarios.slice(0, 3).map((comentario, index) => (
+                    <div key={comentario.id || index} className="item-comentario">
+                        <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
+                        <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
+                        <span className="tiempo-comentario">
+                            • {formatoTiempoRelativo(comentario.fecha)}
+                        </span>
+                    </div>
+                ))
+            ) : (
+                <div className="sin-comentarios">Sé el primero en comentar...</div>
+            )}
+        </div>
 
 
-            <DrawerComentarios
-                open={drawerAbierto}
-                onClose={handleCloseDrawer}
-                idReceta={receta.id}
-                onComentarioAgregado={handleComentarioAgregado}
-            />
-        </Paper>
+        <DrawerComentarios
+            open={drawerAbierto}
+            onClose={handleCloseDrawer}
+            idReceta={receta.id}
+            onComentarioAgregado={handleComentarioAgregado}
+        />
+    </Paper>
     );
 };
 

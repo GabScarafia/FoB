@@ -821,7 +821,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                         {/* --- NUEVO: MENSAJE DE FIN DE FEED --- */}
                         {!hasMore && recetas.length > 0 && (
-                            <div style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                            <div style={{ textAlign: 'center', padding: '4px', color: '#888' }}>
                                 Fin de las recetas.
                             </div>
                         )}
