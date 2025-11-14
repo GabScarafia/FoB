@@ -1,10 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using FoB.Application.Interfaces;
 using FoB.Application.Dtos;
 using System.Linq;
-using System;
+using System.Security.Claims;
+using FoB.Infrastructure.Context;
+using FoB.Infrastructure.Models;
 
 namespace FoB.Server.Controllers
 {
@@ -13,11 +16,20 @@ namespace FoB.Server.Controllers
     public class DesafiosController : ControllerBase
     {
         private readonly IDesafioService _desafioService;
+        private readonly fobContext _context;
 
-        // Inyección de la capa de servicio (ahora funciona gracias a la interfaz)
-        public DesafiosController(IDesafioService desafioService)
+        // Inyección de la capa de servicio y del contexto de BD
+        public DesafiosController(IDesafioService desafioService, fobContext context)
         {
             _desafioService = desafioService;
+            _context = context;
+        }
+
+        private int? GetCurrentUserId()
+        {
+            var userIdClaim = User?.FindFirstValue("id");
+            if (int.TryParse(userIdClaim, out var id)) return id;
+            return null;
         }
 
         /// <summary>
@@ -107,6 +119,43 @@ namespace FoB.Server.Controllers
             {
                 return StatusCode(500, $"Error interno del servidor al actualizar el desafío: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Verifica si el usuario actual está participando en el desafío activo.
+        /// </summary>
+        [HttpGet("participacion/esta")]
+        [Authorize]
+        public async Task<IActionResult> EstaParticipando()
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Unauthorized();
+
+            var desafio = await _desafioService.GetDesafioActivoYRankingAnteriorAsync();
+            if (desafio?.DesafioActual == null) return NotFound(new { message = "No hay desafío activo." });
+
+            var desafioId = desafio.DesafioActual.Id;
+            var participacion = _context.ParticipacionDesafio.FirstOrDefault(p => p.DesafioId == desafioId && p.UsuarioId == userId.Value);
+            return Ok(new { participada = participacion != null });
+        }
+
+        /// <summary>
+        /// Devuelve los puntos de participación del usuario para el desafío activo (si existe).
+        /// </summary>
+        [HttpGet("participacion/mis-puntos")]
+        [Authorize]
+        public async Task<IActionResult> MisPuntos()
+        {
+            var userId = GetCurrentUserId();
+            if (!userId.HasValue) return Unauthorized();
+
+            var desafio = await _desafioService.GetDesafioActivoYRankingAnteriorAsync();
+            if (desafio?.DesafioActual == null) return NotFound(new { message = "No hay desafío activo." });
+
+            var desafioId = desafio.DesafioActual.Id;
+            var participacion = _context.ParticipacionDesafio.FirstOrDefault(p => p.DesafioId == desafioId && p.UsuarioId == userId.Value);
+            var puntos = participacion?.Puntos ?? 0;
+            return Ok(new { participada = participacion != null, puntos = puntos });
         }
     }
 }

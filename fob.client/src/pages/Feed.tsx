@@ -1,22 +1,20 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
 import { useAuth } from "../context/AuthContext";
 import '../styles/Feed.css';
-import type { Comentario } from 'components/DrawerComentarios';
 import PersonAddOutlinedIcon from '@mui/icons-material/PersonAddOutlined';
 import NewspaperOutlinedIcon from '@mui/icons-material/NewspaperOutlined';
 import SportsScoreIcon from '@mui/icons-material/SportsScore';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import KitchenIcon from '@mui/icons-material/Kitchen'
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha, ThemeProvider } from '@mui/material';
+import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
 import type { RecetaType as DatosReceta, Usuario } from '../types/Receta';
 import CreateRecetaDialog from 'components/CreateRecetaDialog';
 import { BASE_URL } from '../apiConfig';
-import { getTheme } from '../theme';
 import fotoPerfilLocal from '../assets/images/avatar.png';
 
 // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
@@ -25,7 +23,7 @@ const PAGE_SIZE = 5; // <-- DEFINIMOS EL TAMAÑO DE PÁGINA
 interface DesafioDto {
     id: number;
     nombre: string;
-    ingrediente: string;
+    ingredientes: string;
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
@@ -82,6 +80,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [currentRanking, setCurrentRanking] = useState<RankingItemDto[]>([]);
     const [modalRankingOpen, setModalRankingOpen] = useState(false);
     const [rankingCargando, setRankingCargando] = useState(false);
+    const [misPuntos, setMisPuntos] = useState<number | null>(null);
 
     // ESTADOS PARA LA LÓGICA DE DESAFÍO
     const [desafioSemanal, setDesafioSemanal] = useState<DesafioSemanalDto | null>(null);
@@ -116,7 +115,22 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
             const data: RankingItemDto[] = await response.json();
             setCurrentRanking(data);
-            setModalRankingOpen(true); 
+            setModalRankingOpen(true);
+            // Also fetch my current points for this desafio (may be0 or not participating)
+            try {
+              const resp = await fetch(`${BASE_URL}/Desafios/participacion/mis-puntos`, {
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+              });
+              if (resp.ok) {
+                const obj = await resp.json();
+                setMisPuntos(obj?.puntos ??0);
+              } else {
+                setMisPuntos(null);
+              }
+            } catch (err) {
+              console.error('Error fetching my points:', err);
+              setMisPuntos(null);
+            }
             handleCloseDesafioModal(); 
         } catch (err) {
             console.error("Error al obtener el ranking semanal:", err);
@@ -124,7 +138,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         } finally {
             setRankingCargando(false);
         }
-    };
+    }
 
 
     // EFECTO 1: Obtener el Desafío Semanal (Sin cambios)
@@ -146,19 +160,23 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 const data: DesafioSemanalDto = await response.json();
                 setDesafioSemanal(data);
-                
-                // mostrar modal una vez sola
-                const desafioId = data?.desafioActual?.id;
-                if (desafioId) {
-                    const userKey = currentUserId ? `${currentUserId}` : 'anon';
-                    const localKey = `desafio_seen_${desafioId}_${userKey}`;
-                    const alreadySeen = localStorage.getItem(localKey);
-                    if (!alreadySeen) {
 
-                        setModalDesafioOpen(true);
-                        try { localStorage.setItem(localKey, '1'); } catch {}
-                    }
+                // Comprobar si el usuario ya participó u optó por no participar
+                try {
+                  const resp = await fetch(`${BASE_URL}/Desafios/participacion/esta`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                  });
+                  let mostrar = true;
+                  if (resp.ok) {
+                    const obj = await resp.json();
+                    if (obj && obj.participada === true) mostrar = false;
+                  }
+                  if (mostrar) setModalDesafioOpen(true);
+                } catch (err) {
+                  // Si falla la comprobación, mostramos el modal por defecto
+                  setModalDesafioOpen(true);
                 }
+
             } catch (err) {
                 console.error("Error al obtener el desafío semanal:", err);
             }
@@ -301,60 +319,66 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         } finally {
             handleCloseModal();
         }
-    };
+    }
     const handleOpenModal = async (recetaId: number) => {
         setRecetaAEliminarId(recetaId);
         setModalOpen(true);
-    };
+    }
     const handleCloseModal = () => {
         setModalOpen(false);
         setRecetaAEliminarId(null);
-    };
+    }
     const handleConfirmDelete = () => {
         if (recetaAEliminarId !== null) {
             handleDeleteReceta(recetaAEliminarId);
         }
-    };
+    }
 
 
     // ... (Manejadores de modales de desafío y creación - Sin cambios) ...
-    const handleOpenCreateDialog = () => {
-        setIsCreateDialogOpen(true);
-    };
-    const handleCloseCreateDialog = () => {
-        setIsCreateDialogOpen(false);
-    };
     const handleOpenDesafioModal = () => {
         if (desafioSemanal) {
             setModalDesafioOpen(true);
         }
-    };
-    const handleCloseDesafioModal = () => {
+    }
+    const handleCloseDesafioModal = async (markSeen = true) => {
         setModalDesafioOpen(false);
-    };
+        if (markSeen && typeof markDesafioAsSeen === 'function') {
+            try { await markDesafioAsSeen(); } catch (e) { console.error(e); }
+        }
+    }
     const handleCloseRankingModal = () => {
         setModalRankingOpen(false);
         setCurrentRanking([]); 
-    };
+    }
     const handleBackToDesafio = () => {
         // Close ranking modal and reopen desafio modal
         setModalRankingOpen(false);
         setCurrentRanking([]);
         setModalDesafioOpen(true);
-    };
+    }
     const handleCargarRecetaDesafio = () => {
-        handleCloseDesafioModal();
+        // Close modal without marking as seen so user can participate
+        handleCloseDesafioModal(false);
         const ingrediente = desafioSemanal?.desafioActual?.ingrediente;
         const idDesafio = desafioSemanal?.desafioActual?.id;
         if (ingrediente) setIngredienteDesafio(ingrediente);
         if (idDesafio) setDesafioIdActivo(idDesafio);
         setIsCreateDialogOpen(true);
-    };
+    }
+    // Close handler for create dialog (used by CreateRecetaDialog)
+    const handleCloseCreateDialog = () => {
+        setIsCreateDialogOpen(false);
+    }
+    // Handler called when a recipe is created in the CreateRecetaDialog
     const handleRecetaCreada = () => {
-        handleCloseCreateDialog(); 
-        setIngredienteDesafio(undefined); 
+        // Close dialog and reset challenge-related temporary state
+        handleCloseCreateDialog();
+        setIngredienteDesafio(undefined);
         setDesafioIdActivo(undefined);
-    };
+        // Also reload feed from first page
+        recargarRecetas(true);
+    }
 
 
     // =========================================================================
@@ -671,6 +695,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             Participar
                         </Button>
                     </Box>
+
                 </Box>
             </Modal>
         );
@@ -698,9 +723,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     >
                         🏆 Ranking Actual
                     </Typography>
-                    <Typography variant="subtitle2" sx={{ mb: 3, color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }}>
+                    <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }}>
                         {nombreDesafio}
                     </Typography>
+                    {misPuntos !== null && (
+                    <Typography variant="body2" sx={{ mb: 2, color: 'text.primary', textAlign: 'center', fontWeight: 700 }}>
+                        Tus puntos: {misPuntos}
+                    </Typography>
+                    )}
                     <Divider sx={{ mb: 3 }} />
                     {hasRanking && (
                         <List sx={{ p: 0 }}>
