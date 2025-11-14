@@ -21,5 +21,9 @@ public partial class Notificacion
 
     public int UsuarioId { get; set; }
 
+    public int? EmisorId { get; set; } // nulleable para notificaciones del sistema
+
     public virtual Usuario Usuario { get; set; }
+
+    public virtual Usuario Emisor { get; set; }
 }

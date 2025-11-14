@@ -63,6 +63,7 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
     const { id: perfilId } = useParams<{ id: string }>();
     const [searchParams] = useSearchParams();
     const recetaIdInicial = searchParams.get('receta');
+    const comentarioInicial = searchParams.get('comentario');
 
     const { authData } = useAuth();
     const token = authData?.token ?? null;
@@ -161,6 +162,18 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
             return newMap;
         });
     };
+
+    // Cuando la receta indicada y el comentario estén cargados, emitimos evento para abrir y centrar el comentario
+    useEffect(() => {
+        if (!recetaIdInicial || !comentarioInicial) return;
+        const recetaIdNum = Number(recetaIdInicial);
+        const comentarioIdNum = Number(comentarioInicial);
+
+        if (recetasCargadasRef.current.has(recetaIdNum)) {
+            // Dispatch custom event to notify Receta components
+            window.dispatchEvent(new CustomEvent('openCommentOnReceta', { detail: { recetaId: recetaIdNum, comentarioId: comentarioIdNum } }));
+        }
+    }, [recetaIdInicial, comentarioInicial, recetasCargadas]);
 
     // 1. Carga inicial de todas las publicaciones del usuario (vista previa)
     useEffect(() => {

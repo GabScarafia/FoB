@@ -2,6 +2,10 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using FoB.Infrastructure.Context;
+using FoB.Infrastructure.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
 
 namespace FoB.Server.Controllers
 {
@@ -10,10 +14,12 @@ namespace FoB.Server.Controllers
     public class FollowController : ControllerBase
     {
         private readonly IUserRepository _userRepository;
+        private readonly fobContext _context;
 
-        public FollowController(IUserRepository userRepository)
+        public FollowController(IUserRepository userRepository, fobContext context)
         {
             _userRepository = userRepository;
+            _context = context;
         }
 
         // Helper para obtener el ID del usuario del token
@@ -39,6 +45,35 @@ namespace FoB.Server.Controllers
 
             await _userRepository.FollowUserAsync(followerId.Value, followedId);
             await _userRepository.SaveChangesAsync();
+
+            try
+            {
+                // Crear notificación para el usuario seguido
+                var follower = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == followerId.Value);
+                if (follower != null)
+                {
+                    var noti = new Notificacion
+                    {
+                        FechaDeEnvio = DateTime.UtcNow,
+                        Leida = false,
+                        Mensaje = $"{follower.NombreUsuario} te empezó a seguir",
+                        Tipo = "Nuevo Seguidor",
+                        UrlEnlace = $"/perfil/{followerId.Value}",
+                        UsuarioId = followedId
+                    };
+                    _context.Notificacion.Add(noti);
+                    await _context.SaveChangesAsync();
+
+                    // asignar EmisorId
+                    noti.EmisorId = followerId.Value;
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                // No fallar la acción principal por un error en notificación
+                Console.Error.WriteLine(ex.ToString());
+            }
 
             return Ok(new { message = "Usuario seguido exitosamente." });
         }

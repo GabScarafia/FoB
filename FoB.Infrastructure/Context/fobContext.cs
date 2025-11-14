@@ -264,6 +264,8 @@ public partial class fobContext : DbContext
 
             entity.HasIndex(e => e.UsuarioId, "usuario_id");
 
+            entity.HasIndex(e => e.EmisorId, "emisor_id");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.FechaDeEnvio)
                 .HasColumnType("datetime")
@@ -279,10 +281,15 @@ public partial class fobContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("url_enlace");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
+            entity.Property(e => e.EmisorId).HasColumnName("emisor_id");
 
             entity.HasOne(d => d.Usuario).WithMany(p => p.Notificacion)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("notificacion_ibfk_1");
+
+            entity.HasOne(d => d.Emisor).WithMany()
+                .HasForeignKey(d => d.EmisorId)
+                .HasConstraintName("notificacion_emisor_ibfk");
         });
 
         modelBuilder.Entity<ParticipacionDesafio>(entity =>

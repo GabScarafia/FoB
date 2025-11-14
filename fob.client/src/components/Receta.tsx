@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 // En Receta.tsx (arriba de todo)
 import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material';
@@ -33,7 +33,6 @@ import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BASE_URL } from '../apiConfig';
-
 
 // 1. Helper para determinar 'image' o 'video' desde el contentType
 const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
@@ -469,6 +468,26 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const itemActual = carruselItems[indiceImagen] || carruselItems[0]; 
 
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
+
+    useEffect(() => {
+        const handler = (e: any) => {
+            try {
+                const detail = e.detail;
+                if (!detail) return;
+                const { recetaId, comentarioId } = detail;
+                if (Number(recetaId) !== receta.id) return;
+                // Abrir drawer y luego scrollear al comentario si existe
+                setDrawerAbierto(true);
+                onDrawerToggle(true);
+                // El DrawerComentarios maneja el scroll cuando carga comentarios; emitimos un evento con el ID
+                window.dispatchEvent(new CustomEvent('focusComentario', { detail: { comentarioId } }));
+            } catch (err) {
+                console.error(err);
+            }
+        };
+        window.addEventListener('openCommentOnReceta', handler as EventListener);
+        return () => window.removeEventListener('openCommentOnReceta', handler as EventListener);
+    }, [receta.id, onDrawerToggle]);
 
     return (
     <Paper

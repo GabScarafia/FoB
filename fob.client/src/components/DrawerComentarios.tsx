@@ -72,7 +72,8 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
 }) => {
   // Nota: evitamos hook de auth dentro de este componente porque lo maneja el padre.
   return (
-    <List key={comentario.id} sx={{ p: 0 }}>
+    <List key={comentario.id} sx={{ p:0 }}>
+      <div id={`comentario-${comentario.id}`}> 
       <ListItem
         className="comment-list-item"
         alignItems="flex-start"
@@ -164,9 +165,10 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
             El padre decide si pasa onDeleteRequest (si el usuario es el autor). */}
         {/** Si el padre pasa onDeleteRequest y el comentario no está ya eliminado, mostramos el tachito aquí. */}
       </ListItem>
+      </div>
 
-      {comentario.respuestas && comentario.respuestas.length > 0 && (
-        <List sx={{ pl: 4 }}>
+      {comentario.respuestas && comentario.respuestas.length >0 && (
+        <List sx={{ pl:4 }}>
           {comentario.respuestas.map((reply) => (
             <ComentarioAnidado
               key={reply.id}
@@ -231,7 +233,8 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     try {
       // El backend ahora devuelve una lista anidada, por lo que no es necesario procesarla aquí
       const response = await fetch(`${BASE_URL}/api/Comentario/receta/${idReceta}`, {
-        headers: {
+        headers:
+        {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         }
@@ -261,6 +264,21 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, idReceta, token]);
+
+  // Escuchar evento global para centrar un comentario
+  useEffect(() => {
+    const handler = (ev: any) => {
+      const commentId = ev?.detail?.comentarioId;
+      if (!commentId) return;
+      // Intentar localizar el elemento luego de un pequeño timeout para que la lista haya renderizado
+      setTimeout(() => {
+        const el = document.getElementById(`comentario-${commentId}`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      },300);
+    };
+    window.addEventListener('focusComentario', handler as EventListener);
+    return () => window.removeEventListener('focusComentario', handler as EventListener);
+  }, []);
 
   const handleReplyClick = (comentario: Comentario) => {
     setComentarioPadre({ id: comentario.id, usuario: comentario.usuario.nombreUsuario });

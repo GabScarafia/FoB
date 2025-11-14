@@ -400,6 +400,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                                 && v.Tipo == interaccion.Tipo.ToString()
                                 && v.UsuarioId == idUsuario);
 
+        bool added = false;
+
         if (interaccion.Accion == InteraccionAccionEnum.Borrar)
         {
             if (votoExistente != null)
@@ -422,6 +424,35 @@ internal sealed class RecetaRepository : IRecetaRepository
                     FechaDeVoto = DateTime.Now
                 };
                 _context.Set<Voto>().Add(nuevoVoto);
+                added = true;
+
+                // Crear notificación para el autor de la receta si no es el mismo usuario
+                try
+                {
+                    var receta = await _context.Receta.Include(r => r.Usuario).FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
+                    if (receta != null && receta.UsuarioId != idUsuario)
+                    {
+                        var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+                        var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
+                        var noti = new Notificacion
+                        {
+                            FechaDeEnvio = DateTime.UtcNow,
+                            Leida = false,
+                            Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
+                            Tipo = "Nuevo Voto",
+                            UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}",
+                            UsuarioId = receta.UsuarioId
+                        };
+                        _context.Notificacion.Add(noti);
+
+                        // asignar emisor
+                        noti.EmisorId = idUsuario;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.Error.WriteLine(ex.ToString());
+                }
             }
         }
 

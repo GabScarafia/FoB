@@ -139,6 +139,32 @@ namespace FoB.Infrastructure.Repositories
                 Respuestas = new List<ComentarioDTO>()
             };
 
+            // Crear notificación para el autor de la receta
+            try
+            {
+                var receta = await _context.Receta.Include(r => r.Usuario).FirstOrDefaultAsync(r => r.Id == comentarioInfra.RecetaId);
+                if (receta != null && receta.UsuarioId != _currentUser.User.Id)
+                {
+                    var actor = usuario; // el que comentó
+                    var noti = new Notificacion
+                    {
+                        FechaDeEnvio = DateTime.UtcNow,
+                        Leida = false,
+                        Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} comentó tu publicación",
+                        Tipo = "Nuevo Comentario",
+                        UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}&comentario={comentarioInfra.Id}",
+                        UsuarioId = receta.UsuarioId
+                    };
+                    _context.Notificacion.Add(noti);
+                    noti.EmisorId = usuario.Id;
+                    await _context.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex.ToString());
+            }
+
             return nuevoComentarioDTO;
         }
 
