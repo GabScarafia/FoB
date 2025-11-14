@@ -146,8 +146,19 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 const data: DesafioSemanalDto = await response.json();
                 setDesafioSemanal(data);
-                setModalDesafioOpen(true);
+                
+                // mostrar modal una vez sola
+                const desafioId = data?.desafioActual?.id;
+                if (desafioId) {
+                    const userKey = currentUserId ? `${currentUserId}` : 'anon';
+                    const localKey = `desafio_seen_${desafioId}_${userKey}`;
+                    const alreadySeen = localStorage.getItem(localKey);
+                    if (!alreadySeen) {
 
+                        setModalDesafioOpen(true);
+                        try { localStorage.setItem(localKey, '1'); } catch {}
+                    }
+                }
             } catch (err) {
                 console.error("Error al obtener el desafío semanal:", err);
             }
