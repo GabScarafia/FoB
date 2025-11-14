@@ -70,7 +70,8 @@ namespace FoB.Infrastructure.Service
                     {
                         UsuarioId = participacion.UsuarioId,
                         NombreUsuario = statsReceta.NombreUsuario,
-                        Puntos = (int)nuevoPuntaje
+                        Puntos = (int)nuevoPuntaje,
+                        RecetaId = participacion.RecetaId
                     });
                 }
 
@@ -84,7 +85,9 @@ namespace FoB.Infrastructure.Service
                         NombreUsuario = g.First().NombreUsuario,
                         NombreCompleto = g.First().NombreCompleto,
                         UrlImagenPerfil = g.First().UrlImagenPerfil,
-                        Puntos = (int)g.Sum(x => x.Puntos)
+                        Puntos = (int)g.Sum(x => x.Puntos),
+                        // Elegimos la receta con mayor puntaje para asociarla al usuario en el ranking
+                        RecetaId = g.OrderByDescending(x => x.Puntos).FirstOrDefault()?.RecetaId
                     })
                     .OrderByDescending(r => r.Puntos)
                     .Take(3) // 6. Tomar solo el Top 3
@@ -177,7 +180,8 @@ namespace FoB.Infrastructure.Service
                 {
                     UsuarioId = participacion.UsuarioId,
                     NombreUsuario = statsReceta.NombreUsuario,
-                    Puntos = (int)nuevoPuntaje
+                    Puntos = (int)nuevoPuntaje,
+                    RecetaId = participacion.RecetaId
                 });
             }
 
@@ -188,7 +192,8 @@ namespace FoB.Infrastructure.Service
                 {
                     UsuarioId = g.Key,
                     NombreUsuario = g.First().NombreUsuario,
-                    Puntos = (int)g.Sum(x => x.Puntos)
+                    Puntos = (int)g.Sum(x => x.Puntos),
+                    RecetaId = g.OrderByDescending(x => x.Puntos).FirstOrDefault()?.RecetaId
                 })
                 .OrderByDescending(r => r.Puntos)
                 .ToList();

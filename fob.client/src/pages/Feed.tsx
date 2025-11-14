@@ -36,6 +36,7 @@ interface RankingItemDto {
     usuarioId: number;
     puntos: number;
     nombreUsuario?: string;
+    recetaId?: number;
 }
 
 interface DesafioSemanalDto {
@@ -324,6 +325,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         setModalRankingOpen(false);
         setCurrentRanking([]); 
     };
+    const handleBackToDesafio = () => {
+        // Close ranking modal and reopen desafio modal
+        setModalRankingOpen(false);
+        setCurrentRanking([]);
+        setModalDesafioOpen(true);
+    };
     const handleCargarRecetaDesafio = () => {
         handleCloseDesafioModal();
         const ingrediente = desafioSemanal?.desafioActual?.ingrediente;
@@ -499,30 +506,41 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 {desafioSemanal.rankingAnterior.slice(0, 3).map((item, index) => (
                     <ListItem
                         key={item.usuarioId}
+                        onClick={() => {
+                            // Si hay recetaId, navega a la receta; si no, solo a el perfil del usuario
+                            if (item.recetaId) {
+                                handleCloseDesafioModal();
+                                navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
+                            } else {
+                                handleCloseDesafioModal();
+                                navigate(`/perfil/${item.usuarioId}`);
+                            }
+                        }}
                         sx={(theme) => ({
-                            p: 1, mb: 0.5, borderRadius: '6px',
-                            bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1)
-                                : index === 1 ? theme.palette.action.hover
-                                : index === 2 ? alpha('#ff7e5f', 0.1) 
-                                : 'white',
+                            p:1, mb:0.5, borderRadius: '6px', cursor: 'pointer',
+                            bgcolor: index ===0 ? alpha(theme.palette.warning.main,0.1)
+                            : index ===1 ? theme.palette.action.hover
+                            : index ===2 ? alpha('#ff7e5f',0.1) 
+                            : 'white',
                             borderLeft: `4px solid ${
-                                index === 0 ? theme.palette.warning.main
-                                : index === 1 ? theme.palette.grey[500]
-                                : index === 2 ? '#ff7e5f'
+                                index ===0 ? theme.palette.warning.main
+                                : index ===1 ? theme.palette.grey[500]
+                                : index ===2 ? '#ff7e5f'
                                 : 'transparent'
                             }`,
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                            boxShadow: '01px3px rgba(0,0,0,0.05)',
+                            '&:hover': { transform: 'translateY(-2px)', boxShadow: '06px18px rgba(0,0,0,0.08)' }
                         })}
                     >
-                        <ListItemIcon sx={{ minWidth: 35 }}>
+                        <ListItemIcon sx={{ minWidth:35 }}>
                             {getMedalIcon(index)}
                         </ListItemIcon>
                         <ListItemText
                             primary={`@${item.nombreUsuario}`}
                             secondary={`${item.puntos} Puntos`}
                             primaryTypographyProps={{ 
-                                fontWeight: index < 3 ? 'bold' : 'normal',
-                                color: index === 0 ? 'warning.dark' : 'text.primary' 
+                                fontWeight: index <3 ? 'bold' : 'normal',
+                                color: index ===0 ? 'warning.dark' : 'text.primary' 
                             }}
                         />
                     </ListItem>
@@ -678,34 +696,45 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             {currentRanking.map((item, index) => (
                                 <ListItem
                                     key={item.usuarioId}
+                                    onClick={() => {
+                                        // Si hay recetaId, navega a la receta; si no, solo a el perfil del usuario
+                                        if (item.recetaId) {
+                                            handleCloseRankingModal();
+                                            navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
+                                        } else {
+                                            handleCloseRankingModal();
+                                            navigate(`/perfil/${item.usuarioId}`);
+                                        }
+                                    }}
                                     sx={(theme) => ({
-                                        p: 1.5, mb: 1, borderRadius: '8px',
-                                        bgcolor: index < 3 ? theme.palette.action.hover : 'background.paper',
-                                        borderLeft: `5px solid ${index === 0 ? theme.palette.warning.main :
-                                                index === 1 ? theme.palette.info.main :
-                                                    index === 2 ? theme.palette.error.main :
+                                        p:1.5, mb:1, borderRadius: '8px', cursor: 'pointer',
+                                        bgcolor: index <3 ? theme.palette.action.hover : 'background.paper',
+                                        borderLeft: `5px solid ${index ===0 ? theme.palette.warning.main :
+                                                index ===1 ? theme.palette.info.main :
+                                                    index ===2 ? theme.palette.error.main :
                                                         theme.palette.divider}`,
-                                        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                                        boxShadow: '01px4px rgba(0,0,0,0.08)',
+                                        '&:hover': { transform: 'translateY(-2px)', boxShadow: '06px18px rgba(0,0,0,0.08)' }
                                     })}
                                 >
-                                    <ListItemIcon sx={{ minWidth: 40 }}>
-                                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? 'primary.main' : 'text.primary' }}>
-                                            {index + 1}°
+                                    <ListItemIcon sx={{ minWidth:40 }}>
+                                        <Typography variant="h6" sx={{ fontWeight: 'bold', color: index <3 ? 'primary.main' : 'text.primary' }}>
+                                            {index +1}°
                                         </Typography>
                                     </ListItemIcon>
                                     <ListItemText
                                         primary={`@${item.nombreUsuario}`}
                                         secondary={`${item.puntos} Puntos`}
-                                        primaryTypographyProps={{ fontWeight: index < 3 ? '900' : '600', color: 'text.primary' }}
+                                        primaryTypographyProps={{ fontWeight: index <3 ? '900' : '600', color: 'text.primary' }}
                                     />
-                                    {index < 3 && getMedalIcon(index)}
+                                    {index <3 && getMedalIcon(index)}
                                 </ListItem>
                             ))}
                         </List>
                     )}
                     <Box sx={{ mt: 4, textAlign: 'center' }}>
                         <Button
-                            onClick={handleCloseRankingModal} variant="contained" color="primary"
+                            onClick={handleBackToDesafio} variant="contained" color="primary"
                             sx={(theme) => ({
                                 ...(theme.palette.mode === 'dark' && {
                                     backgroundColor: '#90caf9', color: theme.palette.getContrastText('#90caf9'),
@@ -713,7 +742,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 }),
                             })}
                         >
-                            Cerrar Ranking
+                            Volver
                         </Button>
                     </Box>
                 </Box>

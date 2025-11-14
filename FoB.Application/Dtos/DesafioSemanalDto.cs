@@ -35,6 +35,7 @@ namespace FoB.Application.Dtos
         public string NombreUsuario { get; set; }
         public string NombreCompleto { get; set; }
         public int Puntos { get; set; }
+        public int? RecetaId { get; set; }
         public string UrlImagenPerfil { get; set; }
         public bool EsGanadorAnterior { get; set; }
     }
