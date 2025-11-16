@@ -15,4 +15,5 @@ public interface DominioService
     public Task<List<DominioDto>> GetEtiquestas(string texto);
     public Task<List<DominioDto>> GetIngredientes(string texto);
     public Task<List<DominioDto>> GetUnidades(string texto);
+   // public Task<List<DominioDto>> GetUtensilio(string texto);
 }

@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 // En Receta.tsx (arriba de todo)
 import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material';
@@ -72,6 +72,11 @@ interface Ingrediente {
     unidadDeMedida: string;
 }
 
+interface Utensilio {
+    id: number;
+    nombre: string;
+}
+
 // --- INTERFAZ ACTUALIZADA ---
 interface Paso {
     titulo: string;
@@ -112,6 +117,7 @@ export interface PropsReceta {
         tiempoPreparacion: string;
         ingredientes: Ingrediente[];
         etiquetas: string[];
+        utensilios: Utensilio[];
         pasos: Paso[]; // Array de la interfaz Paso actualizada
     };
     onDrawerToggle: (open: boolean) => void;
@@ -740,6 +746,25 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                             </span>
                         ))}
                     </Typography>
+                </Box>
+            )}
+            {receta.utensilios && receta.utensilios.length > 0 && (
+                <Box sx={{ mt: 1 }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontSize: '1rem' }}>
+                        Utensilios
+                    </Typography>
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {receta.utensilios.map((utensilio) => (
+                            <Chip
+                                key={utensilio.id}
+                                label={utensilio.nombre}
+                                sx={{
+                                    bgcolor: 'grey.200',
+                                    fontWeight: 'medium',
+                                }}
+                            />
+                        ))}
+                    </Box>
                 </Box>
             )}
             {receta.etiquetas && receta.etiquetas.length > 0 && (

@@ -25,6 +25,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import logoImage from '../assets/images/logo-blanco.png';
 import { useAuth } from "../context/AuthContext";
 import type { etiquetaType } from "types/Etiqueta";
+import type { utensilioType } from "types/Utensilio";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { BASE_URL } from "../apiConfig";
 
@@ -125,6 +126,12 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
     const [inputEtiqueta, setInputEtiqueta] = React.useState('');
     const [etiquetaOptions, setEtiquetaOptions] = React.useState<etiquetaType[]>([]);
     const debouncedInputEtiqueta = useDebounce(inputEtiqueta, 500);
+
+    // Utencilios Debounce
+    const [utencilios, setUtencilios] = React.useState<utensilioType[]>([]);
+    const [inputUtencilio, setInputUtencilio] = React.useState('');
+    const [utencilioOptions, setUtencilioOptions] = React.useState<utensilioType[]>([]);
+    const debouncedInputUtencilio = useDebounce(inputUtencilio, 500);
 
     // Pasos
     const [pasos, setPasos] = React.useState<PasoType[]>([{ titulo: '', descripcion: '', imagen: null, contentType: null }]);
@@ -275,6 +282,37 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
         }
     }, [ingrediente, authData?.token, etiquetas, open]);
 
+    // EFECTO PARA BÚSQUEDA DE UTENCILLOS
+    React.useEffect(() => {
+        const fetchUtencilios = async () => {
+            const texto = debouncedInputUtencilio.trim();
+            if (texto.length >= 2) {
+                try {
+                    const response = await fetch(`${BASE_URL}/Dominio/Utensilios?texto=${encodeURIComponent(texto)}`, {
+                        headers: { "Authorization": `Bearer ${authData?.token}` }
+                    });
+                    if (response.ok) {
+                        const data: utensilioType[] = await response.json();
+                        const newOptions = data.filter(opt =>
+                            !utencilios.some(selected => selected.id === opt.id)
+                        );
+                        setUtencilioOptions(newOptions);
+                    } else {
+                        setUtencilioOptions([]);
+                    }
+                } catch (error) {
+                    setUtencilioOptions([]);
+                }
+            } else {
+                setUtencilioOptions([]);
+            }
+        };
+
+        if (authData?.token) {
+            fetchUtencilios();
+        }
+    }, [debouncedInputUtencilio, authData?.token, utencilios]);
+
     // ... (Manejadores de Ingredientes y Etiquetas no cambian) ...
     const handleAddIngrediente = () => {
         if (nuevoIngrediente.ingrediente && nuevoIngrediente.cantidad && nuevoIngrediente.unidad) {
@@ -319,6 +357,17 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
         setEtiquetas(etiquetas.filter(et => et.id !== etiquetaId));
     };
 
+    const handleAddUtencilio = (utencillo: utensilioType | null) => {
+        if (utencillo && !utencilios.some(u => u.id === utencillo.id)) {
+            setUtencilios([...utencilios, utencillo]);
+            setInputUtencilio('');
+            setUtencilioOptions([]);
+        }
+    };
+
+    const handleRemoveUtencilio = (utencilloId: number) => {
+        setUtencilios(utencilios.filter(ut => ut.id !== utencilloId));
+    };
 
     const handleBoxClick = () => {
         fileInputRef.current?.click();
@@ -443,6 +492,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                 descripcion: ''
             })),
             etiquetas: etiquetas.map(et => ({ nombre: et.nombre, id: et.id })),
+            utensilios: utencilios.map(ut => ({ nombre: ut.nombre, id: ut.id })),
             pasos: pasosValidos, // <-- 'pasosValidos' ya incluye el contentType de cada paso
             ...(desafioId && { desafioId })
         };
@@ -714,87 +764,6 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                     )}
                 </Box>
 
-
-                {/* --- SECCIÓN DE ETIQUETAS --- */}
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
-                        Etiquetas
-                    </Typography>
-                    <Autocomplete
-                        options={etiquetaOptions}
-                        getOptionLabel={(option) => option.nombre}
-                        value={null} 
-                        onChange={(_, newValue) => {
-                            handleAddEtiqueta(newValue);
-                        }}
-                        inputValue={inputEtiqueta}
-                        onInputChange={(_, newInputValue) => {
-                            setInputEtiqueta(newInputValue);
-                        }}
-                        filterOptions={(x) => x}
-                        renderInput={(params) => (
-                            <TextField
-                                {...params}
-                                label="Buscar o agregar etiqueta..."
-                                variant="outlined"
-                                size="small"
-                            />
-                        )}
-                        noOptionsText={inputEtiqueta.length >= 2 ? "No hay coincidencias" : "Escribe al menos 2 letras para buscar"}
-                        sx={{ width: '100%' }}
-                    />
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                        {etiquetas.map((et) => (
-                            <Chip
-                                key={et.id}
-                                label={et.nombre}
-                                onDelete={() => handleRemoveEtiqueta(et.id)}
-                                sx={{
-                                    bgcolor: '#182969',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    '& .MuiChip-deleteIcon': {
-                                        color: 'white',
-                                    }
-                                }}
-                            />
-                        ))}
-                    </Box>
-                </Box>
-
-                {/* --- DIFICULTAD Y MINUTOS --- */}
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <TextField
-                        sx={{ flexGrow: 5 }}
-                        label="Dificultad"
-                        variant="outlined"
-                        select
-                        value={dificultad}
-                        onChange={(e) => setDificultad(e.target.value)}
-                        SelectProps={{
-                            IconComponent: ArrowDropDownIcon
-                        }}
-                    >
-                        <MenuItem value="Facil">Fácil</MenuItem>
-                        <MenuItem value="Medio">Medio</MenuItem>
-                        <MenuItem value="Dificil">Difícil</MenuItem>
-                        <MenuItem value="Experto">Experto</MenuItem>
-                    </TextField>
-
-                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexGrow: 1 }}>
-                        <AccessTimeIcon sx={{ color: 'text.secondary' }} />
-                        <TextField
-                            label="Minutos"
-                            variant="outlined"
-                            type="number"
-                            value={minutes}
-                            onChange={(e) => setMinutes(e.target.value)}
-                            inputProps={{ min: 0, max: 59 }}
-                            sx={{ width: '100%' }}
-                        />
-                    </Box>
-                </Box>
-
                 {/* --- SECCIÓN DE INGREDIENTES --- */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
@@ -921,6 +890,133 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                 </IconButton>
                             </Box>
                         ))}
+                    </Box>
+                </Box>
+
+                {/* --- SECCIÓN DE UTENSILIOS --- */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        Utensilios Necesarios
+                    </Typography>
+                    <Autocomplete
+                        options={utencilioOptions}
+                        getOptionLabel={(option) => option.nombre}
+                        value={null}
+                        onChange={(_, newValue) => {
+                            handleAddUtencilio(newValue);
+                        }}
+                        inputValue={inputUtencilio}
+                        onInputChange={(_, newInputValue) => {
+                            setInputUtencilio(newInputValue);
+                        }}
+                        filterOptions={(x) => x}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Buscar o agregar utensilio..."
+                                variant="outlined"
+                                size="small"
+                            />
+                        )}
+                        noOptionsText={inputUtencilio.length >= 2 ? "No hay coincidencias" : "Escribe al menos 2 letras para buscar"}
+                        sx={{ width: '100%' }}
+                    />
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                        {utencilios.map((ut) => (
+                            <Chip
+                                key={ut.id}
+                                label={ut.nombre}
+                                onDelete={() => handleRemoveUtencilio(ut.id)}
+                                sx={{
+                                    bgcolor: '#182969',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    '& .MuiChip-deleteIcon': {
+                                        color: 'white',
+                                    }
+                                }}
+                            />
+                        ))}
+                    </Box>
+                </Box>
+
+                {/* --- SECCIÓN DE ETIQUETAS --- */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold' }}>
+                        Etiquetas
+                    </Typography>
+                    <Autocomplete
+                        options={etiquetaOptions}
+                        getOptionLabel={(option) => option.nombre}
+                        value={null}
+                        onChange={(_, newValue) => {
+                            handleAddEtiqueta(newValue);
+                        }}
+                        inputValue={inputEtiqueta}
+                        onInputChange={(_, newInputValue) => {
+                            setInputEtiqueta(newInputValue);
+                        }}
+                        filterOptions={(x) => x}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Buscar o agregar etiqueta..."
+                                variant="outlined"
+                                size="small"
+                            />
+                        )}
+                        noOptionsText={inputEtiqueta.length >= 2 ? "No hay coincidencias" : "Escribe al menos 2 letras para buscar"}
+                        sx={{ width: '100%' }}
+                    />
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
+                        {etiquetas.map((et) => (
+                            <Chip
+                                key={et.id}
+                                label={et.nombre}
+                                onDelete={() => handleRemoveEtiqueta(et.id)}
+                                sx={{
+                                    bgcolor: '#182969',
+                                    color: 'white',
+                                    fontWeight: 'bold',
+                                    '& .MuiChip-deleteIcon': {
+                                        color: 'white',
+                                    }
+                                }}
+                            />
+                        ))}
+                    </Box>
+                </Box>
+
+                {/* --- DIFICULTAD Y MINUTOS --- */}
+                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                    <TextField
+                        sx={{ flexGrow: 5 }}
+                        label="Dificultad"
+                        variant="outlined"
+                        select
+                        value={dificultad}
+                        onChange={(e) => setDificultad(e.target.value)}
+                        SelectProps={{
+                            IconComponent: ArrowDropDownIcon
+                        }}
+                    >
+                        <MenuItem value="Facil">Fácil</MenuItem>
+                        <MenuItem value="Medio">Medio</MenuItem>
+                        <MenuItem value="Dificil">Difícil</MenuItem>
+                        <MenuItem value="Experto">Experto</MenuItem>
+                    </TextField>
+
+                    <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexGrow: 1 }}>
+                        <AccessTimeIcon sx={{ color: 'text.secondary' }} />
+                        <TextField
+                            label="Minutos"
+                            variant="outlined"
+                            type="number"
+                            value={minutes}
+                            onChange={(e) => setMinutes(e.target.value)}
+                            inputProps={{ min: 0, max: 59 }}
+                            sx={{ width: '100%' }}
+                        />
                     </Box>
                 </Box>
 
