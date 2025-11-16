@@ -31,7 +31,9 @@ public partial class Usuario
 
     public virtual ICollection<MensajePrivado> MensajePrivadoRemitente { get; set; } = new List<MensajePrivado>();
 
-    public virtual ICollection<Notificacion> Notificacion { get; set; } = new List<Notificacion>();
+    public virtual ICollection<Notificacion> NotificacionEmisor { get; set; } = new List<Notificacion>();
+
+    public virtual ICollection<Notificacion> NotificacionUsuario { get; set; } = new List<Notificacion>();
 
     public virtual ICollection<ParticipacionDesafio> ParticipacionDesafio { get; set; } = new List<ParticipacionDesafio>();
 

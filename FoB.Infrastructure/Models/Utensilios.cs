@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace FoB.Infrastructure.Models;
 
-public partial class Utensilio
+public partial class Utensilios
 {
     public int Id { get; set; }
 
-    public string Descripcion { get; set; }
-
     public string Nombre { get; set; }
 
-    public virtual ICollection<RecetaUtensilio> RecetaEtiquetas { get; set; } = new List<RecetaUtensilio>();
+    public string Descripcion { get; set; }
+
+    public virtual ICollection<RecetaUtensilio> RecetaUtensilio { get; set; } = new List<RecetaUtensilio>();
 }

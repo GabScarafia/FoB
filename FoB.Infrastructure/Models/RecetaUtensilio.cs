@@ -7,11 +7,13 @@ namespace FoB.Infrastructure.Models;
 
 public partial class RecetaUtensilio
 {
+    public int Id { get; set; }
+
     public int RecetaId { get; set; }
 
     public int UtensilioId { get; set; }
 
-    public virtual Utensilio Utensilio { get; set; }
-
     public virtual Receta Receta { get; set; }
+
+    public virtual Utensilios Utensilio { get; set; }
 }

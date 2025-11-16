@@ -41,6 +41,8 @@ public partial class Receta
 
     public virtual ICollection<RecetaImagen> RecetaImagen { get; set; } = new List<RecetaImagen>();
 
+    public virtual ICollection<RecetaUtensilio> RecetaUtensilio { get; set; } = new List<RecetaUtensilio>();
+
     public virtual Usuario Usuario { get; set; }
 
     public virtual ICollection<Voto> Voto { get; set; } = new List<Voto>();

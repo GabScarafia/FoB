@@ -40,6 +40,8 @@ public partial class fobContext : DbContext
 
     public virtual DbSet<RecetaImagen> RecetaImagen { get; set; }
 
+    public virtual DbSet<RecetaUtensilio> RecetaUtensilio { get; set; }
+
     public virtual DbSet<Rol> Rol { get; set; }
 
     public virtual DbSet<SeguimientoUsuario> SeguimientoUsuario { get; set; }
@@ -51,6 +53,8 @@ public partial class fobContext : DbContext
     public virtual DbSet<UsuarioImagen> UsuarioImagen { get; set; }
 
     public virtual DbSet<UsuarioRol> UsuarioRol { get; set; }
+
+    public virtual DbSet<Utensilios> Utensilios { get; set; }
 
     public virtual DbSet<Voto> Voto { get; set; }
 
@@ -262,11 +266,12 @@ public partial class fobContext : DbContext
 
             entity.ToTable("notificacion");
 
+            entity.HasIndex(e => e.EmisorId, "IX_Notificacion_EmisorId");
+
             entity.HasIndex(e => e.UsuarioId, "usuario_id");
 
-            entity.HasIndex(e => e.EmisorId, "emisor_id");
-
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.EmisorId).HasColumnName("emisor_id");
             entity.Property(e => e.FechaDeEnvio)
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_de_envio");
@@ -281,15 +286,15 @@ public partial class fobContext : DbContext
                 .HasMaxLength(255)
                 .HasColumnName("url_enlace");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
-            entity.Property(e => e.EmisorId).HasColumnName("emisor_id");
 
-            entity.HasOne(d => d.Usuario).WithMany(p => p.Notificacion)
+            entity.HasOne(d => d.Emisor).WithMany(p => p.NotificacionEmisor)
+                .HasForeignKey(d => d.EmisorId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .HasConstraintName("FK_Notificacion_Emisor");
+
+            entity.HasOne(d => d.Usuario).WithMany(p => p.NotificacionUsuario)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("notificacion_ibfk_1");
-
-            entity.HasOne(d => d.Emisor).WithMany()
-                .HasForeignKey(d => d.EmisorId)
-                .HasConstraintName("notificacion_emisor_ibfk");
         });
 
         modelBuilder.Entity<ParticipacionDesafio>(entity =>
@@ -441,6 +446,33 @@ public partial class fobContext : DbContext
                 .HasConstraintName("receta_imagen_ibfk_1");
         });
 
+        modelBuilder.Entity<RecetaUtensilio>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("receta_utensilio");
+
+            entity.HasIndex(e => e.RecetaId, "receta_utensilio_receta_FK");
+
+            entity.HasIndex(e => e.UtensilioId, "receta_utensilio_utensilios_FK");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.RecetaId).HasColumnName("receta_id");
+            entity.Property(e => e.UtensilioId).HasColumnName("utensilio_id");
+
+            entity.HasOne(d => d.Receta).WithMany(p => p.RecetaUtensilio)
+                .HasForeignKey(d => d.RecetaId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("receta_utensilio_receta_FK");
+
+            entity.HasOne(d => d.Utensilio).WithMany(p => p.RecetaUtensilio)
+                .HasForeignKey(d => d.UtensilioId)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("receta_utensilio_utensilios_FK");
+        });
+
         modelBuilder.Entity<Rol>(entity =>
         {
             entity.HasKey(e => e.Id).HasName("PRIMARY");
@@ -561,6 +593,23 @@ public partial class fobContext : DbContext
             entity.HasOne(d => d.Usuario).WithMany(p => p.UsuarioRol)
                 .HasForeignKey(d => d.UsuarioId)
                 .HasConstraintName("usuario_rol_ibfk_1");
+        });
+
+        modelBuilder.Entity<Utensilios>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PRIMARY");
+
+            entity.ToTable("utensilios");
+
+            entity.Property(e => e.Id)
+                .ValueGeneratedNever()
+                .HasColumnName("id");
+            entity.Property(e => e.Descripcion)
+                .HasMaxLength(100)
+                .HasColumnName("descripcion");
+            entity.Property(e => e.Nombre)
+                .HasMaxLength(255)
+                .HasColumnName("nombre");
         });
 
         modelBuilder.Entity<Voto>(entity =>
