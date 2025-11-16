@@ -456,9 +456,7 @@ public partial class fobContext : DbContext
 
             entity.HasIndex(e => e.UtensilioId, "receta_utensilio_utensilios_FK");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.UtensilioId).HasColumnName("utensilio_id");
 
@@ -601,9 +599,7 @@ public partial class fobContext : DbContext
 
             entity.ToTable("utensilios");
 
-            entity.Property(e => e.Id)
-                .ValueGeneratedNever()
-                .HasColumnName("id");
+            entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Descripcion)
                 .HasMaxLength(100)
                 .HasColumnName("descripcion");
