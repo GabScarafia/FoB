@@ -90,10 +90,14 @@
 
 /* Contenedor para la lista de resultados de búsqueda */
 .search-results-list {
-    /* background-color: #121212;
-    color: #ffffff; */
+    /* Estos colores se heredarán del tema global (claro/oscuro) */
     flex-grow: 1;
     padding-bottom: 80px;
+    /* Aplicamos la animación */
+    animation: fadeIn 0.3s ease-out;
+}
+
+.search-results-list {
     
     /* Aplicamos la animación */
     animation: fadeIn 0.3s ease-out;
@@ -115,7 +119,10 @@
     }
 
     .resultado-usuario:hover, .resultado-item:hover {
-        background-color: #282828;
+        /* Usamos una variable CSS para el hover que se adapta al tema.
+           'action.hover' de Material UI suele ser un gris sutil. */
+        background-color: rgba(0, 0, 0, 0.04); /* Fallback para modo claro */
+        /* En modo oscuro, el tema global debería aplicar un color más claro */
     }
 
 /* Estilo para el avatar circular */
@@ -154,7 +161,7 @@
 
 .usuario-nombre {
     font-weight: bold;
-    color: #ffffff;
+    /* color: #ffffff; */ /* Eliminamos el color fijo */
     font-size: 1.05em;
     margin-right: 0; 
     white-space: nowrap;
@@ -163,7 +170,7 @@
 }
 
 .usuario-nombre-completo {
-    color: #aaa;
+    /* color: #aaa; */ /* Eliminamos el color fijo */
     font-size: 0.85em;
     flex-grow: 0; 
     white-space: nowrap;
