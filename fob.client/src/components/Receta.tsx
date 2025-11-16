@@ -15,6 +15,7 @@ import StarIcon from '@mui/icons-material/Star';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import ListItemText from '@mui/material/MenuItem';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import ShareIcon from '@mui/icons-material/Share';
 
 
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
@@ -315,6 +316,29 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         } catch (error) {
             console.error("Error de red al dar favorito:", error);
             alert("Ocurrió un error de conexión. Intenta de nuevo.");
+        }
+    };
+
+    const handleShareRecetaClick = async () => {
+        if (!receta) return;
+        const recetaUrl = `${window.location.origin}/perfil/${receta.autor.id}/publicaciones?receta=${receta.id}`;
+        const shareText = `¡Mira la receta "${receta.titulo}" de @${receta.autor.nombreUsuario} en F.o.B!`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Receta: ${receta.titulo}`,
+                    text: shareText,
+                    url: recetaUrl,
+                });
+            } catch (error) {
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    console.error('Error al usar la API de compartir:', error);
+                }
+            }
+        } else {
+            await navigator.clipboard.writeText(recetaUrl);
+            alert('¡Enlace de la receta copiado al portapapeles!');
         }
     };
 
@@ -679,6 +703,9 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
             </Box>
             <div className="acciones-derecha">
+                <IconButton onClick={handleShareRecetaClick} size="small" sx={{ position: 'relative', top: '0.5px' }}>
+                    <ShareIcon />
+                </IconButton>
                 <IconButton onClick={handleFavoritoClick} size="small">
                     {favorite ? (
                         <StarIcon sx={{ color: 'primary.main' }} />
