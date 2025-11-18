@@ -27,7 +27,7 @@
 /* En pantallas de escritorio (600px o más), añade un margen superior para que no se pegue a la barra */
 @media (min-width: 600px) {
     .grilla-tendencias {
-        margin-top: 64px; /* Ajusta este valor si la altura de tu barra de navegación cambia */
+        margin-top: 20px; /* Ajusta este valor si la altura de tu barra de navegación cambia */
     }
 }
 
@@ -63,11 +63,11 @@
 .header-contenedor-principal {
     position: sticky; /* Mantener fijo en la parte superior */
     top: 0;
-    max-width: 800px;
-    margin: 20px auto 0; /* Ajustado el margin superior para pegarlo al borde (si es necesario) */
+    width: 100%;
+    max-width: 500px; /* Coincide con el ancho máximo de la receta */
+    margin: 0 auto;
     box-sizing: border-box;
     display: flex;
-    align-content: center;
     justify-content: center;
     flex-direction: column;
     z-index: 1000;

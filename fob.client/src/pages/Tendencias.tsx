@@ -327,13 +327,13 @@ const Tendencias = () => {
                 }}
             >
 
-                <Box className="header-contenedor-principal ">
-                    <Box className="header-input-seccion ">
+                <Box className="header-contenedor-principal" sx={{ top: '10px' }}>
+                    <Box className="header-input-seccion" sx={{ py: 1 }}>
                         <Box
                             component="img"
                             src={LogoApp}
                             sx={{
-                                width: 50,
+                                width: 40,
                                 height: 'auto',
                                 mr: 1, 
                             }}
@@ -349,6 +349,7 @@ const Tendencias = () => {
                         p: 0, 
                         width: '100%', // Asegura que ocupe todo el ancho
                         backgroundColor: 'background.default', 
+                        mt: '20px', // Margen superior para separar del header
                     }}
                 >
                     {recetaSeleccionada && (
