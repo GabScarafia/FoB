@@ -87,16 +87,17 @@
 
 /* Estilos del Header y Cargando (se mantienen) */
 .header-contenedor-principal {
-  position: sticky; /* Mantener fijo en la parte superior */
-  top: 0;
-  width: 100%;
-  max-width: 500px; /* Coincide con el ancho máximo de la receta */
-  margin: 0 auto;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  flex-direction: column;
-  z-index: 1000;
+    position: sticky; /* Mantener fijo en la parte superior */
+    top: 0;
+    width: 100%;
+    max-width: 500px; /* Coincide con el ancho máximo de la receta */
+    margin: 0 auto;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    margin-top: 1rem;
+    flex-direction: column;
+    z-index: 1000;
 }
 .logo-app {
   height: 35px;

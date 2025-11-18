@@ -62,13 +62,14 @@ const Tendencias = () => {
     const [error, setError] = useState<string | null>(null);
     // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
     const [viewMode, setViewMode] = useState<'grid' | 'feed'>('grid');
-    const { authData } = useAuth(); 
+    const { authData, clearAuthData } = useAuth(); 
     // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
     
     const [openDialog, setOpenDialog] = useState(false);
     
     const mainRef = useRef<HTMLElement | null>(null);
+    const originalMainPaddingTop = useRef<string | null>(null);
 
     // === NUEVOS ESTADOS DE PAGINACIÓN ===
     const [page, setPage] = useState(1);
@@ -87,11 +88,19 @@ const Tendencias = () => {
         if (mainElement) {
             mainElement.classList.add('tendencias-page');
             mainRef.current = mainElement;
+            // store original paddingTop to restore later
+            if (originalMainPaddingTop.current === null) {
+                originalMainPaddingTop.current = window.getComputedStyle(mainElement).paddingTop || null;
+            }
         }
 
         return () => {
             if (mainRef.current) {
                 mainRef.current.classList.remove('tendencias-page');
+            }
+            // restore original padding when unmounting
+            if (mainRef.current && originalMainPaddingTop.current !== null) {
+                mainRef.current.style.paddingTop = originalMainPaddingTop.current;
             }
         };
     }, []);
@@ -124,6 +133,12 @@ const Tendencias = () => {
             });
 
             if (!response.ok) {
+                if (response.status ===401) {
+                    // Token inválido/expirado: limpiar auth y redirigir
+                    try { clearAuthData(); } catch (e) {}
+                    navigate('/iniciar-sesion');
+                    return;
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -212,15 +227,27 @@ const Tendencias = () => {
         if (viewMode === 'feed') {
             // Oculta el header principal (BarraBusqueda)
             window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: false }));
+            // Remove top padding on main so selector moves up into the freed space
+            if (mainRef.current) {
+                mainRef.current.style.paddingTop = '0px';
+            }
         } else {
             // Muestra el header principal al volver a la vista de grid
             window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
+            // Restore original padding
+            if (mainRef.current && originalMainPaddingTop.current !== null) {
+                mainRef.current.style.paddingTop = originalMainPaddingTop.current;
+            }
         }
         // La limpieza se hace más robusta: solo se dispara si el componente se desmonta
         // mientras estaba en modo 'feed'.
         return () => {
             if (viewMode === 'feed')
                 window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
+            // ensure padding is restored
+            if (mainRef.current && originalMainPaddingTop.current !== null) {
+                mainRef.current.style.paddingTop = originalMainPaddingTop.current;
+            }
         };
     }, [viewMode]);
 
@@ -370,6 +397,20 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
+                {/* --- HEADER BLANCO: mostrar en modo FEED (igual que al abrir una publicacion) --- */}
+                {viewMode === 'feed' && (
+                <Box className="header-contenedor-principal" sx={{ position: 'sticky', top:0, zIndex:1100 }}>
+                    <Box className="header-input-seccion" sx={{ py:1 }}>
+                        <Box
+                            component="img"
+                            src={LogoApp}
+                            sx={{ width:40, height: 'auto', mr:1 }}
+                        />
+                        <span>#Tendencias</span>
+                    </Box>
+                </Box>
+                )}
+
                 {/* --- NUEVO: Selector de Vista --- */}
                 <Box
                     className="tendencias-view-selector"

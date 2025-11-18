@@ -42,11 +42,17 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  if (!authData?.token) return;
  try {
  const resCount = await fetch(`${BASE_URL}/Notificacion/unread-count`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
+ if (!resCount.ok) {
+ if (resCount.status ===401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
+ }
  if (resCount.ok) {
  const data = await resCount.json();
  setUnreadCount(data.count ||0);
  }
  const res = await fetch(`${BASE_URL}/Notificacion`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
+ if (!res.ok) {
+ if (res.status ===401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
+ }
  if (res.ok) {
  const list = await res.json();
  setNotifications(list);
@@ -124,10 +130,25 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
     const pattern = new RegExp(`^${n.emisor.nombreUsuario}\\s*`);
     return n.mensaje.replace(pattern, '');
  };
+ // Control visibility from other pages via window.dispatchEvent(new CustomEvent('setHeaderVisibility',{detail: boolean}))
+ const [isVisible, setIsVisible] = React.useState<boolean>(true);
+ React.useEffect(() => {
+ const handler = (e: Event) => {
+ try {
+ // CustomEvent carries detail property
+ const ce = e as CustomEvent<boolean>;
+ if (typeof ce.detail === 'boolean') setIsVisible(ce.detail);
+ } catch (err) {
+ // ignore
+ }
+ };
+ window.addEventListener('setHeaderVisibility', handler as EventListener);
+ return () => window.removeEventListener('setHeaderVisibility', handler as EventListener);
+ }, []);
 
-
+ // Always render the AppBar (Slide expects a child); show/hide via CSS
  return (
- <AppBar position="fixed" ref={ref} sx={{ width: '100%', backgroundColor: 'transparent', boxShadow: 'none' }}>
+ <AppBar position="fixed" ref={ref} sx={{ width: '100%', backgroundColor: 'transparent', boxShadow: 'none', display: isVisible ? undefined : 'none' }}>
  <Toolbar sx={{ gap:1 }}>
  <Typography variant="h6" noWrap component="div" sx={{ flexGrow:1, fontWeight:700 }}>
  Bienvenido {authData?.nombre}
