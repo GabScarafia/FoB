@@ -175,6 +175,6 @@ body.dark .tendencias-view-selector {
 
 @media (max-width: 599px) {
     .tendencias-view-selector {
-        margin-top: 0px !important;
+        margin-top: 0.5px !important;
     }
 }
