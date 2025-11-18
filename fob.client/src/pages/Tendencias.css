@@ -12,10 +12,19 @@
 } */
 
 .css-c11htj {
-  background-color: #f9f9f9;
+    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
 }
-.header-contenedor-principal MuiBox-root css-1b5uciz{
-    display:none !important;
+.css-1xp05p6{
+    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
+}
+.css-119druq {
+    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
+}
+.css-98kddx {
+    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
+}
+.header-contenedor-principal MuiBox-root css-1b5uciz {
+    display: none !important;
 }
 /* Estilos para el selector de vista --- */
 .tendencias-view-selector {
@@ -105,7 +114,6 @@
   filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
 }
 .header-input-seccion {
-  background: linear-gradient(45deg, #ff980030%, #ff572290%);
   color: white;
   font-weight: bold;
   padding: 8px 16px;

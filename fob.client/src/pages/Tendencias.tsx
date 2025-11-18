@@ -401,11 +401,11 @@ const Tendencias = () => {
                 {/* --- HEADER BLANCO/AZUL: mostrar en modo FEED (igual que al abrir una publicacion) --- */}
                 {viewMode === 'feed' && (
                     <Box className="header-contenedor-principal" sx={{ position: 'sticky', top: 0, zIndex: 1100 }}>
-                        <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#1a2a6c' }}>
+                        <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : 'white' }}>
                             <Box
                                 component="img"
                                 // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
-                                src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppAzul}
+                                src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppBlanco}
                                 alt="Logo App" // Agregado alt text
                                 sx={{ width: 40, height: 'auto', mr: 1 }}
                             />
@@ -496,11 +496,11 @@ const Tendencias = () => {
             >
 
                 <Box className="header-contenedor-principal" sx={{ top: '10px' }}>
-                    <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#1a2a6c' }}>
+                    <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#white' }}>
                         <Box
                             component="img"
                             // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
-                            src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppAzul}
+                            src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppBlanco}
                             alt="Logo App" // Agregado alt text
                             sx={{
                                 width: 40,
