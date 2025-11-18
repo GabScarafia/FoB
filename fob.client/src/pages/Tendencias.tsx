@@ -10,6 +10,7 @@ import LogoApp from '../assets/images/logo-blanco.png';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
@@ -244,6 +245,7 @@ const Tendencias = () => {
                             className="galeria-item" 
                             onClick={() => handleRecetaClick(receta)}
                         >
+                            {mediaType === 'video' && <VideoLibraryIcon className="video-watermark-icon" />}
                             {mediaType === 'image' ? (
                                 <img
                                     src={mediaUrl}

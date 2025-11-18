@@ -51,6 +51,15 @@
     display: block; 
 }
 
+/* Estilo para la marca de agua de video en las galerías */
+.video-watermark-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: white;
+    z-index: 1;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));
+}
 /* Estilos para el contenido de la Receta dentro del Dialog (CAMBIO CLAVE) */
 .receta-contenido {
   width: 100%;

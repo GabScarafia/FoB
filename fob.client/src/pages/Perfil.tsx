@@ -301,6 +301,7 @@ const Perfil: React.FC = () => {
 
             return (
                 <div key={receta.id} className="galeria-item">
+                    {mediaType === 'video' && <VideoLibraryIcon className="video-watermark-icon" />}
                     <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
                         {mediaType === 'image' ? (
                             <img
