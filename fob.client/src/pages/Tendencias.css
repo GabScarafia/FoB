@@ -24,6 +24,13 @@
     padding: 10px; /* Espacio alrededor de toda la grilla */
 }
 
+/* En pantallas de escritorio (600px o más), añade un margen superior para que no se pegue a la barra */
+@media (min-width: 600px) {
+    .grilla-tendencias {
+        margin-top: 64px; /* Ajusta este valor si la altura de tu barra de navegación cambia */
+    }
+}
+
 .galeria-item {
     position: relative;
     width: 100%;
