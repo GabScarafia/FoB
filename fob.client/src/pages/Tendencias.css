@@ -5,15 +5,18 @@
   box-sizing: border-box; /* This is key to include padding in the total width */
   overflow-x: hidden; /* Prevents horizontal scrolling */
 }
+
 /* main.MuiBox-root {
   padding-left: 0 !important;
   padding-right: 0 !important;
 } */
 
 .css-c11htj {
-    background-color: #f9f9f9;
+  background-color: #f9f9f9;
 }
-
+.header-contenedor-principal MuiBox-root css-1b5uciz{
+    display:none !important;
+}
 /* Estilos para el selector de vista --- */
 .tendencias-view-selector {
     display: flex;
@@ -21,108 +24,156 @@
     padding: 8px;
     border-bottom: 1px solid #e0e0e0;
     background-color: #fff;
+    margin-top: 1rem;
 }
 
 /* Contenedor para la vista de feed --- */
 .feed-tendencias {
-    padding-top: 15px;
+  padding-top: 15px;
 }
-
 
 /* Grilla de Tendencias (se mantiene para la vista previa) */
 .grilla-tendencias {
-    display: grid;
-    /* Define la cantidad de columnas. Puedes ajustarlo a tu gusto. */
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
-    gap: 6px; /* Espacio entre las imágenes */
-    padding: 10px; /* Espacio alrededor de toda la grilla */
+  display: grid;
+  /* Define la cantidad de columnas. Puedes ajustarlo a tu gusto. */
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 6px; /* Espacio entre las imágenes */
+  padding: 10px; /* Espacio alrededor de toda la grilla */
 }
 
 /* En pantallas de escritorio (600px o más), añade un margen superior para que no se pegue a la barra */
 @media (min-width: 600px) {
-    .grilla-tendencias {
-        margin-top: 20px; /* Ajusta este valor si la altura de tu barra de navegación cambia */
-    }
+  .grilla-tendencias {
+    margin-top: 20px; /* Ajusta este valor si la altura de tu barra de navegación cambia */
+  }
 }
 
 .galeria-item {
-    position: relative;
-    width: 100%;
-    padding-bottom: 120%; /* Altura de retrato */
-    overflow: hidden; 
-    border-radius: 8px; 
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    cursor: pointer;
+  position: relative;
+  width: 100%;
+  padding-bottom: 120%; /* Altura de retrato */
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 
 .galeria-item img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover; 
-    display: block; 
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 /* Estilo para la marca de agua de video en las galerías */
 .video-watermark-icon {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    color: white;
-    z-index: 1;
-    filter: drop-shadow(0 0 3px rgba(0,0,0,0.7));
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: white;
+  z-index: 1;
+  filter: drop-shadow(0 0 3px rgba(0, 0, 0, 0.7));
 }
+
 /* Estilos para el contenido de la Receta dentro del Dialog (CAMBIO CLAVE) */
 .receta-contenido {
   width: 100%;
   /* Eliminamos el max-width y margin, confiando en que el Dialog ya centra y limita el ancho */
-  background-color: white; 
+  background-color: white;
 }
-
 
 /* Estilos del Header y Cargando (se mantienen) */
 .header-contenedor-principal {
-    position: sticky; /* Mantener fijo en la parte superior */
-    top: 0;
-    width: 100%;
-    max-width: 500px; /* Coincide con el ancho máximo de la receta */
-    margin: 0 auto;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    z-index: 1000;
+  position: sticky; /* Mantener fijo en la parte superior */
+  top: 0;
+  width: 100%;
+  max-width: 500px; /* Coincide con el ancho máximo de la receta */
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  z-index: 1000;
 }
 .logo-app {
-    height: 35px;
-    margin-right: 15px;
-    filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+  height: 35px;
+  margin-right: 15px;
+  filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
 }
 .header-input-seccion {
-    background: linear-gradient(45deg, #FF9800 30%, #FF5722 90%);
-    color: white;
-    font-Weight: bold;
-    padding: 8px 16px;
-    border-radius: 25px;
-    justify-self: 'space-between';
-    cursor: 'pointer'; 
-    display: flex;
-    align-Items: center;
-    width: fit-content; /* Asegura que no ocupe todo el ancho del contenedor padre (opcional) */
-    margin: 0 auto;
+  background: linear-gradient(45deg, #ff980030%, #ff572290%);
+  color: white;
+  font-weight: bold;
+  padding: 8px 16px;
+  border-radius: 25px;
+  justify-self: 'space-between';
+  cursor: 'pointer';
+  display: flex;
+  align-items: center;
+  width: fit-content; /* Asegura que no ocupe todo el ancho del contenedor padre (opcional) */
+  margin: 0 auto;
 }
 .cargando-centrado, .cargando-tendencias {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 40vh;
-    text-align: center;
-    font-size: 1.1em;
-    color: #555;
-    gap: 10px; /* Espacio entre el spinner y el texto */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  text-align: center;
+  font-size: 1.1em;
+  color: #555;
+  gap: 10px; /* Espacio entre el spinner y el texto */
 }
 
 /* Quitamos los estilos redundantes para receta-preview-container que ya están en galeria-item */
+
+/* Minimal dark-mode override: keep selector bar black in dark theme */
+body.dark .tendencias-view-selector {
+    background-color: #1e1f22;
+    border-bottom-color: rgba(255, 255, 255, 0.06);
+}
+body.dark .tendencias-view-selector .MuiSvgIcon-root {
+  color: #b0bec5; /* lighter icon color in dark mode */
+}
+body.dark .tendencias-view-selector .MuiIconButton-colorPrimary .MuiSvgIcon-root {
+  color: #ffb74d; /* active icon (primary) in dark mode */
+}
+
+/* Dark mode adjustments for the selector bar */
+body.dark .tendencias-view-selector {
+ background-color: var(--mui-palette-background-default, #000000);
+ border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+/* Icon color default (inactive) in dark mode */
+body.dark .tendencias-view-selector .MuiSvgIcon-root,
+body.dark .tendencias-view-selector .MuiIconButton-root {
+ color: #b0bec5;
+}
+
+/* Active icon (when MUI applies color="primary") */
+body.dark .tendencias-view-selector .MuiIconButton-colorPrimary .MuiSvgIcon-root,
+body.dark .tendencias-view-selector .MuiIconButton-colorPrimary {
+ color: #ffb74d;
+ fill: #ffb74d;
+}
+
+/* Hover/focus state in dark mode to give subtle background */
+body.dark .tendencias-view-selector .MuiIconButton-root:hover {
+ background-color: rgba(255,255,255,0.04);
+}
+
+/* Ensure contrast for the selector when sticky */
+body.dark .tendencias-view-selector {
+ box-shadow:01px0 rgba(255,255,255,0.02);
+}
+
+
+@media (max-width: 599px) {
+    .tendencias-view-selector {
+        margin-top: 0px !important;
+    }
+}

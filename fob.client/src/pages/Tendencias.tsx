@@ -23,6 +23,7 @@ import fotoPerfilLocal from '../assets/images/avatar.png'; // <-- IMPORT NECESAR
 import './Tendencias.css'; 
 
 import type { RecetaType, Usuario } from '../types/Receta';
+import { useTheme } from '@mui/material/styles';
 
 // --- INICIO DE CÓDIGO NUEVO ---
 // (Estas funciones helper están bien)
@@ -54,6 +55,7 @@ const getNormalizedUrl = (
 
 
 const Tendencias = () => {
+ const theme = useTheme();
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
     const [recetaSeleccionada, setRecetaSeleccionada] = useState<RecetaType | null>(null);
     const [cargando, setCargando] = useState(true);
@@ -368,42 +370,40 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {/* --- HEADER CONDICIONAL PARA VISTA FEED --- */}
-                {viewMode === 'feed' && (
-                    <Box 
-                        className="header-contenedor-principal" 
-                        sx={{ 
-                            position: 'sticky', top: 0, backgroundColor: 'background.default', zIndex: 1100,
-                            transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
-                            transition: 'transform 0.3s ease-in-out',
-                        }}
-                    >
-                         <Box className="header-input-seccion" sx={{ py: 1 }}>
-                            <Box
-                                component="img"
-                                src={LogoApp}
-                                sx={{
-                                    width: 40,
-                                    height: 'auto',
-                                    mr: 1,
-                                }}
-                            />
-                            <span>#Tendencias</span>
-                        </Box>
-                    </Box>
-                )}
                 {/* --- NUEVO: Selector de Vista --- */}
-                <Box 
-                    className="tendencias-view-selector" 
-                    sx={{ 
-                        position: 'sticky', zIndex: 1050,
-                        top: viewMode === 'feed' ? (isHeaderVisible ? 60 : 0) : 0,
-                        transition: 'top 0.3s ease-in-out',
-                    }}>
-                    <IconButton onClick={() => setViewMode('grid')} color={viewMode === 'grid' ? 'primary' : 'default'}>
+                <Box
+                    className="tendencias-view-selector"
+                    sx={{
+                        position: 'sticky',
+                        zIndex:1050,
+                        top:0,
+                        transition: 'top0.3s ease-in-out',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        gap:1,
+                        py:1,
+                        bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fff',
+                        borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#e0e0e0'}`,
+                    }}
+                 >
+                    <IconButton
+                        onClick={() => setViewMode('grid')}
+                        aria-label="grid"
+                        sx={{
+                            color: viewMode === 'grid' ? theme.palette.primary.main : theme.palette.text.secondary,
+                            '&:hover': { backgroundColor: theme.palette.action.hover },
+                        }}
+                     >
                         <GridViewIcon />
                     </IconButton>
-                    <IconButton onClick={() => setViewMode('feed')} color={viewMode === 'feed' ? 'primary' : 'default'}>
+                    <IconButton
+                        onClick={() => setViewMode('feed')}
+                        aria-label="feed"
+                        sx={{
+                            color: viewMode === 'feed' ? theme.palette.primary.main : theme.palette.text.secondary,
+                            '&:hover': { backgroundColor: theme.palette.action.hover },
+                        }}
+                     >
                         <ViewListIcon />
                     </IconButton>
                 </Box>
