@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 // import { useTendenciasService } from '../services/tendenciasService'; // <-- No lo usamos para poder paginar
 import Receta from 'components/Receta';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 // Importaciones de Material-UI
 import Dialog from '@mui/material/Dialog';
 import Slide from '@mui/material/Slide';
-import LogoApp from '../assets/images/logo-blanco.png';
+import LogoAppBlanco from '../assets/images/logo-blanco.png';
+import LogoAppAzul from '../assets/images/logo.png'; // <-- ¡LOGO AZUL AHORA USADO EN MODO CLARO!
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
@@ -20,7 +21,7 @@ import { useAuth } from '../context/AuthContext';
 import { BASE_URL } from '../apiConfig';
 import fotoPerfilLocal from '../assets/images/avatar.png'; // <-- IMPORT NECESARIO
 
-import './Tendencias.css'; 
+import './Tendencias.css';
 
 import type { RecetaType, Usuario } from '../types/Receta';
 import { useTheme } from '@mui/material/styles';
@@ -35,39 +36,39 @@ const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => 
 };
 
 const getNormalizedUrl = (
-    mediaStr: string | undefined | null, 
-    contentType: string, 
+    mediaStr: string | undefined | null,
+    contentType: string,
     fallback: string
 ): string => {
     if (!mediaStr || mediaStr === '') return fallback;
-    
+
     if (mediaStr.startsWith('http') || mediaStr.startsWith('data:')) {
         return mediaStr;
     }
-    
+
     if (mediaStr.startsWith('/')) {
         return `${BASE_URL}${mediaStr}`;
     }
-    
+
     return `data:${contentType};base64,${mediaStr}`;
 }
 // --- FIN DE LA CORRECCIÓN ---
 
 
 const Tendencias = () => {
- const theme = useTheme();
+    const theme = useTheme();
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
     const [recetaSeleccionada, setRecetaSeleccionada] = useState<RecetaType | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
     const [viewMode, setViewMode] = useState<'grid' | 'feed'>('grid');
-    const { authData, clearAuthData } = useAuth(); 
+    const { authData, clearAuthData } = useAuth();
     // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
-    
+
     const [openDialog, setOpenDialog] = useState(false);
-    
+
     const mainRef = useRef<HTMLElement | null>(null);
     const originalMainPaddingTop = useRef<string | null>(null);
 
@@ -118,14 +119,14 @@ const Tendencias = () => {
             setHasMore(true);
         } else {
             // Ya estamos cargando más, no hacer nada
-            if (cargandoMas) return; 
+            if (cargandoMas) return;
             setCargandoMas(true);
         }
 
         const currentPage = isInitialLoad ? 1 : page;
 
         try {
-            const response = await fetch(`${BASE_URL}/Recetas/Tendencias?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`, { 
+            const response = await fetch(`${BASE_URL}/Recetas/Tendencias?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`, {
                 headers: {
                     'Authorization': `Bearer ${authData.token}`,
                     'Content-Type': 'application/json'
@@ -133,9 +134,9 @@ const Tendencias = () => {
             });
 
             if (!response.ok) {
-                if (response.status ===401) {
+                if (response.status === 401) {
                     // Token inválido/expirado: limpiar auth y redirigir
-                    try { clearAuthData(); } catch (e) {}
+                    try { clearAuthData(); } catch (e) { }
                     navigate('/iniciar-sesion');
                     return;
                 }
@@ -167,7 +168,7 @@ const Tendencias = () => {
         } catch (err) {
             console.error("Error al cargar las tendencias:", err);
             if (isInitialLoad) {
-                 setError("No se pudieron cargar las tendencias.");
+                setError("No se pudieron cargar las tendencias.");
             }
             setHasMore(false);
         } finally {
@@ -178,13 +179,13 @@ const Tendencias = () => {
 
     // useEffect para carga inicial (MODIFICADO)
     useEffect(() => {
-        if(authData?.token) {
-             cargarTendencias(true);
+        if (authData?.token) {
+            cargarTendencias(true);
         }
     }, [authData?.token]); // Se dispara solo cuando el token está listo
 
     // --- LÓGICA DE SCROLL (REFACTORIZADA PARA ESTABILIDAD) ---
-   useEffect(() => {
+    useEffect(() => {
         const mainElement = mainRef.current;
         if (!mainElement || viewMode !== 'feed') {
             setIsHeaderVisible(true); // Asegura que el header esté visible en modo grid
@@ -256,10 +257,10 @@ const Tendencias = () => {
         const checkForMore = () => {
             // Si no estamos cargando, y SÍ hay más páginas, Y la altura total
             // del documento es MENOR o IGUAL a la altura de la ventana...
-            if (!cargando && !cargandoMas && hasMore && mainRef.current) { 
-                
+            if (!cargando && !cargandoMas && hasMore && mainRef.current) {
+
                 // Usamos el 'mainRef' (el contenedor con scroll)
-                const contentHeight = mainRef.current.scrollHeight; 
+                const contentHeight = mainRef.current.scrollHeight;
                 const viewportHeight = mainRef.current.clientHeight;
 
                 if (contentHeight <= viewportHeight) {
@@ -276,7 +277,7 @@ const Tendencias = () => {
         return () => clearTimeout(timer);
 
     }, [cargando, cargandoMas, hasMore, tendencias, cargarTendencias]);
-    
+
     // ... (Manejadores de Dialog y Navegación - Sin cambios)
     const handleRecetaClick = (receta: RecetaType) => {
         setRecetaSeleccionada(receta);
@@ -297,7 +298,7 @@ const Tendencias = () => {
         // Ahora usa 'tendencias' que es la lista que se actualiza con el scroll
         if (tendencias.length === 0) {
             // No muestra nada si está cargando, el spinner principal se encarga
-            if (cargando) return null; 
+            if (cargando) return null;
             // Si no está cargando y no hay tendencias, muestra el mensaje
             return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
         }
@@ -305,19 +306,19 @@ const Tendencias = () => {
         return (
             <div className="grilla-tendencias">
                 {tendencias.map((receta) => {
-                    
+
                     // --- INICIO DE LÓGICA CORREGIDA (Bug) ---
                     const mediaType = getMediaTypeFromContentType(receta.contentType);
                     // Pasamos 'fotoPerfilLocal' como fallback, por si 'imagenUrl' es nula
-                    const mediaUrl = getNormalizedUrl(receta.imagenUrl, receta.contentType, fotoPerfilLocal); 
+                    const mediaUrl = getNormalizedUrl(receta.imagenUrl, receta.contentType, fotoPerfilLocal);
                     // --- FIN DE LÓGICA CORREGIDA ---
-                    
+
                     // (Si la mediaUrl sigue siendo el fallback, se mostrará el avatar)
-                    
+
                     return (
-                        <div 
-                            key={receta.id} 
-                            className="galeria-item" 
+                        <div
+                            key={receta.id}
+                            className="galeria-item"
                             onClick={() => handleRecetaClick(receta)}
                         >
                             {mediaType === 'video' && <VideoLibraryIcon className="video-watermark-icon" />}
@@ -331,7 +332,7 @@ const Tendencias = () => {
                                     src={mediaUrl}
                                     muted
                                     playsInline
-                                    preload="metadata" 
+                                    preload="metadata"
                                 >
                                     Tu navegador no soporta videos.
                                 </video>
@@ -362,7 +363,7 @@ const Tendencias = () => {
                             esFavorito: receta.esFavorito ?? false,
                             seguido: receta.seguido ?? false,
                         }}
-                        onDrawerToggle={() => {}}
+                        onDrawerToggle={() => { }}
                         currentUserId={authData?.id ?? null}
                         onDeleteReceta={async (recetaId) => {
                             // Al eliminar, lo quitamos de la lista y recargamos
@@ -397,18 +398,20 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {/* --- HEADER BLANCO: mostrar en modo FEED (igual que al abrir una publicacion) --- */}
+                {/* --- HEADER BLANCO/AZUL: mostrar en modo FEED (igual que al abrir una publicacion) --- */}
                 {viewMode === 'feed' && (
-                <Box className="header-contenedor-principal" sx={{ position: 'sticky', top:0, zIndex:1100 }}>
-                    <Box className="header-input-seccion" sx={{ py:1 }}>
-                        <Box
-                            component="img"
-                            src={LogoApp}
-                            sx={{ width:40, height: 'auto', mr:1 }}
-                        />
-                        <span>#Tendencias</span>
+                    <Box className="header-contenedor-principal" sx={{ position: 'sticky', top: 0, zIndex: 1100 }}>
+                        <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#1a2a6c' }}>
+                            <Box
+                                component="img"
+                                // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
+                                src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppAzul}
+                                alt="Logo App" // Agregado alt text
+                                sx={{ width: 40, height: 'auto', mr: 1 }}
+                            />
+                            <span className="tendencias-titulo">#Tendencias</span>
+                        </Box>
                     </Box>
-                </Box>
                 )}
 
                 {/* --- NUEVO: Selector de Vista --- */}
@@ -416,17 +419,17 @@ const Tendencias = () => {
                     className="tendencias-view-selector"
                     sx={{
                         position: 'sticky',
-                        zIndex:1050,
-                        top:0,
-                        transition: 'top0.3s ease-in-out',
+                        zIndex: 1050,
+                        top: (viewMode === 'feed' && isHeaderVisible) ? '56px' : '0px', // Ajusta el 'top' para que quede debajo del header de feed
+                        transition: 'top 0.3s ease-in-out',
                         display: 'flex',
                         justifyContent: 'center',
-                        gap:1,
-                        py:1,
+                        gap: 1,
+                        py: 1,
                         bgcolor: theme.palette.mode === 'dark' ? theme.palette.background.default : '#fff',
                         borderBottom: `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#e0e0e0'}`,
                     }}
-                 >
+                >
                     <IconButton
                         onClick={() => setViewMode('grid')}
                         aria-label="grid"
@@ -434,7 +437,7 @@ const Tendencias = () => {
                             color: viewMode === 'grid' ? theme.palette.primary.main : theme.palette.text.secondary,
                             '&:hover': { backgroundColor: theme.palette.action.hover },
                         }}
-                     >
+                    >
                         <GridViewIcon />
                     </IconButton>
                     <IconButton
@@ -444,14 +447,14 @@ const Tendencias = () => {
                             color: viewMode === 'feed' ? theme.palette.primary.main : theme.palette.text.secondary,
                             '&:hover': { backgroundColor: theme.palette.action.hover },
                         }}
-                     >
+                    >
                         <ViewListIcon />
                     </IconButton>
                 </Box>
 
                 {/* --- Renderizado Condicional --- */}
                 {viewMode === 'grid' ? renderGaleriaTendencias() : renderFeedTendencias()}
-                
+
                 {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
                 {cargandoMas && (
                     <div className="cargando-tendencias" style={{ height: '100px', marginTop: '20px' }}>
@@ -481,11 +484,11 @@ const Tendencias = () => {
                         sx: {
                             display: 'flex',
                             flexDirection: 'column',
-                            alignItems: 'center', 
-                            '& .receta-container': { 
+                            alignItems: 'center',
+                            '& .receta-container': {
                                 width: '100%',
-                                maxWidth: 500, 
-                                margin: '0 auto', 
+                                maxWidth: 500,
+                                margin: '0 auto',
                             },
                         },
                     },
@@ -493,27 +496,29 @@ const Tendencias = () => {
             >
 
                 <Box className="header-contenedor-principal" sx={{ top: '10px' }}>
-                    <Box className="header-input-seccion" sx={{ py: 1 }}>
+                    <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#1a2a6c' }}>
                         <Box
                             component="img"
-                            src={LogoApp}
+                            // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
+                            src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppAzul}
+                            alt="Logo App" // Agregado alt text
                             sx={{
                                 width: 40,
                                 height: 'auto',
-                                mr: 1, 
+                                mr: 1,
                             }}
                         />
-                        <span>#Tendencias</span> 
+                        <span className="tendencias-titulo">#Tendencias</span>
                     </Box>
                 </Box>
 
                 <Box
                     sx={{
-                        flexGrow: 1, 
-                        overflowY: 'auto', 
-                        p: 0, 
+                        flexGrow: 1,
+                        overflowY: 'auto',
+                        p: 0,
                         width: '100%', // Asegura que ocupe todo el ancho
-                        backgroundColor: 'background.default', 
+                        backgroundColor: 'background.default',
                         mt: '20px', // Margen superior para separar del header
                     }}
                 >
@@ -526,15 +531,15 @@ const Tendencias = () => {
                                 esFavorito: recetaSeleccionada.esFavorito ?? false,
                                 seguido: recetaSeleccionada.seguido ?? false,
                             }}
-                            onDrawerToggle={() => {}}
+                            onDrawerToggle={() => { }}
                             currentUserId={authData?.id ?? null}
-                            onDeleteReceta={async () => {}} // No se puede borrar desde tendencias
+                            onDeleteReceta={async () => { }} // No se puede borrar desde tendencias
                             onUsuarioClick={handleUsuarioClick}
                         />
                     )}
 
                 </Box>
-                        
+
                 <Box sx={{
                     width: '100%',
                     height: 55,
@@ -542,7 +547,7 @@ const Tendencias = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    p: 2, 
+                    p: 2,
                 }}>
                     <IconButton
                         edge="start"
@@ -553,9 +558,9 @@ const Tendencias = () => {
                     >
                         <ArrowBackIcon />
                     </IconButton>
-                    
-                    <WhatshotIcon sx={{ color: '#ffffffff' }}/> 
-                    
+
+                    <WhatshotIcon sx={{ color: '#ffffffff' }} />
+
                     <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
                         <ArrowBackIcon />
                     </IconButton>

@@ -1,9 +1,9 @@
 .tendencias-container {
-  /* Use a consistent padding on both sides to create a small gutter */
-  padding-bottom: 32px; /* Adjust this value as needed */
-  width: 100%; /* Ensure it takes up the full width */
-  box-sizing: border-box; /* This is key to include padding in the total width */
-  overflow-x: hidden; /* Prevents horizontal scrolling */
+    /* Use a consistent padding on both sides to create a small gutter */
+    padding-bottom: 32px; /* Adjust this value as needed */
+    width: 100%; /* Ensure it takes up the full width */
+    box-sizing: border-box; /* This is key to include padding in the total width */
+    overflow-x: hidden; /* Prevents horizontal scrolling */
 }
 
 /* main.MuiBox-root {
@@ -169,7 +169,11 @@ body.dark .tendencias-view-selector .MuiIconButton-root:hover {
 
 /* Ensure contrast for the selector when sticky */
 body.dark .tendencias-view-selector {
- box-shadow:01px0 rgba(255,255,255,0.02);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+body.dark .header-contenedor-principal .tendencias-titulo {
+    color: white !important; /* Usar !important si todo lo demás falla con MUI */
 }
 
 
