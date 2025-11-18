@@ -44,12 +44,11 @@ public class DominioController : ControllerBase
 
     }
 
-    /* DESCOMENTAR DPES DE AGREGAR EL DATASET
-     * [HttpGet("Utensilio")]
+     [HttpGet("Utensilio")]
     public async Task<IActionResult> Utensilio([FromQuery] string texto)
     {
         var etiquetas = await _etiquetasService.GetUtensilio(texto);
         return Ok(etiquetas);
 
-    }*/
+    }
 }

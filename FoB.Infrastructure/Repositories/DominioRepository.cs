@@ -58,9 +58,7 @@ namespace FoB.Infrastructure.Repositories
 
             return etiquetas;
         }
-
-        /* FIJARSE ESTO, HAY Q AGREGARLE UN DATASET COMO CON LOS DEMAS
-         * public async Task<List<DominioDto>> GetUtensilio(string texto)
+         public async Task<List<DominioDto>> GetUtensilio(string texto)
         {
             var etiquetas = await _context.Utensilios
                 .Where(e => EF.Functions.Like(e.Nombre.ToLower(), $"%{texto.ToLower()}%"))
@@ -72,6 +70,6 @@ namespace FoB.Infrastructure.Repositories
                 .ToListAsync();
 
             return etiquetas;
-        }*/
+        }
     }
 }

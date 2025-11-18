@@ -117,6 +117,15 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  return d.toLocaleString();
  };
 
+ const formatMessage = (n: NotificacionItem): string => {
+    if (!n.emisor?.nombreUsuario || !n.mensaje) {
+        return n.mensaje || '';
+    }
+    const pattern = new RegExp(`^${n.emisor.nombreUsuario}\\s*`);
+    return n.mensaje.replace(pattern, '');
+ };
+
+
  return (
  <AppBar position="fixed" ref={ref} sx={{ width: '100%', backgroundColor: 'transparent', boxShadow: 'none' }}>
  <Toolbar sx={{ gap:1 }}>
@@ -172,36 +181,42 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  <MenuItem
  key={n.id}
  onClick={() => handleNotificationClick(n)}
+ // El onClick se mantiene en el contenedor principal para la navegación
  sx={{
- alignItems: 'flex-start',
+ flexDirection: 'column', // 1. El item ahora es una columna
+ alignItems: 'stretch', // Los hijos se estiran a lo ancho
  borderRadius:1,
  py:1,
  px:1.25,
  bgcolor: n.leida ? 'transparent' : (theme) => theme.palette.action.selected,
  '&:hover': { bgcolor: (theme) => theme.palette.action.hover },
  display: 'flex',
- gap:1.5,
+ gap: 1, // Espacio entre el contenido y los botones
  }}
  >
- <ListItemAvatar sx={{ minWidth:0 }}>
+ <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
+ <ListItemAvatar sx={{ minWidth:0, mt: 0.5 }}>
  <Avatar src={n.emisor?.imagenUrl ?? undefined} alt={n.emisor?.nombreUsuario ?? undefined} sx={{ width:44, height:44 }} />
  </ListItemAvatar>
  <ListItemText
  primary={
  <Box sx={{ display: 'flex', flexDirection: 'column', gap:0.3 }}>
- <Box sx={{ display: 'flex', alignItems: 'center', gap:1 }}>
- <Typography variant="subtitle2" sx={{ fontWeight:700 }}>{n.emisor ? `@${n.emisor.nombreUsuario}` : 'Sistema'}</Typography>
- <Typography variant="body2" sx={{ color: 'text.primary' }}>{n.mensaje}</Typography>
+ <Box sx={{ display: 'flex', alignItems: 'center', gap:1, flexWrap: 'wrap' }}>
+ <Typography variant="subtitle2" sx={{ fontWeight:700, whiteSpace: 'nowrap' }}>{n.emisor ? `@${n.emisor.nombreUsuario}` : 'Sistema'}</Typography>
+ <Typography variant="body2" sx={{ color: 'text.primary', flexShrink: 1, wordBreak: 'break-word' }}>{formatMessage(n)}</Typography>
  </Box>
  </Box>
  }
  secondary={<Typography variant="caption" color="text.secondary">{formatDate(n.fecha)}</Typography>}
- sx={{ mr:1, minWidth:0 }}
+ sx={{ my: 0, flex: '1 1 auto', minWidth: 0 }}
  />
- <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap:1, ml: 'auto', width:72 }}>
+ </Box>
+ 
+ {/* 2. Contenedor para los botones, ahora horizontal y abajo */}
+ <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 1, borderTop: 1, borderColor: 'divider' }}>
  {!n.leida && (
  <Tooltip title="Marcar como leída">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }} sx={{ bgcolor: 'action.hover' }}>
+ <IconButton size="small" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}>
  <DoneIcon fontSize="small" />
  </IconButton>
  </Tooltip>
