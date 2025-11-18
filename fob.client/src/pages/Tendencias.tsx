@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'; // <-- AÑADIDO useCallback
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 // import { useTendenciasService } from '../services/tendenciasService'; // <-- No lo usamos para poder paginar
 import Receta from 'components/Receta';
 import { useNavigate } from 'react-router-dom'; 
@@ -10,6 +10,8 @@ import LogoApp from '../assets/images/logo-blanco.png';
 import IconButton from '@mui/material/IconButton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import ViewListIcon from '@mui/icons-material/ViewList';
+import GridViewIcon from '@mui/icons-material/GridView';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import CircularProgress from '@mui/material/CircularProgress';
 import type { Comentario } from 'components/DrawerComentarios';
@@ -57,6 +59,7 @@ const Tendencias = () => {
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
+    const [viewMode, setViewMode] = useState<'grid' | 'feed'>('grid');
     const { authData } = useAuth(); 
     // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
@@ -70,6 +73,11 @@ const Tendencias = () => {
     const [cargandoMas, setCargandoMas] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const PAGE_SIZE = 15; // <-- Tamaño de página 15
+
+    // --- ESTADOS PARA EL HEADER DINÁMICO ---
+    const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+    const lastScrollTop = useRef(0);
+
 
     // useEffect para la clase 'tendencias-page' (Sin cambios)
     useEffect(() => {
@@ -126,7 +134,11 @@ const Tendencias = () => {
                     setError("No hay tendencias para mostrar.");
                 }
             } else {
-                setTendencias(prev => [...prev, ...recetasObtenidas]);
+                setTendencias(prev => {
+                    const recetasExistentesIds = new Set(prev.map(r => r.id));
+                    const recetasNuevasUnicas = recetasObtenidas.filter(r => !recetasExistentesIds.has(r.id));
+                    return [...prev, ...recetasNuevasUnicas];
+                });
             }
 
             if (recetasObtenidas.length < PAGE_SIZE) {
@@ -154,27 +166,61 @@ const Tendencias = () => {
         }
     }, [authData?.token]); // Se dispara solo cuando el token está listo
 
-    // useEffect para scroll infinito (NUEVO)
+    // --- LÓGICA DE SCROLL (REFACTORIZADA PARA ESTABILIDAD) ---
    useEffect(() => {
-        const mainElement = mainRef.current; // Capturamos el elemento 'main'
+        const mainElement = mainRef.current;
+        if (!mainElement || viewMode !== 'feed') {
+            setIsHeaderVisible(true); // Asegura que el header esté visible en modo grid
+            return;
+        }
 
         const handleScroll = () => {
-            if (!mainElement) return; // Si no hay 'main', no hagas nada
+            const scrollTop = mainElement.scrollTop;
 
-            // (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300)
-            if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300 && 
-                !cargandoMas && 
-                hasMore
-            ) {
-                cargarTendencias(false); // Carga la siguiente página
+            // Lógica para ocultar/mostrar el header
+            if (scrollTop > lastScrollTop.current && scrollTop > 80) { // Scroll hacia abajo y pasamos un umbral
+                setIsHeaderVisible(false);
+            } else if (scrollTop < lastScrollTop.current) { // Scroll hacia arriba
+                setIsHeaderVisible(true);
             }
+            lastScrollTop.current = scrollTop <= 0 ? 0 : scrollTop;
         };
 
-        // Escuchamos el scroll DENTRO del elemento 'main'
-        mainElement?.addEventListener('scroll', handleScroll);
-        return () => mainElement?.removeEventListener('scroll', handleScroll);
-        
-    }, [cargandoMas, hasMore, cargarTendencias]);
+        mainElement.addEventListener('scroll', handleScroll);
+        return () => mainElement.removeEventListener('scroll', handleScroll);
+
+    }, [viewMode]); // Se ejecuta solo cuando cambia el modo de vista.
+
+    // --- LÓGICA DE SCROLL INFINITO (SEPARADA) ---
+    useEffect(() => {
+        const mainElement = mainRef.current;
+        if (!mainElement || !hasMore || cargandoMas) return;
+
+        const checkScroll = () => {
+            if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300) {
+                cargarTendencias(false);
+            }
+        };
+        mainElement.addEventListener('scroll', checkScroll);
+        return () => mainElement.removeEventListener('scroll', checkScroll);
+    }, [cargandoMas, hasMore, cargarTendencias]); // Dependencias específicas para scroll infinito.
+
+    // --- NUEVO: EFECTO PARA CONTROLAR EL HEADER PRINCIPAL ---
+    useEffect(() => {
+        if (viewMode === 'feed') {
+            // Oculta el header principal (BarraBusqueda)
+            window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: false }));
+        } else {
+            // Muestra el header principal al volver a la vista de grid
+            window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
+        }
+        // La limpieza se hace más robusta: solo se dispara si el componente se desmonta
+        // mientras estaba en modo 'feed'.
+        return () => {
+            if (viewMode === 'feed')
+                window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
+        };
+    }, [viewMode]);
 
     useEffect(() => {
         // Esta función revisa si el contenido llena la pantalla
@@ -269,6 +315,41 @@ const Tendencias = () => {
     };
     // FIN DE LA FUNCIÓN DE RENDERIZADO
 
+    // --- NUEVA FUNCIÓN PARA RENDERIZAR EL FEED ---
+    const renderFeedTendencias = () => {
+        if (tendencias.length === 0) {
+            if (cargando) return null;
+            return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
+        }
+
+        return (
+            <div className="feed-tendencias">
+                {tendencias.map(receta => (
+                    <Receta
+                        key={receta.id}
+                        receta={{
+                            ...receta,
+                            noMeGusta: receta.noMeGusta ?? false,
+                            esFavorito: receta.esFavorito ?? false,
+                            seguido: receta.seguido ?? false,
+                        }}
+                        onDrawerToggle={() => {}}
+                        currentUserId={authData?.id ?? null}
+                        onDeleteReceta={async (recetaId) => {
+                            // Al eliminar, lo quitamos de la lista y recargamos
+                            setTendencias(prev => prev.filter(r => r.id !== recetaId));
+                        }}
+                        onUsuarioClick={handleUsuarioClick}
+                    />
+                ))}
+            </div>
+        );
+    };
+
+    const handleDeleteFromFeed = (recetaId: number) => {
+        setTendencias(prev => prev.filter(r => r.id !== recetaId));
+    };
+
     // MODIFICADO: Muestra spinner solo en carga inicial
     if (cargando && tendencias.length === 0) {
         return (
@@ -287,7 +368,48 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {renderGaleriaTendencias()}
+                {/* --- HEADER CONDICIONAL PARA VISTA FEED --- */}
+                {viewMode === 'feed' && (
+                    <Box 
+                        className="header-contenedor-principal" 
+                        sx={{ 
+                            position: 'sticky', top: 0, backgroundColor: 'background.default', zIndex: 1100,
+                            transform: isHeaderVisible ? 'translateY(0)' : 'translateY(-100%)',
+                            transition: 'transform 0.3s ease-in-out',
+                        }}
+                    >
+                         <Box className="header-input-seccion" sx={{ py: 1 }}>
+                            <Box
+                                component="img"
+                                src={LogoApp}
+                                sx={{
+                                    width: 40,
+                                    height: 'auto',
+                                    mr: 1,
+                                }}
+                            />
+                            <span>#Tendencias</span>
+                        </Box>
+                    </Box>
+                )}
+                {/* --- NUEVO: Selector de Vista --- */}
+                <Box 
+                    className="tendencias-view-selector" 
+                    sx={{ 
+                        position: 'sticky', zIndex: 1050,
+                        top: viewMode === 'feed' ? (isHeaderVisible ? 60 : 0) : 0,
+                        transition: 'top 0.3s ease-in-out',
+                    }}>
+                    <IconButton onClick={() => setViewMode('grid')} color={viewMode === 'grid' ? 'primary' : 'default'}>
+                        <GridViewIcon />
+                    </IconButton>
+                    <IconButton onClick={() => setViewMode('feed')} color={viewMode === 'feed' ? 'primary' : 'default'}>
+                        <ViewListIcon />
+                    </IconButton>
+                </Box>
+
+                {/* --- Renderizado Condicional --- */}
+                {viewMode === 'grid' ? renderGaleriaTendencias() : renderFeedTendencias()}
                 
                 {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
                 {cargandoMas && (
