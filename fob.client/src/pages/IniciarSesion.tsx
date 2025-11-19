@@ -68,6 +68,16 @@ const IniciarSesion: React.FC = () => {
     };
 
     return (
+        <>
+        {cargando && (
+            <div className="loading-overlay">
+                <div className="loading-content">
+                    <img src={logoImage} alt="Logo Fondo Blanco" className="loading-logo" />
+                    <div className="loading-spinner"></div>
+                </div>
+            </div>
+        )}
+
         <div className="contenedor-inicio-sesion">
             <div className="header-autenticacion-curvo">
                 <div className="seccion-logo">
@@ -115,6 +125,7 @@ const IniciarSesion: React.FC = () => {
                 </Link>
             </div>
         </div>
+        </>
     );
 };
 

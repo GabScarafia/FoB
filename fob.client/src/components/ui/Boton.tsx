@@ -8,12 +8,13 @@ interface BotonProps {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   tipo?: 'button' | 'submit' | 'reset';
   className?: string;
+  deshabilitado?: boolean;
 }
 
 // Componente funcional Boton
-const Boton: React.FC<BotonProps> = ({ children, onClick, tipo = 'button', className }) => {
+const Boton: React.FC<BotonProps> = ({ children, onClick, tipo = 'button', className, deshabilitado = false }) => {
   return (
-    <button type={tipo} onClick={onClick} className={`boton ${className || ''}`}>
+    <button type={tipo} onClick={onClick} className={`boton ${className || ''}`} disabled={deshabilitado}>
       {children}
     </button>
   );
