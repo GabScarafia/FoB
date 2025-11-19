@@ -10,6 +10,16 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="wwwroot\assets\avatar-DsqCMPPI.PNG" />
+    <Content Remove="wwwroot\assets\index-0PZ9J5E8.js" />
+    <Content Remove="wwwroot\assets\index-BIdoi11C.css" />
+    <Content Remove="wwwroot\assets\logo-blanco-CtbNWzD4.PNG" />
+    <Content Remove="wwwroot\assets\logo-DOpalBzT.png" />
+    <Content Remove="wwwroot\index.html" />
+    <Content Remove="wwwroot\vite.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.SpaProxy">
@@ -30,6 +40,16 @@
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
     </ProjectReference>
     <ProjectReference Include="..\FoB.Infrastructure\FoB.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\assets\avatar-DsqCMPPI.PNG" />
+    <None Include="wwwroot\assets\index-0PZ9J5E8.js" />
+    <None Include="wwwroot\assets\index-BIdoi11C.css" />
+    <None Include="wwwroot\assets\logo-blanco-CtbNWzD4.PNG" />
+    <None Include="wwwroot\assets\logo-DOpalBzT.png" />
+    <None Include="wwwroot\index.html" />
+    <None Include="wwwroot\vite.svg" />
   </ItemGroup>
 
 </Project>

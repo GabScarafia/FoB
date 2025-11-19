@@ -619,6 +619,7 @@ public partial class fobContext : DbContext
             entity.HasIndex(e => e.UsuarioId, "usuario_id");
 
             entity.Property(e => e.Id).HasColumnName("id");
+            entity.Property(e => e.ComentarioId).HasColumnName("comentario_id");
             entity.Property(e => e.FechaDeVoto)
                 .HasColumnType("datetime")
                 .HasColumnName("fecha_de_voto");
