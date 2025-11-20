@@ -436,7 +436,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                         var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
                         var noti = new Notificacion
                         {
-                            FechaDeEnvio = DateTime.UtcNow,
+                            FechaDeEnvio = DateTime.Now,
                             Leida = false,
                             Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
                             Tipo = "Nuevo Voto",
