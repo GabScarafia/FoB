@@ -625,7 +625,7 @@ public partial class fobContext : DbContext
                 .HasColumnName("fecha_de_voto");
             entity.Property(e => e.RecetaId).HasColumnName("receta_id");
             entity.Property(e => e.Tipo)
-                .HasColumnType("enum('Like','Dislike','Favorito')")
+                .HasColumnType("enum('Like','Dislike','Favorito','ComentarioLike')")
                 .HasColumnName("tipo");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
             entity.Property(e => e.Valor).HasColumnName("valor");
