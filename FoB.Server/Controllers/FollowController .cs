@@ -54,7 +54,7 @@ namespace FoB.Server.Controllers
                 {
                     var noti = new Notificacion
                     {
-                        FechaDeEnvio = DateTime.UtcNow,
+                        FechaDeEnvio = DateTime.Now,
                         Leida = false,
                         Mensaje = $"{follower.NombreUsuario} te empezó a seguir",
                         Tipo = "Nuevo Seguidor",

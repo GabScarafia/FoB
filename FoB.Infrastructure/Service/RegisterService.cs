@@ -89,7 +89,7 @@ namespace FoB.Infrastructure.Service
                     Email = request.Email,
                     Contrasena = hashedPassword,
                     Activo = true,
-                    FechaRegistro = DateOnly.FromDateTime(DateTime.UtcNow), // Guarda la fecha de registro
+                    FechaRegistro = DateOnly.FromDateTime(DateTime.Now), // Guarda la fecha de registro
                     Biografia = null
                 };
 
