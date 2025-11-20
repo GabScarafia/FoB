@@ -398,7 +398,8 @@ internal sealed class RecetaRepository : IRecetaRepository
         var votoExistente = _context.Set<Voto>()
             .FirstOrDefault(v => v.RecetaId == interaccion.IdReceta
                                 && v.Tipo == interaccion.Tipo.ToString()
-                                && v.UsuarioId == idUsuario);
+                                && v.UsuarioId == idUsuario 
+                                && (interaccion.ComentarioId == null || interaccion.ComentarioId == v.ComentarioId));
 
         bool added = false;
 
@@ -413,11 +414,13 @@ internal sealed class RecetaRepository : IRecetaRepository
             {
                 int valorTipo = interaccion.Tipo == InteraccionTipoEnum.Like ? 1 :
                                         (interaccion.Tipo == InteraccionTipoEnum.Dislike ? -1 :
-                                        (interaccion.Tipo == InteraccionTipoEnum.Favorito ? 5 : 0));
+                                        (interaccion.Tipo == InteraccionTipoEnum.Favorito ? 5 : 
+                                        (interaccion.Tipo == InteraccionTipoEnum.ComentarioLike ? 1 : 0)));
 
                 Voto nuevoVoto = new()
                 {
                     RecetaId = interaccion.IdReceta,
+                    ComentarioId = interaccion.ComentarioId,
                     Tipo = interaccion.Tipo.ToString(),
                     Valor = valorTipo,
                     UsuarioId = idUsuario,
