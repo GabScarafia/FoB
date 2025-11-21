@@ -187,7 +187,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Count(),
+            CantidadVotos = x.Voto.Where(x=>x.ComentarioId == null).Count(),
             CantidadComentarios = x.Comentario.Count(),
             Estado = x.Estado,
             ImagenUrl = x.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null
@@ -197,9 +197,9 @@ internal sealed class RecetaRepository : IRecetaRepository
                 ? x.RecetaImagen.FirstOrDefault(img => img.PasoId == null).ContentType
                 : null,
             FechaCreacion = x.FechaCreacion,
-            MeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Like.ToString()),
-            NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString()),
-            EsFavorito = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString()), // Sigue pareciendo un bug, pero lo dejo como está
+            MeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Like.ToString() && x.ComentarioId == null),
+            NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null),
+            EsFavorito = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null), // Sigue pareciendo un bug, pero lo dejo como está
             FechaModificacion = x.FechaModificacion,
             PuntuacionPromedio = x.PuntuacionPromedio,
             TiempoPreparacion = x.TiempoPreparacion.HasValue ? x.TiempoPreparacion.Value.ToTimeSpan() : null,
@@ -294,10 +294,10 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Count(),
-            MeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Like.ToString()),
-            NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString()),
-            EsFavorito = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Favorito.ToString()),
+            CantidadVotos = x.Voto.Where(x=>x.ComentarioId == null).Count(),
+            MeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Like.ToString() && x.ComentarioId == null),
+            NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null),
+            EsFavorito = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null), // Sigue pareciendo un bug, pero lo dejo como está
             CantidadComentarios = x.Comentario.Count(),
             VistaPreviaComentarios = x.Comentario.OrderByDescending(c => c.Fecha).Take(3)
                 .Select(c => new ComentarioResponse
@@ -557,8 +557,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                     // --- FIN CAMBIO ---
                 }).ToList() ?? new List<PasoResponse>(),
                 Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
-                CantidadVotos = receta.Voto.Count,
-                MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value),
+                CantidadVotos = receta.Voto.Where(x=>x.ComentarioId == null).Count(),
+                MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,
                 VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
                     .OrderByDescending(c => c.Fecha)
