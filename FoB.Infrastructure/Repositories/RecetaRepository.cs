@@ -432,64 +432,103 @@ internal sealed class RecetaRepository : IRecetaRepository
                 // Crear notificación para el autor de la receta si no es el mismo usuario
                 try
                 {
-                    if (interaccion.ComentarioId == null)
+                    switch (interaccion.Tipo)
                     {
-                        // 📌 LIKE A PUBLICACIÓN
-                        var receta = await _context.Receta
-                            .Include(r => r.Usuario)
-                            .FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
-
-                        if (receta != null && receta.UsuarioId != idUsuario)
-                        {
-                            var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
-                            var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
-
-                            var noti = new Notificacion
+                        case InteraccionTipoEnum.Like:
+                        case InteraccionTipoEnum.Favorito:
                             {
-                                FechaDeEnvio = DateTime.Now,
-                                Leida = false,
-                                Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
-                                Tipo = "Nuevo Voto",
-                                UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}",
-                                UsuarioId = receta.UsuarioId,
-                                EmisorId = idUsuario
-                            };
+                                // LIKE O FAVORITO A PUBLICACIÓN
+                                var receta = await _context.Receta
+                                    .Include(r => r.Usuario)
+                                    .FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
 
-                            _context.Notificacion.Add(noti);
-                        }
-                    }
-                    else
-                    {
-                        // LIKE A COMENTARIO
-                        var comentario = await _context.Comentario
-                            .Include(c => c.Usuario)
-                            .FirstOrDefaultAsync(c => c.Id == interaccion.ComentarioId);
+                                if (receta != null && receta.UsuarioId != idUsuario)
+                                {
+                                    var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+                                    var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
 
-                        if (comentario != null && comentario.UsuarioId != idUsuario)
-                        {
-                            var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+                                    var noti = new Notificacion
+                                    {
+                                        FechaDeEnvio = DateTime.Now,
+                                        Leida = false,
+                                        Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
+                                        Tipo = "Nuevo Voto",
+                                        UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}",
+                                        UsuarioId = receta.UsuarioId,
+                                        EmisorId = idUsuario
+                                    };
 
-                            var noti = new Notificacion
+                                    _context.Notificacion.Add(noti);
+                                }
+                                break;
+                            }
+
+                        case InteraccionTipoEnum.ComentarioLike:
                             {
-                                FechaDeEnvio = DateTime.Now,
-                                Leida = false,
-                                Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio like a tu comentario",
-                                Tipo = "Nuevo Voto",
-                                UrlEnlace = $"/receta/{interaccion.IdReceta}?drawerComentarios=true&comentarioId=" + interaccion.ComentarioId,
+                                // LIKE A COMENTARIO
+                                var comentario = await _context.Comentario
+                                    .Include(c => c.Usuario)
+                                    .FirstOrDefaultAsync(c => c.Id == interaccion.ComentarioId);
 
-                                UsuarioId = comentario.UsuarioId,
-                                EmisorId = idUsuario
-                            };
+                                if (comentario != null && comentario.UsuarioId != idUsuario)
+                                {
+                                    var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
 
-                            _context.Notificacion.Add(noti);
-                        }
+                                    var noti = new Notificacion
+                                    {
+                                        FechaDeEnvio = DateTime.Now,
+                                        Leida = false,
+                                        Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio like a tu comentario",
+                                        Tipo = "Nuevo Voto",
+
+                                        // 🔥 ESTA ES LA URL EXACTA QUE NECESITÁS para abrir drawer y hacer flash
+                                        UrlEnlace = $"/receta/{interaccion.IdReceta}?drawerComentarios=true&comentarioId={interaccion.ComentarioId}",
+
+                                        UsuarioId = comentario.UsuarioId,
+                                        EmisorId = idUsuario
+                                    };
+
+                                    _context.Notificacion.Add(noti);
+                                }
+                                break;
+                            }
+
+                        case InteraccionTipoEnum.ComentarioNuevo:
+                            {
+                                // NOTIFICAR NUEVO COMENTARIO EN TU PUBLICACIÓN
+                                var receta = await _context.Receta
+                                    .Include(r => r.Usuario)
+                                    .FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
+
+                                if (receta != null && receta.UsuarioId != idUsuario)
+                                {
+                                    var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+
+                                    var noti = new Notificacion
+                                    {
+                                        FechaDeEnvio = DateTime.Now,
+                                        Leida = false,
+                                        Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} comentó en tu publicación",
+                                        Tipo = "Nuevo Comentario",
+
+                                        // Abrir el drawer pero SIN flash
+                                        UrlEnlace = $"/receta/{interaccion.IdReceta}?drawerComentarios=true",
+
+                                        UsuarioId = receta.UsuarioId,
+                                        EmisorId = idUsuario
+                                    };
+
+                                    _context.Notificacion.Add(noti);
+                                }
+                                break;
+                            }
                     }
-
                 }
                 catch (Exception ex)
                 {
                     Console.Error.WriteLine(ex.ToString());
                 }
+
 
             }
         }

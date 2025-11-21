@@ -13,7 +13,8 @@ public enum InteraccionTipoEnum
     Like,
     Dislike,
     Favorito,
-    ComentarioLike
+    ComentarioLike,
+    ComentarioNuevo
 }   
 
 public enum InteraccionAccionEnum
