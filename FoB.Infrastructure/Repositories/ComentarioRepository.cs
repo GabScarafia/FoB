@@ -45,7 +45,9 @@ namespace FoB.Infrastructure.Repositories
                         Nombre = c.Usuario.Nombre,
                         Apellido = c.Usuario.Apellido,
                         NombreUsuario = c.Usuario.NombreUsuario,
-                        Imagen = c.Usuario.UsuarioImagen.FirstOrDefault().Imagen,
+                        ImagenUrl = c.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault() != null
+                            ? $"/api/archivos/usuario/{c.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault().Id}"
+                            : null,
                     },
                     Respuestas = new List<ComentarioDTO>() // Mantienes la estructura anidada aquí
                 }).ToListAsync();
@@ -97,7 +99,9 @@ namespace FoB.Infrastructure.Repositories
                     Nombre = comentario.Usuario.Nombre,
                     Apellido = comentario.Usuario.Apellido,
                     NombreUsuario = comentario.Usuario.NombreUsuario,
-                    Imagen = comentario.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen,
+                    ImagenUrl = comentario.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault() != null
+                            ? $"/api/archivos/usuario/{comentario.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault().Id}"
+                            : null,
                 },
                 // No necesitamos cargar respuestas anidadas para GetByIdAsync,
                 // ya que solo lo usamos para verificar el autor en el controlador.
@@ -137,7 +141,9 @@ namespace FoB.Infrastructure.Repositories
                     Nombre = usuario.Nombre,
                     Apellido = usuario.Apellido,
                     NombreUsuario = usuario.NombreUsuario,
-                    Imagen = usuario.UsuarioImagen.FirstOrDefault()?.Imagen,
+                    ImagenUrl = usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault() != null
+                            ? $"/api/archivos/usuario/{usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault().Id}"
+                            : null,
                 },
                 Respuestas = new List<ComentarioDTO>()
             };
@@ -217,7 +223,9 @@ namespace FoB.Infrastructure.Repositories
                     Nombre = comentario.Usuario.Nombre,
                     Apellido = comentario.Usuario.Apellido,
                     NombreUsuario = comentario.Usuario.NombreUsuario,
-                    Imagen = comentario.Usuario.UsuarioImagen.FirstOrDefault()?.Imagen
+                    ImagenUrl = comentario.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault() != null
+                            ? $"/api/archivos/usuario/{comentario.Usuario.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault().Id}"
+                            : null
                 },
                 Respuestas = new List<ComentarioDTO>() // No incluimos anidamiento aquí
             };

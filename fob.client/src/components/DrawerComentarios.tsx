@@ -38,6 +38,25 @@ import { formatoTiempoRelativo } from "../utils/formateoDeTiempo";
 import "./DrawerComentarios.css";
 import { BASE_URL } from "../apiConfig";
 
+// Helper to normalize avatar/media source. Accepts either a string or a user object.
+const normalizeAvatarUrl = (mediaOrUsuario?: any) => {
+  if (!mediaOrUsuario) return fotoPerfilLocal;
+
+  // If an object, try multiple possible fields the backend/client might use
+  let media: string | undefined | null = undefined;
+  if (typeof mediaOrUsuario === 'object') {
+    media = mediaOrUsuario.imagenUrl ?? mediaOrUsuario.ImagenUrl ?? mediaOrUsuario.fotoUrl ?? mediaOrUsuario.FotoUrl ?? mediaOrUsuario.fotoPerfilUrl ?? mediaOrUsuario.FotoPerfilUrl ?? mediaOrUsuario.imagen ?? mediaOrUsuario.imagenUrlRaw ?? null;
+  } else if (typeof mediaOrUsuario === 'string') {
+    media = mediaOrUsuario;
+  }
+
+  if (!media) return fotoPerfilLocal;
+  if (media.startsWith('data:') || media.startsWith('http')) return media;
+  if (media.startsWith('/')) return `${BASE_URL}${media}`;
+  // assume raw base64 string
+  return `data:image/jpeg;base64,${media}`;
+};
+
 export interface Comentario {
   id: number;
   usuario: Usuario;
@@ -136,7 +155,6 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
     setIsProcessingLike(false);
   };
 
-
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
       <div id={`comentario-${comentario.id}`}>
@@ -152,11 +170,7 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
             <ListItemAvatar sx={{ minWidth: 50 }}>
               <Avatar
                 sx={{ width: 36, height: 36 }}
-                src={
-                  comentario.usuario?.imagen
-                    ? `data:image/jpeg;base64,${comentario.usuario.imagen}`
-                    : fotoPerfilLocal
-                }
+                src={normalizeAvatarUrl(comentario.usuario)}
                 alt={comentario.usuario?.nombreUsuario}
               />
             </ListItemAvatar>

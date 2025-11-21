@@ -1,18 +1,21 @@
 import React from 'react';
 import './RecetaPreview.css'; // Crea este archivo CSS
+import { BASE_URL } from '../apiConfig';
 
 interface Props {
   receta: {
-    imagen: string;
+    imagen?: string | null; // ahora puede ser URL o base64
     // ... otras propiedades que necesites
   };
   onClick: () => void;
 }
 
 const RecetaPreview: React.FC<Props> = ({ receta, onClick }) => {
-  // Construye la URL de la imagen de la receta desde la cadena Base64
-  const urlReceta = receta.imagen 
-    ? `data:image/jpeg;base64,${receta.imagen}` 
+  const imagen = receta.imagen ?? '';
+
+  // Si es ruta relativa del API comienza con '/', la preparamos con BASE_URL
+  const urlReceta = imagen
+    ? (imagen.startsWith('/') ? `${BASE_URL}${imagen}` : (imagen.startsWith('data:') || imagen.startsWith('http') ? imagen : `data:image/jpeg;base64,${imagen}`))
     : 'https://via.placeholder.com/200';
 
   return (

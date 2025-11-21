@@ -12,13 +12,12 @@ import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import fotoPerfilDefault from '../assets/images/avatar.png';
 import { BASE_URL } from '../apiConfig';
 
-// --- INTERFACES (Asegúrate que contentType pueda ser null) ---
+// --- INTERFACES actualizadas ---
 interface RecetaDto {
     id: number;
     titulo?: string;
-    imagenPrincipalBase64?: string | null;
-    imagen?: string | null;
-    contentType: string | null; // <-- Marcado como opcional/nullable
+    imagenPrincipalUrl?: string | null; // ahora URL relativa a /api/archivos/receta/{id}
+    contentType?: string | null;
 }
 
 interface UsuarioPerfilDto {
@@ -28,7 +27,7 @@ interface UsuarioPerfilDto {
     email: string | null;
     nombreUsuario: string | null;
     biografia: string | null;
-    fotoPerfilBase64: string | null;
+    fotoPerfilUrl?: string | null; // ahora URL relativa a /api/archivos/usuario/{id}
     cantidadPublicaciones: number;
     cantidadSeguidores: number;
     cantidadSeguidos: number;
@@ -45,13 +44,15 @@ const getMediaTypeFromContentType = (contentType: string | null | undefined): 'i
 };
 
 const getNormalizedUrl = (
-    mediaStr: string | undefined | null, 
-    contentType: string | null | undefined, 
+    mediaStr: string | undefined | null,
+    contentType: string | null | undefined,
 ): string => {
     if (!mediaStr || mediaStr === '') return '';
     if (mediaStr.startsWith('data:') || mediaStr.startsWith('http')) {
         return mediaStr;
     }
+    // Si es ruta relativa comienza con '/', la resolvemos con BASE_URL
+    if (mediaStr.startsWith('/')) return `${BASE_URL}${mediaStr}`;
     const type = contentType || 'image/jpeg'; // Fallback a imagen si no hay contentType
     return `data:${type};base64,${mediaStr}`;
 }
@@ -74,9 +75,6 @@ const Perfil: React.FC = () => {
     const [isFollowing, setIsFollowing] = useState(false);
     const [isProcessingFollow, setIsProcessingFollow] = useState(false);
 
-    // --- HOOK MOVIDO AQUÍ ---
-    // Movemos el useMemo al inicio, junto con los otros Hooks.
-    // Ahora se llamará en CADA render, cumpliendo las reglas.
     const { publicacionesImagen, publicacionesVideo } = useMemo(() => {
         if (!datosPerfil?.publicaciones) {
             return { publicacionesImagen: [], publicacionesVideo: [] };
@@ -86,8 +84,8 @@ const Perfil: React.FC = () => {
         const videos: RecetaDto[] = [];
 
         datosPerfil.publicaciones.forEach(pub => {
-            const mediaType = getMediaTypeFromContentType(pub.contentType);
-            
+            const mediaType = getMediaTypeFromContentType(pub.contentType as string);
+
             if (mediaType === 'video') {
                 videos.push(pub);
             } else {
@@ -98,10 +96,7 @@ const Perfil: React.FC = () => {
         return { publicacionesImagen: imagenes, publicacionesVideo: videos };
 
     }, [datosPerfil?.publicaciones]);
-    // --- FIN DEL BLOQUE MOVIDO ---
 
-
-    // ... (Tu useEffect de fetch no cambia) ...
     useEffect(() => {
         if (id === undefined && currentUserId == null) return;
         const perfilId = id ? Number(id) : currentUserId;
@@ -155,7 +150,6 @@ const Perfil: React.FC = () => {
         };
     }, [id, token, currentUserId]);
 
-    // ... (Tus handlers no cambian) ...
     const handleFollowClick = async () => {
         if (!datosPerfil || !currentUserId || isProcessingFollow) return;
         setIsProcessingFollow(true);
@@ -227,14 +221,11 @@ const Perfil: React.FC = () => {
             alert('Fallo al copiar el enlace. Por favor, cópialo manualmente.');
         }
     };
-    
+
     const handleEditarPerfilClick = () => {
         navigate('/editar-perfil');
     };
 
-    // --- LÓGICA DE RENDERIZADO ---
-    // Ahora los 'if' de retorno temprano pueden ir aquí,
-    // después de que TODOS los hooks se hayan llamado.
     if (cargando) {
         return <Box className="cargando-perfil" sx={{ color: 'text.secondary' }}>Cargando perfil...</Box>;
     }
@@ -254,17 +245,15 @@ const Perfil: React.FC = () => {
         );
     }
     if (!datosPerfil) {
-        return null; // O un estado de 'no encontrado' si prefieres
+        return null;
     }
-
-    // --- El useMemo ya no está aquí ---
 
     const {
         nombre,
         apellido,
         nombreUsuario,
         biografia,
-        fotoPerfilBase64,
+        fotoPerfilUrl,
         cantidadPublicaciones,
         cantidadSeguidores,
         cantidadSeguidos,
@@ -273,7 +262,6 @@ const Perfil: React.FC = () => {
     const nombreCompletoDisplay = `${nombre || ''} ${apellido || ''}`.trim();
     const esPerfilPropio = currentUserId === datosPerfil.id;
 
-    // ... (Tu renderGaleria no cambia) ...
     const renderGaleria = () => {
         const listaAMostrar = activeTab === 'imagenes' ? publicacionesImagen : publicacionesVideo;
         const tabName = activeTab === 'imagenes' ? 'publicaciones' : 'videos';
@@ -290,14 +278,11 @@ const Perfil: React.FC = () => {
         }
         
         return listaAMostrar.map((receta) => {
-            const imagen = receta.imagenPrincipalBase64 ?? receta.imagen ?? null;
-            
-            if (!imagen) {
-                 return null;
-            }
+            const imagen = receta.imagenPrincipalUrl ?? null;
+            if (!imagen) return null;
 
-            const mediaUrl = getNormalizedUrl(imagen, receta.contentType);
-            const mediaType = getMediaTypeFromContentType(receta.contentType);
+            const mediaUrl = getNormalizedUrl(imagen, receta.contentType ?? undefined);
+            const mediaType = getMediaTypeFromContentType(receta.contentType ?? undefined);
 
             return (
                 <div key={receta.id} className="galeria-item">
@@ -324,13 +309,14 @@ const Perfil: React.FC = () => {
         });
     };
 
-    // ... (El JSX de retorno no cambia) ...
+    const perfilFotoSrc = fotoPerfilUrl ? getNormalizedUrl(fotoPerfilUrl, 'image/jpeg') : fotoPerfilDefault;
+
     return (
         <Box className="perfil-contenedor">
             <Box component="header" className="perfil-header">
                 <div className="perfil-imagen-circular">
                     <img
-                        src={fotoPerfilBase64 ? `data:image/jpeg;base64,${fotoPerfilBase64}` : fotoPerfilDefault}
+                        src={perfilFotoSrc}
                         alt="Foto de perfil"
                     />
                 </div>

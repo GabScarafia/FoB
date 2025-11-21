@@ -24,7 +24,9 @@ public class UserRepository : IUserRepository
             Nombre = result.Nombre,
             Apellido = result.Apellido,
             NombreUsuario = result.NombreUsuario,
-            Imagen = result.UsuarioImagen.FirstOrDefault()?.Imagen
+            ImagenUrl = result.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault() != null
+                ? $"/api/archivos/usuario/{result.UsuarioImagen.OrderByDescending(ui => ui.Id).FirstOrDefault().Id}"
+                : null
         };
     }
     public async Task<bool> EmailExistsAsync(string email)

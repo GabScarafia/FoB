@@ -15,7 +15,8 @@ namespace FoB.Application.Dtos
         public string? NombreUsuario { get; set; }
 
         public string? Email { get; set; }
-        public string? FotoPerfilBase64 { get; set; }
+        // Cambiado: ahora devolvemos la URL de la foto de perfil en vez del Base64
+        public string? FotoPerfilUrl { get; set; }
         public int CantidadPublicaciones { get; set; }
         public int CantidadSeguidores { get; set; }
         public int CantidadSeguidos { get; set; }

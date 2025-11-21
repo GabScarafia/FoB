@@ -10,7 +10,8 @@ namespace FoB.Application.Dtos
     {
         public int Id { get; set; }
         public string Titulo { get; set; }
-        public string ImagenPrincipalBase64 { get; set; }
+        // ahora devolvemos URL en vez de Base64
+        public string ImagenPrincipalUrl { get; set; }
         public string ContentType { get; set; }
 
         public int? DesafioId { get; set; }

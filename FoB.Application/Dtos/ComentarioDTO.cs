@@ -35,5 +35,6 @@ public class UsuarioComentarioDTO
     public string Nombre { get; set; }
     public string Apellido { get; set; }
     public string NombreUsuario { get; set; }
-    public byte[] Imagen { get; set; }
+    // ahora devolvemos URL en vez de byte[]
+    public string ImagenUrl { get; set; }
 }

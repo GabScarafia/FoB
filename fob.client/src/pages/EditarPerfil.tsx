@@ -36,7 +36,8 @@ const EditarPerfil: React.FC = () => {
         contrasena: '',
         fotoPerfilBase64: null,
     });
-    
+    const [initialFotoUrl, setInitialFotoUrl] = useState<string | null>(null); // <-- guardamos la URL que devuelve la API
+
     const [confirmarContrasena, setConfirmarContrasena] = useState(''); 
 
     const [cargando, setCargando] = useState(true);
@@ -97,9 +98,9 @@ const EditarPerfil: React.FC = () => {
                     biografia: data.biografia || '',
                     email: data.email || '',
                     contrasena: '', 
-                    fotoPerfilBase64: data.fotoPerfilBase64 || null, 
+                    fotoPerfilBase64: null, // no esperamos base64 desde servidor
                 });
-                
+                setInitialFotoUrl(data.fotoPerfilUrl || null); // guardamos la URL para mostrar
                 setFormKey(prev => prev + 1); 
                 
             } catch (err: any) {
@@ -148,6 +149,8 @@ const EditarPerfil: React.FC = () => {
                 const base64Only = base64StringWithPrefix.split(',')[1]; 
                 
                 setFormData(prev => ({ ...prev, fotoPerfilBase64: base64Only }));
+                // Cuando subimos una nueva imagen, limpiamos la URL inicial para que muestre la preview
+                setInitialFotoUrl(null);
             };
             reader.readAsDataURL(file);
         }
@@ -234,6 +237,8 @@ const EditarPerfil: React.FC = () => {
             } else {
                 // 3. Manejo si solo se actualizaron datos de perfil
                 setExito('Perfil actualizado exitosamente.');
+                // Actualizamos la foto inicial si el backend devolvió la URL
+                setInitialFotoUrl(dataActualizada.fotoPerfilUrl || initialFotoUrl);
                 // Redirección al perfil
                 setTimeout(() => {
                     navigate(`/perfil/${userId}`);
@@ -251,7 +256,7 @@ const EditarPerfil: React.FC = () => {
  
     const imagenSrc = formData.fotoPerfilBase64
         ? `data:image/jpeg;base64,${formData.fotoPerfilBase64}`
-        : fotoPerfilDefault;
+        : (initialFotoUrl ? (initialFotoUrl.startsWith('/') ? `${BASE_URL}${initialFotoUrl}` : initialFotoUrl) : fotoPerfilDefault);
         
     // Mostrar un loader si está cargando y aún no tiene datos iniciales
     if (cargando && !formData.nombreUsuario) {

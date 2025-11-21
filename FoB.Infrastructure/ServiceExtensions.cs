@@ -3,6 +3,7 @@ using FoB.Infrastructure.Context;
 using FoB.Infrastructure.Interface;
 using FoB.Infrastructure.Repositories;
 using FoB.Infrastructure.Service;
+using FoB.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -32,5 +33,6 @@ public static class ServiceExtensions
         services.AddTransient<IUserRepository, UserRepository>();
         services.AddTransient<DominioService, DominioRepository>();
         services.AddTransient<IRecetaRepository, RecetaRepository>();
+        services.AddTransient<IUsuarioPerfilService, UsuarioPerfilService>();
     }
 }

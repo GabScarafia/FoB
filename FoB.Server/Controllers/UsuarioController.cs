@@ -1,6 +1,7 @@
 ﻿using FoB.Application.Dtos;
 using FoB.Infrastructure.Context;
 using FoB.Infrastructure.Models;
+using FoB.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -16,10 +17,12 @@ namespace FoB.Server.Controllers
     public class UsuarioController : ControllerBase
     {
         private readonly fobContext _context;
+        private readonly IUsuarioPerfilService _usuarioPerfilService;
 
-        public UsuarioController(fobContext context)
+        public UsuarioController(fobContext context, IUsuarioPerfilService usuarioPerfilService)
         {
             _context = context;
+            _usuarioPerfilService = usuarioPerfilService;
         }
 
         [HttpGet("perfil")]
@@ -34,7 +37,11 @@ namespace FoB.Server.Controllers
                 return Unauthorized(new { message = "ID de usuario no encontrado en el token o formato inválido." });
             }
 
-            return await GetPerfilCompleto(idUsuario);
+            // Obtener id del usuario actual para la lógica de seguimiento
+            int? idUsuarioActual = idUsuario;
+            var perfil = await _usuarioPerfilService.ObtenerPerfilUsuarioAsync(idUsuario, idUsuarioActual);
+            if (perfil == null) return NotFound();
+            return Ok(perfil);
         }
 
         [HttpGet("{idUsuario}")]
@@ -53,70 +60,12 @@ namespace FoB.Server.Controllers
                     }
                 }
 
-                var usuario = await _context.Usuario
-                    .Where(u => u.Id == idUsuario)
-                    .Include(u => u.UsuarioImagen)
-                    .Include(u => u.Receta.Where(r => r.Activa == true))
-                        .ThenInclude(r => r.RecetaImagen)
-                    .Include(u => u.SeguimientoUsuarioSeguidor)
-                    .Include(u => u.SeguimientoUsuarioSeguido)
-                    .FirstOrDefaultAsync();
-
-                if (usuario == null)
-                {
+                // Use the optimized service projection to load the profile
+                var perfil = await _usuarioPerfilService.ObtenerPerfilUsuarioAsync(idUsuario, idUsuarioActual);
+                if (perfil == null)
                     return NotFound();
-                }
 
-                // Obtiene y convierte la imagen de perfil a Base64
-                var fotoPerfilBytes = usuario.UsuarioImagen.FirstOrDefault()?.Imagen;
-                string fotoPerfilBase64 = null;
-                if (fotoPerfilBytes != null && fotoPerfilBytes.Length > 0)
-                {
-                    fotoPerfilBase64 = Convert.ToBase64String(fotoPerfilBytes);
-                }
-
-                // Mapea la lista de recetas del usuario a los DTOs
-                var publicacionesDto = usuario.Receta.Select(r => new RecetaDto
-                {
-                    Id = r.Id,
-                    Titulo = r.Titulo,
-                    // primera imagen es la principal para la galería
-                    ImagenPrincipalBase64 = r.RecetaImagen.FirstOrDefault(x => x.PasoId == null) != null
-                        ? Convert.ToBase64String(r.RecetaImagen.FirstOrDefault(x => x.PasoId == null).Imagen)
-                        : null,
-                    ContentType = r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
-                            ? r.RecetaImagen.OrderByDescending(img => img.Id).FirstOrDefault().ContentType
-                            : null
-                })
-                .OrderByDescending(x => x.Id)
-                .ToList();
-
-                // *** DETERMINAR SI EL USUARIO ACTUAL SIGUE A ESTE USUARIO ***
-                bool esSeguido = false;
-                if (idUsuarioActual.HasValue && idUsuarioActual.Value != idUsuario)
-                {
-                    esSeguido = usuario.SeguimientoUsuarioSeguido
-                        .Any(s => s.SeguidorId == idUsuarioActual.Value);
-                }
-
-                // Crea el DTO final con toda la información consolidada
-                var perfilDto = new UsuarioPerfilDto
-                {
-                    Id = usuario.Id,
-                    Nombre = usuario.Nombre,
-                    Apellido = usuario.Apellido,
-                    NombreUsuario = usuario.NombreUsuario,
-                    Email = usuario.Email,
-                    Biografia = usuario.Biografia,
-                    FotoPerfilBase64 = fotoPerfilBase64,
-                    CantidadPublicaciones = usuario.Receta.Count(),
-                    CantidadSeguidores = usuario.SeguimientoUsuarioSeguido.Count(),
-                    CantidadSeguidos = usuario.SeguimientoUsuarioSeguidor.Count(),
-                    Publicaciones = publicacionesDto,
-                    EsSeguido = esSeguido
-                };
-
-                return Ok(perfilDto);
+                return Ok(perfil);
             }
             catch (Exception ex)
             {
