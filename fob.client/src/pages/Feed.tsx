@@ -972,8 +972,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                             className="resultado-usuario"
                                             onClick={() => handleUsuarioClick(usuario.id)}
                                         >
-                                            {usuario.imagenUrl ? (
-                                                <img src={`data:image/jpeg;base64,${usuario.imagenUrl}`} alt="avatar" className="avatar-busqueda" />
+                                            {usuario.imagen ? (
+                                                <img src={`data:image/jpeg;base64,${usuario.imagen}`} alt="avatar" className="avatar-busqueda" />
                                             ) : (
                                                 <img src={`${fotoPerfilLocal}`} alt="avatar" className="avatar-busqueda" />
                                             )}

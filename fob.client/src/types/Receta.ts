@@ -8,6 +8,7 @@ export interface Usuario {
   texto?: string;
   tiempo?: string;
   imagenUrl?: string;
+  imagen?: string;
   isFollowing: boolean;
 }
 
