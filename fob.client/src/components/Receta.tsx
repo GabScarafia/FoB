@@ -1,38 +1,31 @@
 ﻿﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
-// En Receta.tsx (arriba de todo)
-import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha, ListItemText } from '@mui/material';
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Chip, alpha, ListItemText } from '@mui/material';
 import './Receta.css';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Íconos de Material UI
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShareIcon from '@mui/icons-material/Share';
-
-
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
-
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbDownAltOutlinedIcon from '@mui/icons-material/ThumbDownAltOutlined';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import KitchenIcon from '@mui/icons-material/Kitchen'; // Icono opcional para ingrediente
 
 import fotoPerfilLocal from '../assets/images/avatar.png';
-
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';
 import type { Usuario } from '../types/Receta'
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { BASE_URL } from '../apiConfig';
 
 // 1. Helper para determinar 'image' o 'video' desde el contentType
@@ -43,7 +36,7 @@ const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => 
     return 'image';
 };
 
-// 2. Helper para normalizar la URL (Esta función ya estaba bien)
+// 2. Helper para normalizar la URL
 const getNormalizedUrl = (
     mediaStr: string | undefined | null,
     contentType: string,
@@ -59,11 +52,8 @@ const getNormalizedUrl = (
         return `${BASE_URL}${mediaStr}`;
     }
 
-    // Si es base64 crudo (legacy), lo arma
     return `data:${contentType};base64,${mediaStr}`;
 }
-// --- FIN DE LA CORRECCIÓN ---
-
 
 interface Ingrediente {
     id: number;
@@ -77,16 +67,14 @@ interface Utensilio {
     nombre: string;
 }
 
-// --- INTERFAZ ACTUALIZADA ---
 interface Paso {
     titulo: string;
     descripcion: string;
     numero: number;
-    imagenUrl?: string; // <-- CAMBIO AQUÍ
+    imagenUrl?: string; 
     contentType: string;
 }
 
-// Interfaz para un elemento del carrusel
 interface CarruselItem {
     mediaUrl: string;
     mediaType: 'image' | 'video';
@@ -94,15 +82,14 @@ interface CarruselItem {
     isMainImage: boolean;
 }
 
-// --- INTERFAZ ACTUALIZADA ---
 export interface PropsReceta {
     receta: {
         id: number;
-        autor: Usuario; // <-- Asegúrate que 'Usuario' tenga 'imagenUrl'
+        autor: Usuario;
         fechaCreacion: string;
         tipoContenido: string;
         dificultad: string;
-        imagenUrl: string; // <-- CAMBIO AQUÍ
+        imagenUrl: string;
         contentType: string;
         cantidadVotos: number;
         meGusta: boolean;
@@ -118,14 +105,13 @@ export interface PropsReceta {
         ingredientes: Ingrediente[];
         etiquetas: string[];
         utensilios: Utensilio[];
-        pasos: Paso[]; // Array de la interfaz Paso actualizada
+        pasos: Paso[];
     };
     onDrawerToggle: (open: boolean) => void;
     currentUserId: number | null;
     onDeleteReceta: (recetaId: number) => Promise<void>;
     onUsuarioClick?: (userId: number) => void;
 }
-
 
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
     const navigate = useNavigate();
@@ -137,15 +123,14 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return <div>Error: La receta no se pudo cargar.</div>;
     }
 
-    // ... (El resto de tus estados: disliked, favorite, liked, etc. no cambian)
     const [disliked, setDisliked] = useState(receta.noMeGusta);
     const [favorite, setFavorito] = useState(receta.esFavorito);
     const [liked, setLiked] = useState(receta.meGusta);
     const [likesCount, setLikesCount] = useState(receta.cantidadVotos);
-    const [saved, setSaved] = useState(receta.isSavedInitially || false);
     const [mostrarMas, setMostrarMas] = useState(false);
     const [isFollowing, setIsFollowing] = useState(receta.seguido);
     const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
+    // Inicialización segura de comentarios
     const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
     const { authData } = useAuth();
     const [drawerAbierto, setDrawerAbierto] = useState(false);
@@ -155,17 +140,15 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const [isProcessingLike, setIsProcessingLike] = useState(false);
 
     useEffect(() => {
-        // Si esta receta es la que tiene el comentario destacado, abrimos el drawer.
         const recetaIdParam = searchParams.get('receta');
         const comentarioIdParam = searchParams.get('comentario');
         if (recetaIdParam && comentarioIdParam && Number(receta.id) === Number(recetaIdParam) && !haProcesadoApertura.current) {
             setDrawerAbierto(true);
             onDrawerToggle(true);
-            haProcesadoApertura.current = true; // Marcamos que ya lo procesamos
+            haProcesadoApertura.current = true;
         }
     }, [receta.id, onDrawerToggle, searchParams]);
 
-    // ... (El resto de tus manejadores: handleClickMenu, handleCloseMenu, etc. no cambian)
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
     };
@@ -193,7 +176,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         return estrellas;
     };
 
-    // ... (El resto de tus manejadores de 'likes' no cambian)
     const handleLikeClick = async () => {
         if (isProcessingLike) return;
         setIsProcessingLike(true);
@@ -209,7 +191,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     tipo: 0,
                     accion: Number(liked)
                 })
-
             });
 
             if (response.ok) {
@@ -236,38 +217,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    const handleFollowClick = async (usuarioId: number) => {
-        if (!authData?.token) {
-            alert("Debes iniciar sesión para seguir a un usuario.");
-            return;
-        }
-
-        const apiUrl = `${BASE_URL}/Follow/${usuarioId}`;
-
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${authData.token}`,
-                },
-            });
-
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Error: ${response.status} - ${errorText}`);
-            }
-
-            setIsFollowing(prev => !prev);
-
-        } catch (error) {
-            console.error("Fallo al ejecutar la acción de seguir:", error);
-            alert("Ocurrió un error. Intenta de nuevo.");
-        }
-    };
-
     const handleDisLikeClick = async () => {
         try {
-
             const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
@@ -279,7 +230,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     tipo: 1,
                     accion: Number(disliked)
                 })
-
             });
 
             if (response.ok) {
@@ -305,7 +255,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const handleFavoritoClick = async () => {
         try {
-
             const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
                 method: 'POST',
                 headers: {
@@ -317,7 +266,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     tipo: 2,
                     accion: Number(favorite)
                 })
-
             });
 
             if (response.ok) {
@@ -374,25 +322,23 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         onDrawerToggle(false);
     };
 
-    const descripcionMostrada = mostrarMas || receta.descripcion.length <= LIMITE_CARACTERES
-        ? receta.descripcion
-        : `${receta.descripcion.substring(0, LIMITE_CARACTERES)}...`;
+    // --- CORRECCIÓN: Manejo seguro de la descripción ---
+    const descripcionSegura = receta.descripcion || ''; 
+    const descripcionMostrada = mostrarMas || descripcionSegura.length <= LIMITE_CARACTERES
+        ? descripcionSegura
+        : `${descripcionSegura.substring(0, LIMITE_CARACTERES)}...`;
 
-    const debeMostrarBotonLeerMas = receta.descripcion.length > LIMITE_CARACTERES;
+    const debeMostrarBotonLeerMas = descripcionSegura.length > LIMITE_CARACTERES;
+    // --- FIN CORRECCIÓN ---
 
-
-    // --- LÓGICA DE FOTO DE PERFIL CORREGIDA ---
-    // Esta línea (la 315) ahora funciona porque 'getNormalizedUrl' está definida arriba
     const fotoPerfilUrl = getNormalizedUrl(
         receta.autor?.imagenUrl,
-        'image/jpeg', // Asumimos jpeg para fotos de perfil o el backend debe enviarlo
+        'image/jpeg', 
         fotoPerfilLocal
     );
-    // --- FIN DE LÓGICA CORREGIDA ---
-
 
     const formatearTiempo = (tiempo: string): string => {
-        if (!tiempo) return 'N/A'; // Guarda por si 'tiempo' es nulo
+        if (!tiempo) return 'N/A'; 
         const partes = tiempo.split(':').map(part => parseInt(part, 10));
         const horas = partes[0] || 0;
         const minutos = partes[1] || 0;
@@ -413,7 +359,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     };
 
     const fechaFormateada = formatoTiempoRelativo(receta.fechaCreacion);
-
     const esRecetaPropia = currentUserId === receta.autor.id;
 
     const handleUsuarioClick = (e: React.MouseEvent) => {
@@ -425,21 +370,21 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         }
     };
 
-    // --- LÓGICA DEL CARRUSEL (Ahora usa las funciones globales) ---
-
-    // 3. Obtener la media principal (Portada)
+    // --- LÓGICA DEL CARRUSEL (Protegida contra Pasos nulos) ---
     const tipoMediaPrincipal = getMediaTypeFromContentType(receta.contentType);
     const mediaPrincipalUrl = getNormalizedUrl(
-        receta.imagenUrl, // <-- CAMBIO AQUÍ
+        receta.imagenUrl,
         receta.contentType,
         fotoPerfilLocal
     );
 
-    // 4. Crear la matriz de elementos del carrusel (CarruselItem[])
     const carruselItems: CarruselItem[] = [];
+    
+    // CORRECCIÓN: Asegurar que 'receta.pasos' no sea null
+    const pasosSeguros = receta.pasos || []; 
 
     // **Añadir el slide de la Media Principal (Portada)**
-    if (mediaPrincipalUrl && (mediaPrincipalUrl !== fotoPerfilLocal || receta.pasos.length === 0)) {
+    if (mediaPrincipalUrl && (mediaPrincipalUrl !== fotoPerfilLocal || pasosSeguros.length === 0)) {
         carruselItems.push({
             mediaUrl: mediaPrincipalUrl,
             mediaType: tipoMediaPrincipal,
@@ -448,23 +393,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     }
 
     // **Añadir un slide para CADA PASO**
-    receta.pasos.forEach(paso => {
-        let mediaPasoUrl = mediaPrincipalUrl; // Fallback: usa la media principal
-        let mediaPasoType = tipoMediaPrincipal; // Fallback: usa el tipo principal
+    pasosSeguros.forEach(paso => {
+        let mediaPasoUrl = mediaPrincipalUrl; 
+        let mediaPasoType = tipoMediaPrincipal; 
 
-        // Si el paso TIENE una imagen/video, usa la del paso
-        if (paso.imagenUrl && paso.imagenUrl !== '' && paso.contentType) { // <-- CAMBIO AQUÍ
+        if (paso.imagenUrl && paso.imagenUrl !== '' && paso.contentType) { 
             mediaPasoType = getMediaTypeFromContentType(paso.contentType);
             mediaPasoUrl = getNormalizedUrl(
-                paso.imagenUrl, // <-- CAMBIO AQUÍ
+                paso.imagenUrl, 
                 paso.contentType,
                 fotoPerfilLocal
             );
-        } else if (paso.imagenUrl && paso.imagenUrl !== '' && !paso.contentType) { // <-- CAMBIO AQUÍ
+        } else if (paso.imagenUrl && paso.imagenUrl !== '' && !paso.contentType) { 
             console.warn("Paso tiene imagen pero no contentType. Usando el de la receta.");
             mediaPasoType = getMediaTypeFromContentType(receta.contentType);
             mediaPasoUrl = getNormalizedUrl(
-                paso.imagenUrl, // <-- CAMBIO AQUÍ
+                paso.imagenUrl, 
                 receta.contentType,
                 fotoPerfilLocal
             );
@@ -478,7 +422,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         });
     });
 
-    // Si después de todo, el carrusel está vacío (raro), ponemos el fallback
     if (carruselItems.length === 0) {
         carruselItems.push({
             mediaUrl: fotoPerfilLocal,
@@ -487,12 +430,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         });
     }
 
-    // --- FIN DE LA LÓGICA MODIFICADA ---
-
-
     const [indiceImagen, setIndiceImagen] = useState(0);
 
-    // Swipe handlers
     const swipeHandlers = useSwipeable({
         onSwipedLeft: () => handleNextImagen(),
         onSwipedRight: () => handlePrevImagen(),
@@ -506,52 +445,35 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
         setIndiceImagen(prev => prev < carruselItems.length - 1 ? prev + 1 : prev);
     };
 
-    // Asegurarnos de que itemActual nunca sea indefinido
     const itemActual = carruselItems[indiceImagen] || carruselItems[0];
-
-    const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
 
 
     return (
         <Paper
-            // 'sx' ahora es una FUNCIÓN (theme) => ({...})
-            // que DEVUELVE el objeto de estilos.
             sx={(theme) => ({
                 maxWidth: '500px',
                 mx: 'auto',
                 mb: 3,
                 overflow: 'hidden',
                 borderRadius: '16px',
-                transition: 'background 0.3s, border 0.3s, box-shadow 0.3s', // Transición suave
-
-                // --- LÓGICA DE TEMA ---
-                // Ahora 'theme' SÍ está definido aquí
+                transition: 'background 0.3s, border 0.3s, box-shadow 0.3s',
                 ...(theme.palette.mode === 'light' ?
                     {
-                        // --- MODO CLARO (Blanco) ---
-                        bgcolor: 'background.paper', // Fondo blanco
-                        // Borde gris sutil
+                        bgcolor: 'background.paper',
                         border: `1px solid ${theme.palette.divider}`,
-                        // Sombra más fuerte para "peso visual"
-                        boxShadow: theme.shadows[3], // Esto es como un "elevation={3}"
+                        boxShadow: theme.shadows[3],
                     } : {
-                        // --- MODO OSCURO (Oscuro) ---
-                        // El "Glassmorphism" que te gustó
-                        background: 'rgba(255, 255, 255, 0.08)', // Vidrio semi-transparente
+                        background: 'rgba(255, 255, 255, 0.08)',
                         backdropFilter: 'blur(12px)',
-                        WebkitBackdropFilter: 'blur(12px)', // Safari
-                        border: '1px solid rgba(255, 255, 255, 0.15)', // Borde de vidrio
+                        WebkitBackdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
                         boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                     })
             })}
         >
             <Box className="encabezado-receta" sx={{
                 p: 2,
-                // Este borde también usa la función (theme) para adaptarse
-                borderBottom: (theme) => `1px solid ${theme.palette.mode === 'light'
-                    ? theme.palette.divider         // Borde gris en claro
-                    : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
-                    }`
+                borderBottom: (theme) => `1px solid ${theme.palette.mode === 'light' ? theme.palette.divider : 'rgba(255, 255, 255, 0.15)'}`
             }}>
                 <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
                     <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
@@ -602,7 +524,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             </Box>
 
             {/* --- BLOQUE DE RENDERIZADO --- */}
-            {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
             <div className="carrusel-imagen" {...swipeHandlers}>
                 {itemActual && itemActual.mediaType === 'image' && (
                     <img
@@ -628,10 +549,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     </video>
                 )}
             </div>
-            {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
 
-
-            {/* Navegación y puntitos debajo de la imagen */}
             <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
                 <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
                     <ArrowBackIcon />
@@ -653,7 +571,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </IconButton>
             </div>
 
-            {/* Info del paso si corresponde */}
             {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
                 <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
                     <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
@@ -661,34 +578,21 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 </div>
             )}
 
-            {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
             <Box className="acciones-receta" sx={{
                 px: 2,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
-                // Este borde también usa la función (theme)
-                borderTop: (theme) => `1px solid ${theme.palette.mode === 'light'
-                    ? theme.palette.divider         // Borde gris en claro
-                    : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
-                    }`
+                borderTop: (theme) => `1px solid ${theme.palette.mode === 'light' ? theme.palette.divider : 'rgba(255, 255, 255, 0.15)'}`
             }}>
                 <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                     <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
-                        {liked ? (
-                            <ThumbUpIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <ThumbUpAltOutlinedIcon />
-                        )}
+                        {liked ? <ThumbUpIcon sx={{ color: 'primary.main' }} /> : <ThumbUpAltOutlinedIcon />}
                     </IconButton>
                     <span className="conteo-me-gusta">{likesCount}</span>
 
                     <IconButton onClick={handleDisLikeClick} size="small">
-                        {disliked ? (
-                            <ThumbDownIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <ThumbDownAltOutlinedIcon />
-                        )}
+                        {disliked ? <ThumbDownIcon sx={{ color: 'primary.main' }} /> : <ThumbDownAltOutlinedIcon />}
                     </IconButton>
 
                     <IconButton onClick={handleOpenDrawer} size="small">
@@ -704,11 +608,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         <ShareIcon />
                     </IconButton>
                     <IconButton onClick={handleFavoritoClick} size="small">
-                        {favorite ? (
-                            <StarIcon sx={{ color: 'primary.main' }} />
-                        ) : (
-                            <StarBorderIcon />
-                        )}
+                        {favorite ? <StarIcon sx={{ color: 'primary.main' }} /> : <StarBorderIcon />}
                     </IconButton>
                 </div>
             </Box>
@@ -727,7 +627,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             </Box>
 
             <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
-                {receta.ingredientes && receta.ingredientes.length > 0 && (
+                {/* CORRECCIÓN: Uso de ?.length y mapeo seguro para ingredientes */}
+                {receta.ingredientes?.length > 0 && (
                     <Box className="ingredientes-receta" sx={{ mt: 1 }}>
                         <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
                         <Typography component="span" variant="body2">
@@ -739,7 +640,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         </Typography>
                     </Box>
                 )}
-                {receta.utensilios && receta.utensilios.length > 0 && (
+                {/* CORRECCIÓN: Uso de ?.length y mapeo seguro para utensilios */}
+                {receta.utensilios?.length > 0 && (
                     <Box sx={{ mt: 1 }}>
                         <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontSize: '1rem' }}>
                             Utensilios
@@ -749,26 +651,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 <Chip
                                     key={utensilio.id}
                                     label={utensilio.nombre}
-                                    sx={{
-                                        bgcolor: 'grey.200',
-                                        fontWeight: 'medium',
-                                    }}
+                                    sx={{ bgcolor: 'grey.200', fontWeight: 'medium' }}
                                 />
                             ))}
                         </Box>
                     </Box>
                 )}
-                {receta.etiquetas && receta.etiquetas.length > 0 && (
+                {/* CORRECCIÓN: Uso de ?.length y mapeo seguro para etiquetas */}
+                {receta.etiquetas?.length > 0 && (
                     <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
                         <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
                         {receta.etiquetas
                             .sort((a, b) => {
                                 const aEsDesafio = a.toLowerCase() === 'desafio';
                                 const bEsDesafio = b.toLowerCase() === 'desafio';
-
                                 if (aEsDesafio) return -1;
                                 if (bEsDesafio) return 1;
-
                                 return 0;
                             }).map((etiqueta, index) => (
                                 <Chip
@@ -783,9 +681,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                             background: 'linear-gradient(to right, #FF7B00, #FFD700)',
                                             color: 'white',
                                             fontWeight: 'bold',
-                                            '&:hover': {
-                                                opacity: 0.9
-                                            }
+                                            '&:hover': { opacity: 0.9 }
                                         }),
                                     }}
                                 />
@@ -809,7 +705,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     <div className="sin-comentarios">Sé el primero en comentar...</div>
                 )}
             </div>
-
 
             <DrawerComentarios
                 open={drawerAbierto}

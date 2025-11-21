@@ -9,6 +9,7 @@ import SportsScoreIcon from '@mui/icons-material/SportsScore';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import KitchenIcon from '@mui/icons-material/Kitchen'
 import EventNoteIcon from '@mui/icons-material/EventNote';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { Modal, Box, Button, Typography, Divider, List, ListItem, ListItemIcon, ListItemText, CircularProgress, alpha } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import LocalBarIcon from '@mui/icons-material/LocalBar';
@@ -18,7 +19,7 @@ import { BASE_URL } from '../apiConfig';
 import fotoPerfilLocal from '../assets/images/avatar.png';
 
 // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
-const PAGE_SIZE = 5; // <-- DEFINIMOS EL TAMAÑO DE PÁGINA
+const PAGE_SIZE = 5;
 
 interface DesafioDto {
     id: number;
@@ -42,15 +43,14 @@ interface DesafioSemanalDto {
     rankingAnterior: RankingItemDto[];
 }
 
-
 interface FeedProps {
     onDrawerToggle: (isOpen: boolean) => void;
 }
 
-
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
-    const [recetas, setRecetas] = useState<DatosReceta[]>([]); // <-- Recetas del Feed
-    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); // <-- Recetas de BÚSQUEDA
+    const [recetas, setRecetas] = useState<DatosReceta[]>([]); 
+    // recetasFiltradas se usa SOLO para el dropdown de búsqueda rápida
+    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); 
     const [usuariosFiltrados, setUsuariosFiltrados] = useState<Usuario[]>([]);
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -60,7 +60,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const currentUserId = authData?.id;
     const navigate = useNavigate();
 
-    // --- NUEVOS ESTADOS PARA PAGINACIÓN ---
+    // --- ESTADOS PARA PAGINACIÓN ---
     const [page, setPage] = useState(1);
     const [cargandoMas, setCargandoMas] = useState(false);
     const [hasMore, setHasMore] = useState(true);
@@ -69,11 +69,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchMessage, setSearchMessage] = useState<string | null>(null);
     const [isSearchActive, setIsSearchActive] = useState(false); 
-    // ===========================
+    
+    // === ESTADO: MODO RESULTADOS COMPLETOS ===
+    const [mostrarResultadosCompletos, setMostrarResultadosCompletos] = useState(false);
 
     const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
     const [ingredienteDesafio, setIngredienteDesafio] = useState<string | undefined>(undefined);
-
     const [desafioIdActivo, setDesafioIdActivo] = useState<number | undefined>(undefined);
 
     // ESTADOS PARA EL RANKING
@@ -81,7 +82,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [modalRankingOpen, setModalRankingOpen] = useState(false);
     const [rankingCargando, setRankingCargando] = useState(false);
     const [misPuntos, setMisPuntos] = useState<number | null>(null);
-    const [rankingEmptyMessage, setRankingEmptyMessage] = useState<string | null>(null); // mensaje simple cuando no hay datos
+    const [rankingEmptyMessage, setRankingEmptyMessage] = useState<string | null>(null);
 
     // ESTADOS PARA LA LÓGICA DE DESAFÍO
     const [desafioSemanal, setDesafioSemanal] = useState<DesafioSemanalDto | null>(null);
@@ -90,14 +91,16 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // Estados para el modal de confirmación de eliminación
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
+    
     interface BusquedaResponse {
         usuarios: Usuario[]; 
         recetas: DatosReceta[]; 
     }
-    // =========================================================================
-    // LÓGICA DE RANKING (SIMPLE: abrir modal y mostrar mensaje si 404)
-    // =========================================================================
 
+    // =========================================================================
+    // LÓGICA DE RANKING
+    // =========================================================================
+    // ... (Sin cambios en fetchCurrentRanking) ...
     const fetchCurrentRanking = async () => {
         if (!token) return;
         setRankingCargando(true);
@@ -110,9 +113,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 }
             });
 
-            // Si no OK -> mostrar modal con mensaje simple (evitamos romper UI)
             if (!response.ok) {
-                // Si el servidor responde 404, mostramos mensaje claro al usuario
                 if (response.status === 404) {
                     setRankingEmptyMessage('No hay desafío actual o participaciones.');
                 } else {
@@ -129,7 +130,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             setRankingEmptyMessage(null);
             setModalRankingOpen(true);
 
-            // Also fetch my current points for this desafio
             try {
               const resp = await fetch(`${BASE_URL}/Desafios/participacion/mis-puntos`, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
@@ -155,8 +155,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         }
     }
 
-
-    // EFECTO 1: Obtener el Desafío Semanal (Sin cambios)
+    // EFECTO 1: Obtener el Desafío Semanal
     useEffect(() => {
         if (!token) return;
 
@@ -169,14 +168,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     }
                 });
 
-                if (!response.ok) {
-                    return;
-                }
+                if (!response.ok) return;
 
                 const data: DesafioSemanalDto = await response.json();
                 setDesafioSemanal(data);
 
-                // Comprobar si el usuario ya participó u optó por no participar
                 try {
                   const resp = await fetch(`${BASE_URL}/Desafios/participacion/esta`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -188,7 +184,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                   }
                   if (mostrar) setModalDesafioOpen(true);
                 } catch (err) {
-                  // Si falla la comprobación, mostramos el modal por defecto
                   setModalDesafioOpen(true);
                 }
 
@@ -203,31 +198,37 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
 
     // =========================================================================
-    // LÓGICA DE CARGA DE RECETAS (MODIFICADA PARA SCROLL INFINITO)
+    // LÓGICA DE CARGA DE RECETAS (SCROLL INFINITO + BÚSQUEDA)
     // =========================================================================
 
-    // useCallback para la función de obtener recetas
-    const recargarRecetas = useCallback(async (isInitialLoad = false) => {
+    // MODIFICADO: Ahora acepta un término opcional para filtrar en el endpoint Feed
+    const recargarRecetas = useCallback(async (isInitialLoad = false, terminoBusqueda: string = '') => {
         if (!token) {
             setCargando(false);
             return;
         }
 
-        // Si es la carga inicial, mostramos el spinner grande
         if (isInitialLoad) {
             setCargando(true);
-            setPage(1); // Resetea la página
-            setHasMore(true); // Resetea si hay más
+            setPage(1);
+            setHasMore(true);
+            setMensaje(null); // Limpiar mensaje anterior
         } else {
-            // Si no es carga inicial (es scroll), mostramos spinner pequeño
             setCargandoMas(true);
         }
 
-        const currentPage = isInitialLoad ? 1 : page; // Usa la página 1 si es carga inicial
+        const currentPage = isInitialLoad ? 1 : page;
 
         try {
-            // Pide la página y tamaño correctos
-            const response = await fetch(`${BASE_URL}/Recetas/Feed?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`, {
+            // Construcción dinámica de la URL
+            let url = `${BASE_URL}/Recetas/Feed?pageNumber=${currentPage}&pageSize=${PAGE_SIZE}`;
+            
+            // Si hay término de búsqueda, lo agregamos a la URL
+            if (terminoBusqueda && terminoBusqueda.trim() !== '') {
+                url += `&Termino=${encodeURIComponent(terminoBusqueda.trim())}`;
+            }
+
+            const response = await fetch(url, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
@@ -242,173 +243,133 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             const recetasObtenidas: DatosReceta[] = data.recetas;
 
             if (isInitialLoad) {
-                setMensaje(data.mensaje); // Solo setea el mensaje en la carga inicial
-                setRecetas(recetasObtenidas); // Reemplaza las recetas
+                setMensaje(data.mensaje);
+                setRecetas(recetasObtenidas);
             } else {
-                // AÑADE las nuevas recetas a las existentes
                 setRecetas(prevRecetas => [...prevRecetas, ...recetasObtenidas]);
             }
 
-            // Si el backend devuelve menos recetas que las pedidas (o 0), ya no hay más.
             if (recetasObtenidas.length < PAGE_SIZE) {
                 setHasMore(false);
             }
 
-            // Actualiza el número de página para la *siguiente* llamada
             setPage(currentPage + 1); 
 
         } catch (err) {
             setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
             console.error("Error al obtener recetas:", err);
-            setHasMore(false); // Detiene intentos futuros si hay error
+            setHasMore(false);
         } finally {
-            setCargando(false); // Oculta spinner grande
-            setCargandoMas(false); // Oculta spinner pequeño
+            setCargando(false);
+            setCargandoMas(false);
         }
-    }, [token, page]); // 'page' es ahora una dependencia clave
+    }, [token, page]);
 
 
-    // EFECTO 2: Obtener las recetas al montar (MODIFICADO)
+    // EFECTO 2: Obtener las recetas al montar (Feed Normal)
     useEffect(() => {
-        // Llama a la función con 'true' para indicar que es la carga inicial
         recargarRecetas(true);
-    }, []); // <-- Se ejecuta SOLO al montar
+    }, []);
 
-    // EFECTO 3: Escuchar evento de recarga (MODIFICADO)
+    // EFECTO 3: Escuchar evento de recarga
     useEffect(() => {
         const handleRecetaCreadaEvent = () => {
             console.log('Evento "recetaCreada" recibido, recargando feed...');
-            recargarRecetas(true); // Recarga todo desde la página 1
+            // Si estamos en búsqueda, recargamos la búsqueda, si no, el feed normal
+            const term = mostrarResultadosCompletos ? searchTerm : '';
+            recargarRecetas(true, term);
         };
 
         document.addEventListener('recetaCreada', handleRecetaCreadaEvent);
         return () => document.removeEventListener('recetaCreada', handleRecetaCreadaEvent);
-    }, [recargarRecetas]); 
+    }, [recargarRecetas, mostrarResultadosCompletos, searchTerm]); 
 
-    // --- NUEVO EFECTO 4: DETECTOR DE SCROLL ---
+    // EFECTO 4: DETECTOR DE SCROLL (MODIFICADO)
     useEffect(() => {
         const handleScroll = () => {
-            // Si el usuario está a 300px del fondo Y no estamos cargando Y hay más por cargar Y no estamos en búsqueda
+            // Solo ejecuta el scroll si NO estamos en búsqueda activa (dropdown)
+            // PERO SÍ permite scroll si estamos en 'mostrarResultadosCompletos'
             if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 300 && 
                 !cargandoMas && 
                 hasMore && 
-                !isSearchActive
+                !isSearchActive // Bloqueamos scroll si el dropdown está abierto
             ) {
-                recargarRecetas(false); // Carga la siguiente página (no es carga inicial)
+                // Determinar qué término usar para la siguiente página
+                const term = mostrarResultadosCompletos ? searchTerm : '';
+                recargarRecetas(false, term);
             }
         };
 
         window.addEventListener('scroll', handleScroll);
-        // Limpiamos el listener al desmontar
         return () => window.removeEventListener('scroll', handleScroll);
         
-    }, [cargandoMas, hasMore, isSearchActive, recargarRecetas]); // Depende de estos estados
+    }, [cargandoMas, hasMore, isSearchActive, recargarRecetas, mostrarResultadosCompletos, searchTerm]);
 
 
-    // ... (Lógica de eliminación: handleDeleteReceta, handleOpenModal, handleCloseModal, handleConfirmDelete) ...
+    // ... Lógica de eliminación ...
     const handleDeleteReceta = async (recetaId: number) => {
-        if (!token) {
-            console.error("No hay token de autenticación para eliminar la receta.");
-            return;
-        }
-
+        if (!token) return;
         try {
             const response = await fetch(`${BASE_URL}/Recetas/${recetaId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
             if (response.status === 204) {
-                // MODIFICADO: Ahora solo borra de 'recetas'
                 setRecetas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
-                // setRecetasFiltradas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId)); // (Se mantiene por si borra desde la búsqueda)
-                console.log(`Receta con ID ${recetaId} eliminada exitosamente.`);
+                setRecetasFiltradas(prevRecetas => prevRecetas.filter(receta => receta.id !== recetaId));
             } else {
                 const errorData = await response.json();
-                throw new Error(`Error al eliminar la receta: ${response.statusText} - ${JSON.stringify(errorData)}`);
+                throw new Error(`Error al eliminar: ${JSON.stringify(errorData)}`);
             }
         } catch (error) {
             console.error('Error al eliminar la receta:', error);
-            console.error('Error al eliminar la receta. Por favor, inténtelo de nuevo.');
         } finally {
             handleCloseModal();
         }
     }
-    const handleOpenModal = async (recetaId: number) => {
-        setRecetaAEliminarId(recetaId);
-        setModalOpen(true);
-    }
-    const handleCloseModal = () => {
-        setModalOpen(false);
-        setRecetaAEliminarId(null);
-    }
-    const handleConfirmDelete = () => {
-        if (recetaAEliminarId !== null) {
-            handleDeleteReceta(recetaAEliminarId);
-        }
-    }
+    const handleOpenModal = async (recetaId: number) => { setRecetaAEliminarId(recetaId); setModalOpen(true); }
+    const handleCloseModal = () => { setModalOpen(false); setRecetaAEliminarId(null); }
+    const handleConfirmDelete = () => { if (recetaAEliminarId !== null) handleDeleteReceta(recetaAEliminarId); }
 
 
-    // ... (Manejadores de modales de desafío y creación - Sin cambios) ...
-    const handleOpenDesafioModal = () => {
-        if (desafioSemanal) {
-            setModalDesafioOpen(true);
-        }
-    }
+    // ... Manejadores de modales ...
+    const handleOpenDesafioModal = () => { if (desafioSemanal) setModalDesafioOpen(true); }
     const handleCloseDesafioModal = async (markSeen = true) => {
         setModalDesafioOpen(false);
         if (markSeen && typeof markDesafioAsSeen === 'function') {
             try { await markDesafioAsSeen(); } catch (e) { console.error(e); }
         }
     }
-    const handleCloseRankingModal = () => {
-        setModalRankingOpen(false);
-        setCurrentRanking([]); 
-        setRankingEmptyMessage(null);
-    }
-    const handleBackToDesafio = () => {
-        // Close ranking modal and reopen desafio modal
-        setModalRankingOpen(false);
-        setCurrentRanking([]);
-        setModalDesafioOpen(true);
-    }
+    const handleCloseRankingModal = () => { setModalRankingOpen(false); setCurrentRanking([]); setRankingEmptyMessage(null); }
+    const handleBackToDesafio = () => { setModalRankingOpen(false); setCurrentRanking([]); setModalDesafioOpen(true); }
     const handleCargarRecetaDesafio = () => {
-        // Close modal without marking as seen so user can participate
         handleCloseDesafioModal(false);
-        const ingrediente = desafioSemanal?.desafioActual?.ingrediente;
+        const ingrediente = desafioSemanal?.desafioActual?.ingredientes;
         const idDesafio = desafioSemanal?.desafioActual?.id;
         if (ingrediente) setIngredienteDesafio(ingrediente);
         if (idDesafio) setDesafioIdActivo(idDesafio);
         setIsCreateDialogOpen(true);
     }
-    // Close handler for create dialog (used by CreateRecetaDialog)
-    const handleCloseCreateDialog = () => {
-        setIsCreateDialogOpen(false);
-    }
-    // Handler called when a recipe is created in the CreateRecetaDialog
+    const handleCloseCreateDialog = () => { setIsCreateDialogOpen(false); }
     const handleRecetaCreada = () => {
-        // Close dialog and reset challenge-related temporary state
         handleCloseCreateDialog();
         setIngredienteDesafio(undefined);
         setDesafioIdActivo(undefined);
-        // Also reload feed from first page
-        recargarRecetas(true);
+        // Recargar según el contexto actual
+        const term = mostrarResultadosCompletos ? searchTerm : '';
+        recargarRecetas(true, term);
     }
 
 
     // =========================================================================
-    // LÓGICA DE BÚSQUEDA (Sin cambios)
+    // LÓGICA DE BÚSQUEDA RÁPIDA (DROPDOWN)
     // =========================================================================
 
     const manejarBusqueda = async (termino: string) => {
         setSearchTerm(termino);
         const terminoLimpio = termino.trim();
 
-        if (!token) {
-            console.error("No hay token de autenticación.");
-            return;
-        }
+        if (!token) return;
 
         if (terminoLimpio === '') {
             setRecetasFiltradas([]); 
@@ -461,45 +422,32 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         try {
             const response = await fetch(`${BASE_URL}/Follow/${followedId}`, {
                 method: method,
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
             });
-
             if (response.ok) {
                 setUsuariosFiltrados(prevUsuarios =>
-                    prevUsuarios.map(u =>
-                        u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u
-                    )
+                    prevUsuarios.map(u => u.id === followedId ? { ...u, isFollowing: !isCurrentlyFollowing } : u)
                 );
-            } else {
-                console.error(`Error al ${isCurrentlyFollowing ? 'dejar de seguir' : 'seguir'} al usuario.`);
             }
-        } catch (error) {
-            console.error('Error de red al seguir/dejar de seguir:', error);
-        }
+        } catch (error) { console.error('Error de red al seguir/dejar de seguir:', error); }
     };
 
-    // Al hacer clic en un resultado, salimos del modo búsqueda
     const handleUsuarioClick = (userId: number) => {
         setIsSearchActive(false);
         setSearchTerm('');
         setUsuariosFiltrados([]);
-        setRecetasFiltradas([]); // Limpia resultados
+        setRecetasFiltradas([]);
         navigate(`/perfil/${userId}`);
     };
 
     const handleRecetaClick = (receta: DatosReceta) => {
         if (!receta.autor?.id) {
-            console.error("No se puede navegar a la receta, falta el ID del autor:", receta);
             setIsSearchActive(false);
             setSearchTerm('');
             setUsuariosFiltrados([]);
             setRecetasFiltradas([]);
             return;
         }
-
         setIsSearchActive(false);
         setSearchTerm('');
         setUsuariosFiltrados([]);
@@ -507,43 +455,59 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         navigate(`/perfil/${receta.autor.id}/publicaciones?receta=${receta.id}`);
     };
     
-    // === NUEVAS FUNCIONES PARA CONTROLAR MODO BÚSQUEDA ===
-    const handleSearchFocus = () => {
-        setIsSearchActive(true);
-        // setRecetasFiltradas([]); // Ya no es necesario, el render lo maneja
-    };
+    // === FUNCIONES UI BÚSQUEDA ===
+    const handleSearchFocus = () => { setIsSearchActive(true); };
 
     const handleSearchBackClick = () => {
         setIsSearchActive(false);
         setSearchTerm('');
         setSearchMessage(null);
         setUsuariosFiltrados([]);
-        setRecetasFiltradas([]); // Limpia resultados
-        // No es necesario restaurar el feed, el estado 'recetas' nunca se tocó
+        setRecetasFiltradas([]); 
     };
-    // ====================================================
+
+    // === LÓGICA "VER TODO" (MODIFICADA) ===
+    const handleVerTodoResultados = () => {
+        // 1. Cerramos dropdown
+        setIsSearchActive(false);
+        // 2. Activamos modo resultados
+        setMostrarResultadosCompletos(true);
+        // 3. Limpiamos la lista actual y cargamos desde el endpoint de Feed con el término
+        setRecetas([]); // Limpiamos visualmente para que aparezca el loading
+        recargarRecetas(true, searchTerm);
+    };
+
+    const handleVolverAlFeed = () => {
+        setMostrarResultadosCompletos(false);
+        setSearchTerm('');
+        setRecetasFiltradas([]);
+        setUsuariosFiltrados([]);
+        // Recargamos el feed normal sin término
+        setRecetas([]);
+        recargarRecetas(true, '');
+    };
 
 
-    // MODIFICADO: Muestra el spinner grande solo si está cargando Y no hay recetas
-    if (cargando && recetas.length === 0) {
+    // Si carga inicial y no hay recetas
+    if (cargando && recetas.length === 0 && !mostrarResultadosCompletos) {
         return <div className="feed-cargando">Cargando feed...</div>;
     }
 
-    if (error) {
+    if (error && !mostrarResultadosCompletos) {
         return <div className="feed-error">{error}</div>;
     }
 
-    // ... (El resto de tus funciones 'renderModal' no cambian) ...
-    // ...
+    // ... Helpers de Iconos ...
     const getMedalIcon = (index: number) => {
         switch (index) {
-            case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; // Oro
-            case 1: return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; // Plata
-            case 2: return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; // Bronce
+            case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; 
+            case 1: return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; 
+            case 2: return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; 
             default: return <SportsScoreIcon sx={{ color: '#666' }} />;
         }
     };
 
+    // ... Helpers de Renderizado de Modal ...
     const renderRankingAnterior = () => {
         if (!desafioSemanal || desafioSemanal.rankingAnterior.length === 0) {
             return (
@@ -558,7 +522,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     <ListItem
                         key={item.usuarioId}
                         onClick={() => {
-                            // Si hay recetaId, navega a la receta; si no, solo a el perfil del usuario
                             if (item.recetaId) {
                                 handleCloseDesafioModal();
                                 navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
@@ -625,7 +588,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         <KitchenIcon sx={{ fontSize: 26 }} /> Ingrediente Clave
                     </Typography>
                     <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 1, textShadow: "0 2px 4px rgba(0,0,0,0.2)", }}>
-                        “{desafio.ingrediente?.toUpperCase() ?? desafio.nombre}”
+                        “{desafio.ingredientes?.toUpperCase() ?? desafio.nombre}”
                     </Typography>
                 </Box>
                 <Typography variant="body1" sx={{ mb: 3, color: "text.secondary", textAlign: "justify", lineHeight: 1.6, }}>
@@ -749,7 +712,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     )}
                     <Divider sx={{ mb: 3 }} />
 
-                    {/* Si no hay ranking mostramos un mensaje simple */}
                     {!rankingCargando && !hasRanking && (
                         <Box sx={{ py: 6, textAlign: 'center' }}>
                             <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
@@ -764,7 +726,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 <ListItem
                                     key={item.usuarioId}
                                     onClick={() => {
-                                        // Si hay recetaId, navega a la receta; si no, solo a el perfil del usuario
                                         if (item.recetaId) {
                                             handleCloseRankingModal();
                                             navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
@@ -777,9 +738,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                         p:1.5, mb:1, borderRadius: '8px', cursor: 'pointer',
                                         bgcolor: index <3 ? theme.palette.action.hover : 'background.paper',
                                         borderLeft: `5px solid ${index ===0 ? theme.palette.warning.main :
-                                                index ===1 ? theme.palette.info.main :
-                                                    index ===2 ? theme.palette.error.main :
-                                                        theme.palette.divider}`,
+                                            index ===1 ? theme.palette.info.main :
+                                                index ===2 ? theme.palette.error.main :
+                                                    theme.palette.divider}`,
                                         boxShadow: '01px4px rgba(0,0,0,0.08)',
                                         '&:hover': { transform: 'translateY(-2px)', boxShadow: '06px18px rgba(0,0,0,0.08)' }
                                     })}
@@ -819,8 +780,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     
     return (
         <div className="feed-contenedor-principal">
-            {/* Botón Flotante para el Desafío */}
-            {desafioSemanal && !isSearchActive && ( // <-- Oculto si se está buscando
+            {/* Botón Flotante para el Desafío (Oculto si buscamos) */}
+            {desafioSemanal && !isSearchActive && !mostrarResultadosCompletos && (
                 <button
                     className="boton-desafio-flotante"
                     onClick={handleOpenDesafioModal}
@@ -849,44 +810,65 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 desafioId={desafioIdActivo}
             />
             
-            {/* === BARRA BÚSQUEDA MODIFICADA === */}
-            <BarraBusqueda
-                searchTerm={searchTerm}
-                onSearchChange={manejarBusqueda}
-                onSearchSubmit={() => manejarBusqueda(searchTerm)}
-                
-                // --- NUEVAS PROPS ---
-                isSearchActive={isSearchActive}
-                onFocus={handleSearchFocus}
-                onBackClick={handleSearchBackClick}
-            />
+         {/* === BARRA BÚSQUEDA O HEADER "VOLVER" === */}
+            {!mostrarResultadosCompletos ? (
+                <BarraBusqueda
+                    searchTerm={searchTerm}
+                    onSearchChange={manejarBusqueda}
+                    onSearchSubmit={() => manejarBusqueda(searchTerm)}
+                    isSearchActive={isSearchActive}
+                    onFocus={handleSearchFocus}
+                    onBackClick={handleSearchBackClick}
+                />
+            ) : (
+                // === HEADER FIJO QUE REEMPLAZA AL APP BAR ===
+                <Box sx={{ 
+                    position: 'fixed',        // Se fija a la pantalla
+                    top: 0,                   // Pegado al techo
+                    left: 0,
+                    width: '100%',            // Ocupa todo el ancho
+                    zIndex: 9999,             // Z-Index alto para tapar el "Bienvenido Alessandro"
+                    height: '64px',           // Altura estándar de una App Bar
+                    p: 2, 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    bgcolor: 'background.paper', // Color de fondo sólido (importante para tapar lo de atrás)
+                    borderBottom: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: 3
+                    // ELIMINADO: mt: 8  <-- Esto era lo que causaba el espacio gigante
+                }}>
+                    <Button 
+                        variant="text" 
+                        onClick={handleVolverAlFeed}
+                        startIcon={<ArrowBackIcon />}
+                        sx={{ fontWeight: 'bold', color: '#FF5722' }}
+                    >
+                        Volver
+                    </Button>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 'bold', mr: 2 }}>
+                        Resultados para "{searchTerm}"
+                    </Typography>
+                </Box>
+            )}
             
-            {/* === CONTENIDO CONDICIONAL (MODIFICADO) === */}
+            
+            {/* === CONTENIDO CONDICIONAL === */}
             <div className="feed-contenido">
-                {!isSearchActive ? (
-                    // ===================================
-                    // 1. MODO FEED NORMAL
-                    // AHORA RENDERIZA DESDE 'recetas'
-                    // ===================================
-                    <>
-                        {recetas.length === 0 && mensaje && (
-                            <div className="mensaje-feed">
-                                {mensaje.includes('Sigue a gente') && (
-                                    <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
-                                )}
-                                {mensaje.includes('No hay publicaciones') && (
-                                    <NewspaperOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
-                                )}
-                                <p>{mensaje}</p>
-                            </div>
-                        )}
-                        {recetas.length === 0 && !mensaje && !cargando && !error && (
-                            <div className="no-resultados">No se encontraron recetas.</div>
+                
+             {/* ===================================
+                    MODO RESULTADOS COMPLETOS (VER TODO)
+                   =================================== */}
+                {mostrarResultadosCompletos ? (
+                    <div className="resultados-completos-lista" style={{ paddingTop: '20px' }}>
+                        
+                        {recetas.length === 0 && !cargando && (
+                            <div className="no-resultados">No se encontraron recetas para esta búsqueda.</div>
                         )}
 
-                        {/* Mapea las recetas del estado 'recetas' */}
+                        {/* USAMOS 'recetas' QUE AHORA CONTIENE EL FEED FILTRADO */}
                         {recetas.map(receta => {
-                            const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
+                             const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
                                 if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
                                     return cat.nombre;
                                 }
@@ -907,88 +889,159 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 />
                             );
                         })}
-
-                        {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
+                        
                         {cargandoMas && (
                             <div style={{ textAlign: 'center', padding: '20px' }}>
                                 <CircularProgress />
                             </div>
                         )}
 
-                        {/* --- NUEVO: MENSAJE DE FIN DE FEED --- */}
                         {!hasMore && recetas.length > 0 && (
                             <div style={{ textAlign: 'center', padding: '4px', color: '#888' }}>
-                                Fin de las recetas.
-                            </div>
-                        )}
-                    </>
-                ) : (
-                    // ==========================================
-                    // 2. MODO BÚSQUEDA ACTIVA (Usa 'recetasFiltradas')
-                    // (Sin cambios)
-                    // ==========================================
-                    <div className="search-results-list">
-                        
-                        {/* --- Sección de Usuarios --- */}
-                        {usuariosFiltrados.length > 0 && (
-                            usuariosFiltrados.map(usuario => (
-                                <div
-                                    key={usuario.id}
-                                    className="resultado-usuario"
-                                    onClick={() => handleUsuarioClick(usuario.id)}
-                                >
-                                    {usuario.imagenUrl ? (
-                                        <img src={`data:image/jpeg;base64,${usuario.imagenUrl}`} alt="avatar" className="avatar-busqueda" />
-                                    ) : (
-                                        <img src={`${fotoPerfilLocal}`} alt="avatar" className="avatar-busqueda" />
-                                    )}
-                                    <div className="usuario-info-busqueda">
-                                        <span className="usuario-nombre">{usuario.nombreUsuario}</span>
-                                        <span className="usuario-nombre-completo">{usuario.nombre} {usuario.apellido}</span>
-                                    </div>
-                                    {currentUserId !== usuario.id && (
-                                        <button
-                                            className={`boton-seguir ${usuario.isFollowing ? 'siguiendo' : ''}`}
-                                            onClick={e => {
-                                                e.stopPropagation();
-                                                manejarSeguirUsuario(usuario.id, usuario.isFollowing || false);
-                                            }}
-                                        >
-                                            {usuario.isFollowing ? 'Siguiendo' : 'Seguir'}
-                                        </button>
-                                    )}
-                                </div>
-                            ))
-                        )}
-
-                        {/* --- Sección de Recetas --- */}
-                        {recetasFiltradas.length > 0 && (
-                            recetasFiltradas.map(receta => (
-                                <div
-                                    key={receta.id}
-                                    className="resultado-item" 
-                                    onClick={() => handleRecetaClick(receta)}
-                                >
-                                    <span className="usuario-nombre">{receta.titulo}</span>
-                                    <span className="usuario-nombre-completo">por @{receta.autor?.nombreUsuario}</span>
-                                </div>
-                            ))
-                        )}
-
-                        {/* --- Mensaje de estado de búsqueda --- */}
-                        {searchMessage && (
-                            <div className="no-resultados-mensaje">
-                                {searchMessage}
-                            </div>
-                        )}
-                        
-                        {/* Mensaje de bienvenida si está vacío */}
-                        {searchTerm.trim() === '' && !searchMessage && (
-                            <div className="no-resultados-mensaje">
-                                Busca usuarios o recetas.
+                                Fin de los resultados.
                             </div>
                         )}
                     </div>
+
+                ) : (
+                    // ===================================
+                    // FEED NORMAL Y DROP DOWN BÚSQUEDA
+                    // ===================================
+                    <>
+                        {!isSearchActive ? (
+                            // 1. FEED NORMAL
+                            <>
+                                {recetas.length === 0 && mensaje && (
+                                    <div className="mensaje-feed">
+                                        {mensaje.includes('Sigue a gente') && (
+                                            <PersonAddOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                                        )}
+                                        {mensaje.includes('No hay publicaciones') && (
+                                            <NewspaperOutlinedIcon style={{ fontSize: 50, color: '#0b2553' }} />
+                                        )}
+                                        <p>{mensaje}</p>
+                                    </div>
+                                )}
+                                {recetas.length === 0 && !mensaje && !cargando && !error && (
+                                    <div className="no-resultados">No se encontraron recetas.</div>
+                                )}
+
+                                {recetas.map(receta => {
+                                    const etiquetasFormateadas = (receta.etiquetas || []).map(cat => {
+                                        if (typeof cat === 'object' && cat !== null && 'nombre' in cat) {
+                                            return cat.nombre;
+                                        }
+                                        return cat;
+                                    });
+                                    const finalEtiquetas = [...etiquetasFormateadas];
+                                    if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) {
+                                        finalEtiquetas.push('DESAFIO');
+                                    }
+                                    return (
+                                        <Receta
+                                            key={receta.id}
+                                            receta={{ ...receta, etiquetas: finalEtiquetas }}
+                                            onDrawerToggle={onDrawerToggle}
+                                            currentUserId={currentUserId ?? null}
+                                            onDeleteReceta={handleOpenModal}
+                                            onUsuarioClick={handleUsuarioClick}
+                                        />
+                                    );
+                                })}
+
+                                {cargandoMas && (
+                                    <div style={{ textAlign: 'center', padding: '20px' }}>
+                                        <CircularProgress />
+                                    </div>
+                                )}
+
+                                {!hasMore && recetas.length > 0 && (
+                                    <div style={{ textAlign: 'center', padding: '4px', color: '#888' }}>
+                                        Fin de las recetas.
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            // 2. MODO BÚSQUEDA ACTIVA (DROP DOWN)
+                            <div className="search-results-list">
+                                
+                                {usuariosFiltrados.length > 0 && (
+                                    usuariosFiltrados.map(usuario => (
+                                        <div
+                                            key={usuario.id}
+                                            className="resultado-usuario"
+                                            onClick={() => handleUsuarioClick(usuario.id)}
+                                        >
+                                            {usuario.imagenUrl ? (
+                                                <img src={`data:image/jpeg;base64,${usuario.imagenUrl}`} alt="avatar" className="avatar-busqueda" />
+                                            ) : (
+                                                <img src={`${fotoPerfilLocal}`} alt="avatar" className="avatar-busqueda" />
+                                            )}
+                                            <div className="usuario-info-busqueda">
+                                                <span className="usuario-nombre">{usuario.nombreUsuario}</span>
+                                                <span className="usuario-nombre-completo">{usuario.nombre} {usuario.apellido}</span>
+                                            </div>
+                                            {currentUserId !== usuario.id && (
+                                                <button
+                                                    className={`boton-seguir ${usuario.isFollowing ? 'siguiendo' : ''}`}
+                                                    onClick={e => {
+                                                        e.stopPropagation();
+                                                        manejarSeguirUsuario(usuario.id, usuario.isFollowing || false);
+                                                    }}
+                                                >
+                                                    {usuario.isFollowing ? 'Siguiendo' : 'Seguir'}
+                                                </button>
+                                            )}
+                                        </div>
+                                    ))
+                                )}
+
+                                {recetasFiltradas.length > 0 && (
+                                    recetasFiltradas.map(receta => (
+                                        <div
+                                            key={receta.id}
+                                            className="resultado-item" 
+                                            onClick={() => handleRecetaClick(receta)}
+                                        >
+                                            <span className="usuario-nombre">{receta.titulo}</span>
+                                            <span className="usuario-nombre-completo">por @{receta.autor?.nombreUsuario}</span>
+                                        </div>
+                                    ))
+                                )}
+
+                                {searchMessage && (
+                                    <div className="no-resultados-mensaje">
+                                        {searchMessage}
+                                    </div>
+                                )}
+                                
+                                {searchTerm.trim() === '' && !searchMessage && (
+                                    <div className="no-resultados-mensaje">
+                                        Busca usuarios o recetas.
+                                    </div>
+                                )}
+
+                                {/* === BOTÓN VER TODO === */}
+                                {(recetasFiltradas.length > 0) && (
+                                    <div 
+                                        className="ver-todo-btn"
+                                        onClick={handleVerTodoResultados}
+                                        style={{
+                                            padding: '15px',
+                                            textAlign: 'center',
+                                            color: '#FF5722',
+                                            fontWeight: 'bold',
+                                            cursor: 'pointer',
+                                            borderTop: '1px solid #eee',
+                                            marginTop: '5px'
+                                        }}
+                                    >
+                                        Ver todas las recetas
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

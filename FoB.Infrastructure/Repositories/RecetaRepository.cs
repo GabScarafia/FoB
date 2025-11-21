@@ -247,57 +247,100 @@ internal sealed class RecetaRepository : IRecetaRepository
         return list;
     }
 
-    // Ahora acepta ambos parámetros y los usa
-    public async Task<IEnumerable<RecetaResponse>> FeedAsync(int pageNumber = 1, int pageSize = 5)
+    public async Task<IEnumerable<RecetaResponse>> FeedAsync(int pageNumber = 1, int pageSize = 5, string? termino = null)
     {
-        // int pageSize = 10; // <-- ELIMINAMOS ESTA LÍNEA
         var currentUserId = _currentUser.User.Id;
 
-        var followedUserIds = await _context.Set<SeguimientoUsuario>()
-                                             .Where(s => s.SeguidorId == currentUserId)
-                                             .Select(s => s.SeguidoId)
-                                             .ToListAsync();
-        followedUserIds.Add(currentUserId);
+        var query = _context.Set<Receta>()
+            .AsNoTracking()
+            .AsSplitQuery();
 
-        if (!followedUserIds.Any())
+        if (!string.IsNullOrWhiteSpace(termino))
         {
-            return new List<RecetaResponse>();
+            var terminoLimpio = termino.Trim();
+            string patronLike = $"%{terminoLimpio}%";
+
+            // A. Filtros Base de Búsqueda (Solo activas y que no sean mías, igual que en tu buscador)
+            query = query.Where(x => x.Activa == true && x.UsuarioId != currentUserId);
+
+            // B. Filtros de coincidencia (Like)
+            query = query.Where(x =>
+                // Coincidencia por Título
+                EF.Functions.Like(x.Titulo, patronLike) ||
+                // Coincidencia por Nombre de Usuario
+                EF.Functions.Like(x.Usuario.NombreUsuario, patronLike) ||
+                // Coincidencia por Nombre de Ingrediente
+                x.IngredienteReceta.Any(ir => EF.Functions.Like(ir.Ingrediente.Nombre, patronLike))
+            );
+
+            // C. Ordenamiento por Relevancia (Título > Ingrediente > Usuario)
+            query = query.OrderByDescending(x =>
+                    EF.Functions.Like(x.Titulo, patronLike) ? 3 :
+                    x.IngredienteReceta.Any(ir => EF.Functions.Like(ir.Ingrediente.Nombre, patronLike)) ? 2 :
+                    EF.Functions.Like(x.Usuario.NombreUsuario, patronLike) ? 1 :
+                    0
+                )
+                .ThenByDescending(x => x.FechaCreacion)
+                .ThenByDescending(x => x.PuntuacionPromedio)
+                .ThenBy(x => x.Titulo);
+        }
+        else
+        {
+            // =================================================================
+            // LÓGICA DE FEED NORMAL (Seguidos + Yo)
+            // =================================================================
+            var followedUserIds = await _context.Set<SeguimientoUsuario>()
+                .Where(s => s.SeguidorId == currentUserId)
+                .Select(s => s.SeguidoId)
+                .ToListAsync();
+
+            followedUserIds.Add(currentUserId); // Agregar mis propias recetas al feed normal
+
+            if (!followedUserIds.Any())
+            {
+                return new List<RecetaResponse>();
+            }
+
+            // Filtro de Feed normal
+            query = query.Where(x => x.Activa == true && followedUserIds.Contains(x.UsuarioId));
+
+            // Orden normal por fecha
+            query = query.OrderByDescending(x => x.FechaCreacion);
         }
 
-        var query = _context.Set<Receta>()
-                            .Include(x => x.Usuario)
-                                .ThenInclude(x => x.UsuarioImagen)
-                            .Include(x => x.RecetaImagen)
-                            .Include(x => x.Voto)
-                            .Include(x => x.Comentario)
-                                .ThenInclude(x => x.Usuario)
-                                    .ThenInclude(u => u.UsuarioImagen) // <-- INCLUYE NECESARIO
-                            .Include(x => x.IngredienteReceta)
-                                .ThenInclude(x => x.Ingrediente)
-                            .Include(r => r.IngredienteReceta)
-                                .ThenInclude(ir => ir.Unidad)
-                            .Include(x => x.RecetaEtiquetas)
-                                .ThenInclude(x => x.Etiquetas)
-                            .Include(x => x.Paso)
-                                .ThenInclude(p => p.RecetaImagen) // <-- INCLUYE NECESARIO
-                            .AsSplitQuery()
-                            .Where(x => x.Activa == true && followedUserIds.Contains(x.UsuarioId));
-
-        query = query.OrderByDescending(x => x.FechaCreacion);
-
-        // AHORA USA LOS PARÁMETROS CORRECTAMENTE
+        // 3. PAGINACIÓN (Se aplica igual para ambos casos)
         query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
+        // 4. INCLUDES (Necesarios para el mapeo completo de RecetaResponse)
+        query = query.Include(x => x.Usuario)
+                .ThenInclude(x => x.UsuarioImagen)
+            .Include(x => x.RecetaImagen)
+            .Include(x => x.Voto)
+            .Include(x => x.Comentario)
+                .ThenInclude(x => x.Usuario)
+                    .ThenInclude(u => u.UsuarioImagen)
+            .Include(x => x.IngredienteReceta)
+                .ThenInclude(x => x.Ingrediente)
+            .Include(r => r.IngredienteReceta)
+                .ThenInclude(ir => ir.Unidad)
+            .Include(x => x.RecetaEtiquetas)
+                .ThenInclude(x => x.Etiquetas)
+            .Include(x => x.Paso)
+                .ThenInclude(p => p.RecetaImagen);
+
+        // 5. PROYECCIÓN (Mapeo a RecetaResponse)
         var list = await query.Select(x => new RecetaResponse
         {
             Id = x.Id,
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Where(x=>x.ComentarioId == null).Count(),
-            MeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Like.ToString() && x.ComentarioId == null),
-            NoMeGusta = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null),
-            EsFavorito = x.Voto.Any(x => x.UsuarioId == _currentUser.User.Id && x.Tipo == InteraccionTipoEnum.Dislike.ToString() && x.ComentarioId == null), // Sigue pareciendo un bug, pero lo dejo como está
+            CantidadVotos = x.Voto.Where(v => v.ComentarioId == null).Count(),
+            // Optimización: Usar variables locales en la query no siempre funciona bien en EF Core complejo, 
+            // mejor dejar la lógica inline para asegurar traducción a SQL.
+            MeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
+            NoMeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Dislike.ToString() && v.ComentarioId == null),
+            EsFavorito = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Favorito.ToString() && v.ComentarioId == null), // Corregido el enum a Favorito si aplica
             CantidadComentarios = x.Comentario.Count(),
             VistaPreviaComentarios = x.Comentario.OrderByDescending(c => c.Fecha).Take(3)
                 .Select(c => new ComentarioResponse

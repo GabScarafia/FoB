@@ -33,10 +33,10 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Feed")]
-    public async Task<IActionResult> Feed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5) // <-- PARÁMETROS CORREGIDOS
+    public async Task<IActionResult> Feed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5, [FromQuery] string? termino = null) // <-- PARÁMETROS CORREGIDOS
     {
         // Pasamos ambos parámetros al repositorio
-        var recetas = await _recetaRepository.FeedAsync(pageNumber, pageSize);
+        var recetas = await _recetaRepository.FeedAsync(pageNumber, pageSize, termino);
 
         if (recetas == null || !recetas.Any())
         {
