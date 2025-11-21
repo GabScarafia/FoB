@@ -26,6 +26,7 @@ namespace FoB.Infrastructure.Repositories
         public async Task<IEnumerable<ComentarioDTO>> GetByRecetaAsync(int idReceta)
         {
             var comentarios = await _context.Set<Comentario>()
+                .Include(x => x.Voto)
                 .Include(x => x.Usuario)
                     .ThenInclude(x => x.UsuarioImagen)
                 .Where(c => c.RecetaId == idReceta)
@@ -36,6 +37,8 @@ namespace FoB.Infrastructure.Repositories
                     Texto = c.Texto,
                     Fecha = c.Fecha,
                     RespuestaAComentarioId = c.RespuestaAComentarioId,
+                    CantidadLikes = c.Voto.Count,
+                    LeGustaAlUsuario = c.Voto.Any(v => v.UsuarioId == _currentUser.User.Id),
                     Usuario = new UsuarioComentarioDTO
                     {
                         Id = c.Usuario.Id, // ¡Perfecto, ya tienes el ID del usuario aquí!

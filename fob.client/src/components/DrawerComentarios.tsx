@@ -63,6 +63,7 @@ interface ComentarioAnidadoProps {
   onDeleteRequest?: (comentario: Comentario) => void;
   onEditRequest?: (comentario: Comentario) => void;
   onLikeChange: (comentarioId: number, isLiked: boolean, newLikeCount: number) => void;
+  idReceta: number;
 }
 
 // --- Componente Recursivo ---
@@ -73,6 +74,7 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
   onDeleteRequest,
   onEditRequest,
   onLikeChange,
+  idReceta,
 }) => {
   const { authData } = useAuth();
   const [liked, setLiked] = useState(comentario.leGustaAlUsuario);
@@ -100,17 +102,19 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
     setLiked(newLiked);
     setLikeCount(newCount);
   
+    console.log(oldLiked)
     try {
-      const response = await fetch(`${BASE_URL}/api/Comentario/Interaccion`, {
+      const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${authData.token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          idComentario: comentario.id,
-          tipo: 0, // 0 para 'Me Gusta'
+          comentarioId: comentario.id,
+          tipo: 3, // 0 para 'Me Gusta'
           accion: oldLiked ? 1 : 0,
+          idReceta: idReceta,
         }),
       });
   
@@ -226,6 +230,7 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
               onDeleteRequest={onDeleteRequest}
               onEditRequest={onEditRequest}
               onLikeChange={onLikeChange}
+              idReceta={idReceta}
             />
           ))}
         </Box>
@@ -456,6 +461,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
                   onDeleteRequest={String(comentario.usuario?.id) === String(currentUserId) ? handleDeleteRequest : undefined}
                   onEditRequest={String(comentario.usuario?.id) === String(currentUserId) ? handleEditClick : undefined}
                   onLikeChange={handleLikeChange}
+                  idReceta={idReceta}
                 />
               ))}
             </List>
