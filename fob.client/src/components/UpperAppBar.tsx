@@ -111,10 +111,25 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  } catch (err) { console.error(err); }
  };
 
- const handleNotificationClick = (n: NotificacionItem) => {
+ const handleNotificationClick = async (n: NotificacionItem) => {
  if (!n.leida) markAsRead(n.id);
  handleCloseNotifications();
- if (n.url) navigate(n.url);
+
+        if (n.url) {
+            // Si la URL es del tipo /receta/32?comentario=108, la transformamos
+            if (n.url.startsWith('/receta/')) {
+                const urlParts = n.url.split('?');
+                const recetaId = urlParts[0].split('/')[2];
+                const params = new URLSearchParams(urlParts[1]);
+                const comentarioId = params.get('comentario');
+
+                // Navegamos a la ruta correcta que el router sí entiende
+                navigate(`/perfil/${n.emisor?.id}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
+            } else {
+                // Para todas las demás URLs, navegamos directamente
+                navigate(n.url);
+            }
+        }
  };
 
  const formatDate = (iso?: string | null) => {
@@ -243,7 +258,7 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  </Tooltip>
  )}
  <Tooltip title="Abrir">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); if (n.url) { handleCloseNotifications(); navigate(n.url); } }}>
+ <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleNotificationClick(n); }}>
  <OpenInNewIcon fontSize="small" />
  </IconButton>
  </Tooltip>

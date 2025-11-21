@@ -432,30 +432,65 @@ internal sealed class RecetaRepository : IRecetaRepository
                 // Crear notificación para el autor de la receta si no es el mismo usuario
                 try
                 {
-                    var receta = await _context.Receta.Include(r => r.Usuario).FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
-                    if (receta != null && receta.UsuarioId != idUsuario)
+                    if (interaccion.ComentarioId == null)
                     {
-                        var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
-                        var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
-                        var noti = new Notificacion
-                        {
-                            FechaDeEnvio = DateTime.Now,
-                            Leida = false,
-                            Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
-                            Tipo = "Nuevo Voto",
-                            UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}",
-                            UsuarioId = receta.UsuarioId
-                        };
-                        _context.Notificacion.Add(noti);
+                        // 📌 LIKE A PUBLICACIÓN
+                        var receta = await _context.Receta
+                            .Include(r => r.Usuario)
+                            .FirstOrDefaultAsync(r => r.Id == interaccion.IdReceta);
 
-                        // asignar emisor
-                        noti.EmisorId = idUsuario;
+                        if (receta != null && receta.UsuarioId != idUsuario)
+                        {
+                            var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+                            var tipoMsg = interaccion.Tipo == InteraccionTipoEnum.Favorito ? "favorito" : "like";
+
+                            var noti = new Notificacion
+                            {
+                                FechaDeEnvio = DateTime.Now,
+                                Leida = false,
+                                Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio {tipoMsg} a tu publicación",
+                                Tipo = "Nuevo Voto",
+                                UrlEnlace = $"/perfil/{receta.UsuarioId}/publicaciones?receta={receta.Id}",
+                                UsuarioId = receta.UsuarioId,
+                                EmisorId = idUsuario
+                            };
+
+                            _context.Notificacion.Add(noti);
+                        }
                     }
+                    else
+                    {
+                        // LIKE A COMENTARIO
+                        var comentario = await _context.Comentario
+                            .Include(c => c.Usuario)
+                            .FirstOrDefaultAsync(c => c.Id == interaccion.ComentarioId);
+
+                        if (comentario != null && comentario.UsuarioId != idUsuario)
+                        {
+                            var actor = await _context.Usuario.FirstOrDefaultAsync(u => u.Id == idUsuario);
+
+                            var noti = new Notificacion
+                            {
+                                FechaDeEnvio = DateTime.Now,
+                                Leida = false,
+                                Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} le dio like a tu comentario",
+                                Tipo = "Nuevo Voto",
+                                UrlEnlace = $"/receta/{interaccion.IdReceta}?drawerComentarios=true&comentarioId=" + interaccion.ComentarioId,
+
+                                UsuarioId = comentario.UsuarioId,
+                                EmisorId = idUsuario
+                            };
+
+                            _context.Notificacion.Add(noti);
+                        }
+                    }
+
                 }
                 catch (Exception ex)
                 {
                     Console.Error.WriteLine(ex.ToString());
                 }
+
             }
         }
 

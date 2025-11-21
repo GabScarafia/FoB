@@ -136,3 +136,19 @@
 .comment-input-clean .MuiInputBase-input {
     padding: 8px 0;
 }
+
+/* --- Animación de Flash --- */
+@keyframes flash {
+  0% {
+    background-color: transparent;
+  }
+  25% {
+    background-color: rgba(25, 118, 210, 0.3); /* Color primario con opacidad */
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+.flash-animation {
+  animation: flash 2s ease-out;
+}

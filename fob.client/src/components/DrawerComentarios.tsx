@@ -53,6 +53,7 @@ interface DrawerComentariosProps {
   open: boolean;
   onClose: () => void;
   idReceta: number;
+  comentarioIdDestacado?: string | null;
   onComentarioAgregado: (nuevoComentario: Comentario) => void;
 }
 
@@ -206,15 +207,23 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
 
           {/* Columna Derecha: Like y Hora (Como en la foto) */}
           <Box className="comment-meta-right">
-            {!isDeleted && !isOwnComment && (
-              // Contenedor para alinear el contador y el corazón en una fila
+            {!isDeleted && (
               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                   {likeCount > 0 && <span className="comment-likes-count">{likeCount}</span>}
-                  <IconButton size="small" onClick={handleLikeClick} disabled={isProcessingLike} sx={{ p: 0.5 }}>
+                  <IconButton 
+                    size="small" 
+                    onClick={handleLikeClick} 
+                    disabled={isProcessingLike || isOwnComment} // Deshabilitado si es propio o si se está procesando
+                    sx={{ 
+                        p: 0.5,
+                        cursor: isOwnComment ? 'default' : 'pointer' // Cambia el cursor si es propio
+                    }}
+                  >
                     {liked ? (
                       <FavoriteIcon fontSize="small" sx={{ color: 'primary.main' }} />
                     ) : (
-                      <FavoriteBorderIcon fontSize="small" className="like-icon" />
+                      // Si es propio, el corazón se ve gris para indicar que está inactivo
+                      <FavoriteBorderIcon fontSize="small" className="like-icon" sx={{ color: isOwnComment ? '#888' : 'white' }} />
                     )}
                   </IconButton>
               </Box>
@@ -255,6 +264,7 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
   open,
   onClose,
   idReceta,
+  comentarioIdDestacado,
   onComentarioAgregado,
 }) => {
   const [nuevoTexto, setNuevoTexto] = useState("");
@@ -317,7 +327,26 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
     }
   };
 
-  useEffect(() => { if (open && token) obtenerTodosLosComentarios(); }, [open, idReceta, token]);
+  useEffect(() => {
+    if (open && token) {
+        obtenerTodosLosComentarios().then(() => {
+            if (comentarioIdDestacado) {
+                setTimeout(() => {
+                    const elemento = document.getElementById(`comentario-${comentarioIdDestacado}`);
+                    if (elemento) {
+                        elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        elemento.classList.add('flash-animation');
+                        // Eliminar la clase después de la animación para que pueda repetirse si es necesario
+                        setTimeout(() => {
+                            elemento.classList.remove('flash-animation');
+                        }, 2000); // La duración de la animación
+                    }
+                }, 300); // Un pequeño retraso para asegurar que el DOM esté listo
+            }
+        });
+    }
+}, [open, idReceta, token, comentarioIdDestacado]);
+
 
   const handleReplyClick = (comentario: Comentario) => {
     setComentarioPadre({ id: comentario.id, usuario: comentario.usuario.nombreUsuario });

@@ -1,9 +1,9 @@
 ﻿﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 // En Receta.tsx (arriba de todo)
-import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material';
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material'; 
 import './Receta.css';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom'; 
 
 // Íconos de Material UI
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -129,6 +129,8 @@ export interface PropsReceta {
 
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
     const navigate = useNavigate();
+    const haProcesadoApertura = React.useRef(false);
+    const [searchParams] = useSearchParams(); 
 
     if (!receta) {
         console.error("Error: el objeto receta es nulo o indefinido.");
@@ -152,6 +154,16 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const openMenu = Boolean(anchorEl);
     const [isProcessingLike, setIsProcessingLike] = useState(false);
 
+    useEffect(() => {
+        // Si esta receta es la que tiene el comentario destacado, abrimos el drawer.
+        const recetaIdParam = searchParams.get('receta'); 
+        const comentarioIdParam = searchParams.get('comentario'); 
+        if (recetaIdParam && comentarioIdParam && Number(receta.id) === Number(recetaIdParam) && !haProcesadoApertura.current) {
+            setDrawerAbierto(true);
+            onDrawerToggle(true);
+            haProcesadoApertura.current = true; // Marcamos que ya lo procesamos
+        }
+    }, [receta.id, onDrawerToggle, searchParams]);
 
     // ... (El resto de tus manejadores: handleClickMenu, handleCloseMenu, etc. no cambian)
     const handleClickMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -499,25 +511,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
 
-    useEffect(() => {
-        const handler = (e: any) => {
-            try {
-                const detail = e.detail;
-                if (!detail) return;
-                const { recetaId, comentarioId } = detail;
-                if (Number(recetaId) !== receta.id) return;
-                // Abrir drawer y luego scrollear al comentario si existe
-                setDrawerAbierto(true);
-                onDrawerToggle(true);
-                // El DrawerComentarios maneja el scroll cuando carga comentarios; emitimos un evento con el ID
-                window.dispatchEvent(new CustomEvent('focusComentario', { detail: { comentarioId } }));
-            } catch (err) {
-                console.error(err);
-            }
-        };
-        window.addEventListener('openCommentOnReceta', handler as EventListener);
-        return () => window.removeEventListener('openCommentOnReceta', handler as EventListener);
-    }, [receta.id, onDrawerToggle]);
 
     return (
     <Paper
@@ -825,6 +818,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             onClose={handleCloseDrawer}
             idReceta={receta.id}
             onComentarioAgregado={handleComentarioAgregado}
+            comentarioIdDestacado={searchParams.get('comentario')}
         />
     </Paper>
     );
