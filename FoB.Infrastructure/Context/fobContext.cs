@@ -618,6 +618,8 @@ public partial class fobContext : DbContext
 
             entity.HasIndex(e => e.UsuarioId, "usuario_id");
 
+            entity.HasIndex(e => e.ComentarioId, "voto_comentario_FK");
+
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.ComentarioId).HasColumnName("comentario_id");
             entity.Property(e => e.FechaDeVoto)
@@ -629,6 +631,10 @@ public partial class fobContext : DbContext
                 .HasColumnName("tipo");
             entity.Property(e => e.UsuarioId).HasColumnName("usuario_id");
             entity.Property(e => e.Valor).HasColumnName("valor");
+
+            entity.HasOne(d => d.Comentario).WithMany(p => p.Voto)
+                .HasForeignKey(d => d.ComentarioId)
+                .HasConstraintName("voto_comentario_FK");
 
             entity.HasOne(d => d.Receta).WithMany(p => p.Voto)
                 .HasForeignKey(d => d.RecetaId)
