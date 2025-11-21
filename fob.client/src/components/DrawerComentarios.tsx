@@ -64,6 +64,8 @@ interface ComentarioAnidadoProps {
   onEditRequest?: (comentario: Comentario) => void;
   onLikeChange: (comentarioId: number, isLiked: boolean, newLikeCount: number) => void;
   idReceta: number;
+  depth: number;
+  currentUserId: string | undefined;
 }
 
 // --- Componente Recursivo ---
@@ -75,12 +77,15 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
   onEditRequest,
   onLikeChange,
   idReceta,
+  depth,
+  currentUserId,
 }) => {
   const { authData } = useAuth();
   const [liked, setLiked] = useState(comentario.leGustaAlUsuario);
   const [likeCount, setLikeCount] = useState(comentario.cantidadLikes);
   const [isProcessingLike, setIsProcessingLike] = useState(false);
   const isDeleted = comentario.texto === "Comentario eliminado";
+  const isOwnComment = String(comentario.usuario?.id) === String(currentUserId);
 
   useEffect(() => {
     setLiked(comentario.leGustaAlUsuario);
@@ -138,77 +143,81 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
           className="comment-list-item"
           alignItems="flex-start"
           sx={{
-            marginLeft: comentario.respuestaAComentarioId ? "20px" : "0",
+            // El margen se aplicará a un contenedor interno
           }}
         >
-          <ListItemAvatar sx={{ minWidth: 50 }}>
-            <Avatar
-              sx={{ width: 36, height: 36 }}
-              src={
-                comentario.usuario?.imagen
-                  ? `data:image/jpeg;base64,${comentario.usuario.imagen}`
-                  : fotoPerfilLocal
-              }
-              alt={comentario.usuario?.nombreUsuario}
-            />
-          </ListItemAvatar>
-          
-          {/* Contenido Central: Nombre y Texto */}
-          <ListItemText
-            primary={
-              <Typography component="span" className="comment-user-name">
-                {comentario.usuario?.nombreUsuario || "Usuario"}
-              </Typography>
-            }
-            secondary={
-              <React.Fragment>
-                <Typography component="span" className="comment-text-body">
-                  {comentario.texto}
+          {/* Contenedor para la parte que se indenta (Avatar y Texto) */}
+          <Box sx={{ flex: 1, display: 'flex', marginLeft: depth > 0 ? "20px" : "0" }}>
+            <ListItemAvatar sx={{ minWidth: 50 }}>
+              <Avatar
+                sx={{ width: 36, height: 36 }}
+                src={
+                  comentario.usuario?.imagen
+                    ? `data:image/jpeg;base64,${comentario.usuario.imagen}`
+                    : fotoPerfilLocal
+                }
+                alt={comentario.usuario?.nombreUsuario}
+              />
+            </ListItemAvatar>
+            
+            {/* Contenido Central: Nombre y Texto */}
+            <ListItemText
+              primary={
+                <Typography component="span" className="comment-user-name">
+                  {comentario.usuario?.nombreUsuario || "Usuario"}
                 </Typography>
-                
-                {/* Boton Responder (Link) debajo del texto */}
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                    <Link
-                    component="button"
-                    variant="body2"
-                    className="comment-reply-link"
-                    onClick={() => handleReplyClick(comentario)}
-                    >
-                    Responder
-                    </Link>
-                    
-                    {/* Botones de acción (Editar/Borrar) discretos si es el dueño */}
-                    {onEditRequest && comentario.texto !== "Comentario eliminado" && (
-                        <EditIcon 
-                            sx={{ fontSize: 14, color: '#aaa', cursor: 'pointer' }} 
-                            onClick={() => onEditRequest(comentario)}
-                        />
-                    )}
-                    {onDeleteRequest && comentario.texto !== "Comentario eliminado" && (
-                        <DeleteIcon 
-                            sx={{ fontSize: 14, color: '#aaa', cursor: 'pointer' }} 
-                            onClick={() => onDeleteRequest(comentario)}
-                        />
-                    )}
-                </Box>
-              </React.Fragment>
-            }
-            sx={{ margin: 0 }}
-          />
+              }
+              secondary={
+                <React.Fragment>
+                  <Typography component="span" className="comment-text-body">
+                    {comentario.texto}
+                  </Typography>
+                  
+                  {/* Boton Responder (Link) debajo del texto */}
+                  <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                      <Link
+                      component="button"
+                      variant="body2"
+                      className="comment-reply-link"
+                      onClick={() => handleReplyClick(comentario)}
+                      >
+                      Responder
+                      </Link>
+                      
+                      {/* Botones de acción (Editar/Borrar) discretos si es el dueño */}
+                      {onEditRequest && comentario.texto !== "Comentario eliminado" && (
+                          <EditIcon 
+                              sx={{ fontSize: 14, color: '#aaa', cursor: 'pointer' }} 
+                              onClick={() => onEditRequest(comentario)}
+                          />
+                      )}
+                      {onDeleteRequest && comentario.texto !== "Comentario eliminado" && (
+                          <DeleteIcon 
+                              sx={{ fontSize: 14, color: '#aaa', cursor: 'pointer' }} 
+                              onClick={() => onDeleteRequest(comentario)}
+                          />
+                      )}
+                  </Box>
+                </React.Fragment>
+              }
+              sx={{ margin: 0 }}
+            />
+          </Box>
 
           {/* Columna Derecha: Like y Hora (Como en la foto) */}
           <Box className="comment-meta-right">
-            {!isDeleted && (
-              <>
-                <IconButton size="small" onClick={handleLikeClick} disabled={isProcessingLike} sx={{ p: 0.5 }}>
-                  {liked ? (
-                    <FavoriteIcon fontSize="small" sx={{ color: 'primary.main' }} />
-                  ) : (
-                    <FavoriteBorderIcon fontSize="small" className="like-icon" />
-                  )}
-                </IconButton>
-                {likeCount > 0 && <span className="comment-likes-count">{likeCount}</span>}
-              </>
+            {!isDeleted && !isOwnComment && (
+              // Contenedor para alinear el contador y el corazón en una fila
+              <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {likeCount > 0 && <span className="comment-likes-count">{likeCount}</span>}
+                  <IconButton size="small" onClick={handleLikeClick} disabled={isProcessingLike} sx={{ p: 0.5 }}>
+                    {liked ? (
+                      <FavoriteIcon fontSize="small" sx={{ color: 'primary.main' }} />
+                    ) : (
+                      <FavoriteBorderIcon fontSize="small" className="like-icon" />
+                    )}
+                  </IconButton>
+              </Box>
             )}
             <span className="comment-time">
                {/* Formateo simple para imitar "Dom. 23:45hs" o usar relativo */}
@@ -220,7 +229,7 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
 
       {/* Renderizado recursivo de respuestas */}
       {comentario.respuestas && comentario.respuestas.length > 0 && (
-        <Box sx={{ pl: 2 }}> 
+        <Box> 
           {comentario.respuestas.map((reply) => (
             <ComentarioAnidado
               key={reply.id}
@@ -231,6 +240,8 @@ const ComentarioAnidado: React.FC<ComentarioAnidadoProps> = ({
               onEditRequest={onEditRequest}
               onLikeChange={onLikeChange}
               idReceta={idReceta}
+              depth={depth + 1}
+              currentUserId={currentUserId}
             />
           ))}
         </Box>
@@ -462,6 +473,8 @@ const DrawerComentarios: React.FC<DrawerComentariosProps> = ({
                   onEditRequest={String(comentario.usuario?.id) === String(currentUserId) ? handleEditClick : undefined}
                   onLikeChange={handleLikeChange}
                   idReceta={idReceta}
+                  depth={0}
+                  currentUserId={currentUserId}
                 />
               ))}
             </List>
