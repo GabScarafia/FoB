@@ -81,6 +81,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [modalRankingOpen, setModalRankingOpen] = useState(false);
     const [rankingCargando, setRankingCargando] = useState(false);
     const [misPuntos, setMisPuntos] = useState<number | null>(null);
+    const [rankingEmptyMessage, setRankingEmptyMessage] = useState<string | null>(null); // mensaje simple cuando no hay datos
 
     // ESTADOS PARA LA LÓGICA DE DESAFÍO
     const [desafioSemanal, setDesafioSemanal] = useState<DesafioSemanalDto | null>(null);
@@ -94,12 +95,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         recetas: DatosReceta[]; 
     }
     // =========================================================================
-    // LÓGICA DE RANKING (Sin cambios)
+    // LÓGICA DE RANKING (SIMPLE: abrir modal y mostrar mensaje si 404)
     // =========================================================================
 
     const fetchCurrentRanking = async () => {
         if (!token) return;
         setRankingCargando(true);
+        setRankingEmptyMessage(null);
         try {
             const response = await fetch(`${BASE_URL}/Desafios/Ranking`, {
                 headers: {
@@ -108,22 +110,33 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 }
             });
 
+            // Si no OK -> mostrar modal con mensaje simple (evitamos romper UI)
             if (!response.ok) {
+                // Si el servidor responde 404, mostramos mensaje claro al usuario
+                if (response.status === 404) {
+                    setRankingEmptyMessage('No hay desafío actual o participaciones.');
+                } else {
+                    setRankingEmptyMessage('No se pudo obtener el ranking en este momento.');
+                }
                 setCurrentRanking([]);
+                setMisPuntos(null);
+                setModalRankingOpen(true);
                 return;
             }
 
             const data: RankingItemDto[] = await response.json();
             setCurrentRanking(data);
+            setRankingEmptyMessage(null);
             setModalRankingOpen(true);
-            // Also fetch my current points for this desafio (may be0 or not participating)
+
+            // Also fetch my current points for this desafio
             try {
               const resp = await fetch(`${BASE_URL}/Desafios/participacion/mis-puntos`, {
                 headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
               });
               if (resp.ok) {
                 const obj = await resp.json();
-                setMisPuntos(obj?.puntos ??0);
+                setMisPuntos(obj?.puntos ?? 0);
               } else {
                 setMisPuntos(null);
               }
@@ -135,6 +148,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         } catch (err) {
             console.error("Error al obtener el ranking semanal:", err);
             setCurrentRanking([]);
+            setRankingEmptyMessage('Error de red al obtener el ranking.');
+            setModalRankingOpen(true);
         } finally {
             setRankingCargando(false);
         }
@@ -350,6 +365,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const handleCloseRankingModal = () => {
         setModalRankingOpen(false);
         setCurrentRanking([]); 
+        setRankingEmptyMessage(null);
     }
     const handleBackToDesafio = () => {
         // Close ranking modal and reopen desafio modal
@@ -634,7 +650,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         ⚠️ Importante:
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Tu receta debe llevar la etiqueta <strong>Desafío</strong> y solo puedes participar con una receta por semana.
+                        Tu receta debe llevar la etiqueta <strong>Desafío</strong>
                     </Typography>
                 </Box>
             </Box>
@@ -732,6 +748,16 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     </Typography>
                     )}
                     <Divider sx={{ mb: 3 }} />
+
+                    {/* Si no hay ranking mostramos un mensaje simple */}
+                    {!rankingCargando && !hasRanking && (
+                        <Box sx={{ py: 6, textAlign: 'center' }}>
+                            <Typography variant="body1" sx={{ color: 'text.secondary', mb: 2 }}>
+                                {rankingEmptyMessage ?? 'No hay desafío actual o no hay participaciones.'}
+                            </Typography>
+                        </Box>
+                    )}
+
                     {hasRanking && (
                         <List sx={{ p: 0 }}>
                             {currentRanking.map((item, index) => (
@@ -990,6 +1016,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             </Modal>
         </div>
     );
-};
+};  
 
 export default Feed;

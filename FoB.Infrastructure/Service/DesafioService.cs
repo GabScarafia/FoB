@@ -37,12 +37,13 @@ namespace FoB.Infrastructure.Service
             // 1. Obtener el desafío activo
             var desafioActual = await _desafioRepository.GetActiveDesafioAsync();
 
-            // Obtener el desafío anterior al momento actual
+            // Obtener el desafío anterior al momento actual (puede devolver null)
             var desafioAnterior = await _desafioRepository.ObtenerDesafioAnteriorAsync(DateTime.UtcNow);
 
             List<RankingDto> rankingAnteriorReal = new List<RankingDto>();
 
-            if (desafioAnterior != null)
+            // Solo recalcular ranking anterior si existe y tiene FechaFin válida
+            if (desafioAnterior != null && desafioAnterior.FechaFin.HasValue)
             {
                 var participacionesAnteriores = await _participacionRepository.GetByDesafioIdAsync(desafioAnterior.Id);
 
@@ -52,26 +53,33 @@ namespace FoB.Infrastructure.Service
                 // 3. Recalcular los puntos de CADA RECETA participante.
                 var puntajesRecetas = new List<RankingDto>();
 
-                foreach (var participacion in participacionesAnteriores)
+                // Protegemos contra repositorios que devuelvan null
+                if (participacionesAnteriores != null)
                 {
-                    var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaCierreAnterior);
-
-                    // Si por alguna razón la receta o sus stats no existen a esa fecha, se ignora.
-                    if (statsReceta == null) continue;
-
-                    // 4. Calcular el puntaje usando la fórmula (Recálculo con datos históricos)
-                    var nuevoPuntaje = CalculateRankingScore(
-                        statsReceta.Likes,
-                        statsReceta.Favorites,
-                        statsReceta.Visits
-                    );
-
-                    puntajesRecetas.Add(new RankingDto
+                    foreach (var participacion in participacionesAnteriores)
                     {
-                        UsuarioId = participacion.UsuarioId,
-                        NombreUsuario = statsReceta.NombreUsuario,
-                        Puntos = (int)nuevoPuntaje
-                    });
+                        // Validar que la participación tenga RecetaId
+                        if (!participacion.RecetaId.HasValue) continue;
+
+                        var statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaCierreAnterior);
+
+                        // Si por alguna razón la receta o sus stats no existen a esa fecha, se ignora.
+                        if (statsReceta == null) continue;
+
+                        // 4. Calcular el puntaje usando la fórmula (Recálculo con datos históricos)
+                        var nuevoPuntaje = CalculateRankingScore(
+                            statsReceta.Likes,
+                            statsReceta.Favorites,
+                            statsReceta.Visits
+                        );
+
+                        puntajesRecetas.Add(new RankingDto
+                        {
+                            UsuarioId = participacion.UsuarioId,
+                            NombreUsuario = statsReceta.NombreUsuario,
+                            Puntos = (int)nuevoPuntaje
+                        });
+                    }
                 }
 
                 // 5. Agrupar por Usuario, sumar los puntos y ordenar.
@@ -104,18 +112,40 @@ namespace FoB.Infrastructure.Service
                 rankingAnteriorReal = rankingTotal;
             }
 
-            DesafioDto desafioDto = null;
+            // Preparar DesafioDto de forma segura (evitar accesos a Nullable<T>.Value sin checks)
+            DesafioDto desafioDto;
+
             if (desafioActual != null)
             {
-                // 8. Mapear la entidad Desafio al DTO DesafioDto.
+                // Si las fechas son nulas, usar valores por defecto razonables para evitar excepciones en tiempo de ejecución.
+                var fechaInicioSeguro = desafioActual.FechaInicio ?? DateTime.UtcNow;
+                var fechaFinSeguro = desafioActual.FechaFin ?? fechaInicioSeguro.AddDays(7);
+
+                // Asegurar que las fechas queden en UTC
+                fechaInicioSeguro = DateTime.SpecifyKind(fechaInicioSeguro, DateTimeKind.Utc);
+                fechaFinSeguro = DateTime.SpecifyKind(fechaFinSeguro, DateTimeKind.Utc);
+
                 desafioDto = new DesafioDto
                 {
                     Id = desafioActual.Id,
                     Nombre = desafioActual.Nombre,
                     Ingrediente = desafioActual.Ingrediente,
                     Descripcion = desafioActual.Descripcion,
-                    FechaInicio = desafioActual.FechaInicio.Value,
-                    FechaFin = desafioActual.FechaFin.Value
+                    FechaInicio = fechaInicioSeguro,
+                    FechaFin = fechaFinSeguro
+                };
+            }
+            else
+            {
+                // No hay desafío activo: devolver DTO con valores neutros para evitar asignaciones nulas
+                desafioDto = new DesafioDto
+                {
+                    Id = 0,
+                    Nombre = string.Empty,
+                    Ingrediente = string.Empty,
+                    Descripcion = string.Empty,
+                    FechaInicio = DateTime.MinValue,
+                    FechaFin = DateTime.MinValue
                 };
             }
 
@@ -154,7 +184,7 @@ namespace FoB.Infrastructure.Service
             {
                 // 2. Obtener las estadísticas actuales de la receta
 
-                RecetaStatsDto statsReceta = null;
+                RecetaStatsDto? statsReceta = null;
 
                 if(participacion.RecetaId.HasValue)
                     statsReceta = await _recetaRepository.GetRecetaStatsAsync(participacion.RecetaId.Value, fechaActualDeCorte);
