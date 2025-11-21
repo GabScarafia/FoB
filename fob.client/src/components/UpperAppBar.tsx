@@ -112,37 +112,64 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  };
 
  const handleNotificationClick = async (n: NotificacionItem) => {
-  // Marca como leída si corresponde y espera a que termine para evitar condiciones de carrera
-  if (!n.leida) {
-    try {
-      await markAsRead(n.id);
-    } catch (e) {
-      console.error('No se pudo marcar la notificación como leída antes de navegar:', e);
-    }
-  }
+   // Marca como leída si corresponde y espera a que termine para evitar condiciones de carrera
+   if (!n.leida) {
+     try {
+       await markAsRead(n.id);
+     } catch (e) {
+       console.error('No se pudo marcar la notificación como leída antes de navegar:', e);
+     }
+   }
 
-  handleCloseNotifications();
+   handleCloseNotifications();
 
-  if (!n.url) return;
+   if (!n.url) return;
 
-  // Si la URL es del tipo /receta/32?comentario=108, la transformamos a la ruta que usa el router
-  if (n.url.startsWith('/receta/')) {
-    const urlParts = n.url.split('?');
-    const recetaId = urlParts[0].split('/')[2];
-    const queryString = urlParts[1] ?? '';
-    const params = new URLSearchParams(queryString);
-    const comentarioId = params.get('comentario');
+   // Caso especial: notificación que apunta a /receta/{id}?drawerComentarios=true&comentarioId=...
+   // -> necesitamos resolver el propietario (autor) de la receta para navegar a:
+   // /perfil/{ownerId}/publicaciones?receta={recetaId}&comentario={comentarioId}
+   if (n.url.startsWith('/receta/')) {
+     const urlParts = n.url.split('?');
+     const recetaId = urlParts[0].split('/')[2];
+     const queryString = urlParts[1] ?? '';
+     const params = new URLSearchParams(queryString);
+     // El backend puede usar 'comentarioId' (como en Interaccion) o 'comentario' en otras URLS.
+     const comentarioId = params.get('comentarioId') || params.get('comentario');
 
-    // Navegamos a la ruta correcta que el router entiende
-    navigate(
-      `/perfil/${n.emisor?.id}/publicaciones?receta=${recetaId}` +
-        (comentarioId ? `&comentario=${comentarioId}` : '')
-    );
-    return;
-  }
+     // Intentamos obtener el autor de la receta desde la API
+     try {
+       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+       if (authData?.token) headers['Authorization'] = `Bearer ${authData.token}`;
+       const resp = await fetch(`${BASE_URL}/Recetas/${recetaId}`, { headers });
+       if (resp.ok) {
+         const data = await resp.json();
+         // multiple casing fallbacks según cómo venga el JSON
+         const ownerId = data?.autor?.id ?? data?.autor?.Id ?? data?.Autor?.id ?? data?.Autor?.Id;
+         if (ownerId) {
+           navigate(`/perfil/${ownerId}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
+           return;
+         }
+       } else {
+         console.warn(`No se pudo obtener autor de receta ${recetaId}: ${resp.status}`);
+       }
+     } catch (err) {
+       console.error('Error al obtener detalles de la receta para notificación:', err);
+     }
 
-  // Para todas las demás URLs, navegamos directamente
-  navigate(n.url);
+     // Fallbacks: si no podemos obtener el owner, intentamos usar 'emisor' (menos ideal) o el user actual
+     const fallbackOwner = n.emisor?.id ?? authData?.id;
+     if (fallbackOwner) {
+       navigate(`/perfil/${fallbackOwner}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
+       return;
+     }
+
+     // Último recurso: ir al feed
+     navigate('/feed');
+     return;
+   }
+
+   // Para todas las demás URLs, navegamos directamente
+   navigate(n.url);
  };
 
  // Formatea la fecha en formato 24 horas y local 'es-ES' (ej: 20/11/2025 14:32)
