@@ -1,9 +1,9 @@
 ﻿﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 // En Receta.tsx (arriba de todo)
-import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha } from '@mui/material'; 
+import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Dialog, DialogTitle, DialogContent, DialogActions, Chip, alpha, ListItemText } from '@mui/material';
 import './Receta.css';
-import { useNavigate, useSearchParams } from 'react-router-dom'; 
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 // Íconos de Material UI
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -13,7 +13,7 @@ import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import ListItemText from '@mui/material/MenuItem';
+
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ShareIcon from '@mui/icons-material/Share';
 
@@ -28,7 +28,7 @@ import fotoPerfilLocal from '../assets/images/avatar.png';
 
 import DrawerComentarios from '../components/DrawerComentarios';
 import type { Comentario } from '../components/DrawerComentarios';
-import type { Usuario } from '../types/Receta' 
+import type { Usuario } from '../types/Receta'
 import { useAuth } from '../context/AuthContext';
 import { formatoTiempoRelativo } from '../utils/formateoDeTiempo';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -45,20 +45,20 @@ const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => 
 
 // 2. Helper para normalizar la URL (Esta función ya estaba bien)
 const getNormalizedUrl = (
-    mediaStr: string | undefined | null, 
-    contentType: string, 
+    mediaStr: string | undefined | null,
+    contentType: string,
     fallback: string
 ): string => {
     if (!mediaStr || mediaStr === '') return fallback;
-    
+
     if (mediaStr.startsWith('http') || mediaStr.startsWith('data:')) {
         return mediaStr;
     }
-    
+
     if (mediaStr.startsWith('/')) {
         return `${BASE_URL}${mediaStr}`;
     }
-    
+
     // Si es base64 crudo (legacy), lo arma
     return `data:${contentType};base64,${mediaStr}`;
 }
@@ -88,9 +88,9 @@ interface Paso {
 
 // Interfaz para un elemento del carrusel
 interface CarruselItem {
-    mediaUrl: string; 
+    mediaUrl: string;
     mediaType: 'image' | 'video';
-    pasoInfo?: Paso; 
+    pasoInfo?: Paso;
     isMainImage: boolean;
 }
 
@@ -103,7 +103,7 @@ export interface PropsReceta {
         tipoContenido: string;
         dificultad: string;
         imagenUrl: string; // <-- CAMBIO AQUÍ
-        contentType: string; 
+        contentType: string;
         cantidadVotos: number;
         meGusta: boolean;
         noMeGusta: boolean;
@@ -130,7 +130,7 @@ export interface PropsReceta {
 const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
     const navigate = useNavigate();
     const haProcesadoApertura = React.useRef(false);
-    const [searchParams] = useSearchParams(); 
+    const [searchParams] = useSearchParams();
 
     if (!receta) {
         console.error("Error: el objeto receta es nulo o indefinido.");
@@ -156,8 +156,8 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     useEffect(() => {
         // Si esta receta es la que tiene el comentario destacado, abrimos el drawer.
-        const recetaIdParam = searchParams.get('receta'); 
-        const comentarioIdParam = searchParams.get('comentario'); 
+        const recetaIdParam = searchParams.get('receta');
+        const comentarioIdParam = searchParams.get('comentario');
         if (recetaIdParam && comentarioIdParam && Number(receta.id) === Number(recetaIdParam) && !haProcesadoApertura.current) {
             setDrawerAbierto(true);
             onDrawerToggle(true);
@@ -195,7 +195,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     // ... (El resto de tus manejadores de 'likes' no cambian)
     const handleLikeClick = async () => {
-        if (isProcessingLike) return; 
+        if (isProcessingLike) return;
         setIsProcessingLike(true);
         try {
             const response = await fetch(`${BASE_URL}/Recetas/Interaccion`, {
@@ -206,7 +206,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 0, 
+                    tipo: 0,
                     accion: Number(liked)
                 })
 
@@ -276,7 +276,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 1, 
+                    tipo: 1,
                     accion: Number(disliked)
                 })
 
@@ -314,7 +314,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 },
                 body: JSON.stringify({
                     idReceta: receta.id,
-                    tipo: 2, 
+                    tipo: 2,
                     accion: Number(favorite)
                 })
 
@@ -384,7 +384,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     // --- LÓGICA DE FOTO DE PERFIL CORREGIDA ---
     // Esta línea (la 315) ahora funciona porque 'getNormalizedUrl' está definida arriba
     const fotoPerfilUrl = getNormalizedUrl(
-        receta.autor?.imagenUrl, 
+        receta.autor?.imagenUrl,
         'image/jpeg', // Asumimos jpeg para fotos de perfil o el backend debe enviarlo
         fotoPerfilLocal
     );
@@ -431,7 +431,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const tipoMediaPrincipal = getMediaTypeFromContentType(receta.contentType);
     const mediaPrincipalUrl = getNormalizedUrl(
         receta.imagenUrl, // <-- CAMBIO AQUÍ
-        receta.contentType, 
+        receta.contentType,
         fotoPerfilLocal
     );
 
@@ -457,17 +457,17 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             mediaPasoType = getMediaTypeFromContentType(paso.contentType);
             mediaPasoUrl = getNormalizedUrl(
                 paso.imagenUrl, // <-- CAMBIO AQUÍ
-                paso.contentType, 
+                paso.contentType,
                 fotoPerfilLocal
             );
         } else if (paso.imagenUrl && paso.imagenUrl !== '' && !paso.contentType) { // <-- CAMBIO AQUÍ
-             console.warn("Paso tiene imagen pero no contentType. Usando el de la receta.");
-             mediaPasoType = getMediaTypeFromContentType(receta.contentType);
-             mediaPasoUrl = getNormalizedUrl(
+            console.warn("Paso tiene imagen pero no contentType. Usando el de la receta.");
+            mediaPasoType = getMediaTypeFromContentType(receta.contentType);
+            mediaPasoUrl = getNormalizedUrl(
                 paso.imagenUrl, // <-- CAMBIO AQUÍ
-                receta.contentType, 
+                receta.contentType,
                 fotoPerfilLocal
-             );
+            );
         }
 
         carruselItems.push({
@@ -477,7 +477,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             isMainImage: false,
         });
     });
-    
+
     // Si después de todo, el carrusel está vacío (raro), ponemos el fallback
     if (carruselItems.length === 0) {
         carruselItems.push({
@@ -507,320 +507,318 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     };
 
     // Asegurarnos de que itemActual nunca sea indefinido
-    const itemActual = carruselItems[indiceImagen] || carruselItems[0]; 
+    const itemActual = carruselItems[indiceImagen] || carruselItems[0];
 
     const debeMostrarBotonSeguir = !isFollowing && !esRecetaPropia;
 
 
     return (
-    <Paper
-        // 'sx' ahora es una FUNCIÓN (theme) => ({...})
-        // que DEVUELVE el objeto de estilos.
-        sx={(theme) => ({
-            maxWidth: '500px',
-            mx: 'auto',
-            mb: 3,
-            overflow: 'hidden',
-            borderRadius: '16px', 
-            transition: 'background 0.3s, border 0.3s, box-shadow 0.3s', // Transición suave
+        <Paper
+            // 'sx' ahora es una FUNCIÓN (theme) => ({...})
+            // que DEVUELVE el objeto de estilos.
+            sx={(theme) => ({
+                maxWidth: '500px',
+                mx: 'auto',
+                mb: 3,
+                overflow: 'hidden',
+                borderRadius: '16px',
+                transition: 'background 0.3s, border 0.3s, box-shadow 0.3s', // Transición suave
 
-            // --- LÓGICA DE TEMA ---
-            // Ahora 'theme' SÍ está definido aquí
-            ...(theme.palette.mode === 'light' ? 
-            {
-                // --- MODO CLARO (Blanco) ---
-                bgcolor: 'background.paper', // Fondo blanco
-                // Borde gris sutil
-                border: `1px solid ${theme.palette.divider}`, 
-                // Sombra más fuerte para "peso visual"
-                boxShadow: theme.shadows[3], // Esto es como un "elevation={3}"
-            } : {
-                // --- MODO OSCURO (Oscuro) ---
-                // El "Glassmorphism" que te gustó
-                background: 'rgba(255, 255, 255, 0.08)', // Vidrio semi-transparente
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)', // Safari
-                border: '1px solid rgba(255, 255, 255, 0.15)', // Borde de vidrio
-                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            })
-        })}
-    >
-        <Box className="encabezado-receta" sx={{ 
-            p: 2,
-            // Este borde también usa la función (theme) para adaptarse
-            borderBottom: (theme) => `1px solid ${
-                theme.palette.mode === 'light' 
-                ? theme.palette.divider         // Borde gris en claro
-                : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
-            }`
-        }}>
-            <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
-                <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
-                <div>
-                    <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
-                    <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
-                </div>
-            </div>
-            <div className="meta-receta-y-menu">
-                <div className="meta-receta">
-                    <span className="tipo-contenido">{receta.dificultad}</span>
-                    <div className="estrellas-calificacion">
-                        {renderizarEstrellas(receta.dificultad)}
+                // --- LÓGICA DE TEMA ---
+                // Ahora 'theme' SÍ está definido aquí
+                ...(theme.palette.mode === 'light' ?
+                    {
+                        // --- MODO CLARO (Blanco) ---
+                        bgcolor: 'background.paper', // Fondo blanco
+                        // Borde gris sutil
+                        border: `1px solid ${theme.palette.divider}`,
+                        // Sombra más fuerte para "peso visual"
+                        boxShadow: theme.shadows[3], // Esto es como un "elevation={3}"
+                    } : {
+                        // --- MODO OSCURO (Oscuro) ---
+                        // El "Glassmorphism" que te gustó
+                        background: 'rgba(255, 255, 255, 0.08)', // Vidrio semi-transparente
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)', // Safari
+                        border: '1px solid rgba(255, 255, 255, 0.15)', // Borde de vidrio
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    })
+            })}
+        >
+            <Box className="encabezado-receta" sx={{
+                p: 2,
+                // Este borde también usa la función (theme) para adaptarse
+                borderBottom: (theme) => `1px solid ${theme.palette.mode === 'light'
+                    ? theme.palette.divider         // Borde gris en claro
+                    : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
+                    }`
+            }}>
+                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
+                    <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
+                    <div>
+                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                        <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
                     </div>
                 </div>
-                {esRecetaPropia && (
-                    <>
-                        <IconButton
-                            aria-label="más opciones"
-                            id="basic-button"
-                            aria-controls={openMenu ? 'basic-menu' : undefined}
-                            aria-haspopup="true"
-                            aria-expanded={openMenu ? 'true' : undefined}
-                            onClick={handleClickMenu}
-                            sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
-                        >
-                            <MoreVertIcon />
-                        </IconButton>
-                        <Menu
-                            id="basic-menu"
-                            anchorEl={anchorEl}
-                            open={openMenu}
-                            onClose={handleCloseMenu}
-                            MenuListProps={{
-                                'aria-labelledby': 'basic-button',
-                            }}
-                        >
-                            <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
-                                <ListItemIcon>
-                                    <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
-                                </ListItemIcon>
-                                <ListItemText>Eliminar</ListItemText>
-                            </MenuItem>
-                        </Menu>
-                    </>
+                <div className="meta-receta-y-menu">
+                    <div className="meta-receta">
+                        <span className="tipo-contenido">{receta.dificultad}</span>
+                        <div className="estrellas-calificacion">
+                            {renderizarEstrellas(receta.dificultad)}
+                        </div>
+                    </div>
+                    {esRecetaPropia && (
+                        <>
+                            <IconButton
+                                aria-label="más opciones"
+                                id="basic-button"
+                                aria-controls={openMenu ? 'basic-menu' : undefined}
+                                aria-haspopup="true"
+                                aria-expanded={openMenu ? 'true' : undefined}
+                                onClick={handleClickMenu}
+                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
+                            >
+                                <MoreVertIcon />
+                            </IconButton>
+                            <Menu
+                                id="basic-menu"
+                                anchorEl={anchorEl}
+                                open={openMenu}
+                                onClose={handleCloseMenu}
+                                MenuListProps={{
+                                    'aria-labelledby': 'basic-button',
+                                }}
+                            >
+                                <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
+                                    <ListItemIcon>
+                                        <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
+                                    </ListItemIcon>
+                                    <ListItemText>Eliminar</ListItemText>
+                                </MenuItem>
+                            </Menu>
+                        </>
+                    )}
+                </div>
+            </Box>
+
+            {/* --- BLOQUE DE RENDERIZADO --- */}
+            {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
+            <div className="carrusel-imagen" {...swipeHandlers}>
+                {itemActual && itemActual.mediaType === 'image' && (
+                    <img
+                        src={itemActual.mediaUrl}
+                        alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
+                        className="imagen-receta"
+                        draggable={false}
+                    />
+                )}
+                {itemActual && itemActual.mediaType === 'video' && (
+                    <video
+                        src={itemActual.mediaUrl}
+                        className="imagen-receta"
+                        controls
+                        autoPlay
+                        muted
+                        controlsList="nodownload"
+                        loop
+                        playsInline
+                        draggable={false}
+                    >
+                        Tu navegador no soporta el tag de video.
+                    </video>
                 )}
             </div>
-        </Box>
-
-        {/* --- BLOQUE DE RENDERIZADO --- */}
-        {/* Ahora itemActual SIEMPRE tendrá un valor (al menos el fallback) */}
-        <div className="carrusel-imagen" {...swipeHandlers}>
-            {itemActual && itemActual.mediaType === 'image' && (
-                <img
-                    src={itemActual.mediaUrl}
-                    alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
-                    className="imagen-receta"
-                    draggable={false}
-                />
-            )}
-            {itemActual && itemActual.mediaType === 'video' && (
-                <video
-                    src={itemActual.mediaUrl}
-                    className="imagen-receta"
-                    controls
-                    autoPlay
-                    muted
-                    controlsList="nodownload"
-                    loop
-                    playsInline
-                    draggable={false}
-                >
-                    Tu navegador no soporta el tag de video.
-                </video>
-            )}
-        </div>
-        {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
+            {/* --- FIN DEL BLOQUE DE RENDERIZADO --- */}
 
 
-        {/* Navegación y puntitos debajo de la imagen */}
-        <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-            <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
-                <ArrowBackIcon />
-            </IconButton>
-            <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
-                {carruselItems.map((_, idx) => (
-                    <Box
-                        key={idx}
-                        component="span"
-                        sx={{
-                            fontSize: 18,
-                            color: idx === indiceImagen ? 'primary.main' : 'text.disabled'
-                        }}
-                    >●</Box>
-                ))}
+            {/* Navegación y puntitos debajo de la imagen */}
+            <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
+                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary">
+                    <ArrowBackIcon />
+                </IconButton>
+                <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
+                    {carruselItems.map((_, idx) => (
+                        <Box
+                            key={idx}
+                            component="span"
+                            sx={{
+                                fontSize: 18,
+                                color: idx === indiceImagen ? 'primary.main' : 'text.disabled'
+                            }}
+                        >●</Box>
+                    ))}
+                </div>
+                <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary">
+                    <ArrowForwardIcon />
+                </IconButton>
             </div>
-            <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary">
-                <ArrowForwardIcon />
-            </IconButton>
-        </div>
 
-        {/* Info del paso si corresponde */}
-        {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
-            <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
-                <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
-                <Typography variant="caption">{itemActual.pasoInfo.descripcion}</Typography>
-            </div>
-        )}
+            {/* Info del paso si corresponde */}
+            {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
+                <div className="info-paso-carrusel" style={{ marginBottom: 12, textAlign: 'center' }}>
+                    <Typography variant="body2"><strong>Paso {itemActual.pasoInfo.numero}:</strong> {itemActual.pasoInfo.titulo}</Typography>
+                    <Typography variant="caption">{itemActual.pasoInfo.descripcion}</Typography>
+                </div>
+            )}
 
-        {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
-        <Box className="acciones-receta" sx={{ 
-            px: 2, 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            // Este borde también usa la función (theme)
-            borderTop: (theme) => `1px solid ${
-                theme.palette.mode === 'light' 
-                ? theme.palette.divider         // Borde gris en claro
-                : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
-            }`
-        }}>
-            <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
-                    {liked ? (
-                        <ThumbUpIcon sx={{ color: 'primary.main' }} />
-                    ) : (
-                        <ThumbUpAltOutlinedIcon />
-                    )}
-                </IconButton>
-                <span className="conteo-me-gusta">{likesCount}</span>
+            {/* ... (El resto del JSX: acciones, descripción, ingredientes, etc. no cambia) ... */}
+            <Box className="acciones-receta" sx={{
+                px: 2,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                // Este borde también usa la función (theme)
+                borderTop: (theme) => `1px solid ${theme.palette.mode === 'light'
+                    ? theme.palette.divider         // Borde gris en claro
+                    : 'rgba(255, 255, 255, 0.15)'  // Borde vidrio en oscuro
+                    }`
+            }}>
+                <Box className="acciones-izquierda" sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <IconButton onClick={handleLikeClick} size="small" disabled={isProcessingLike}>
+                        {liked ? (
+                            <ThumbUpIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <ThumbUpAltOutlinedIcon />
+                        )}
+                    </IconButton>
+                    <span className="conteo-me-gusta">{likesCount}</span>
 
-                <IconButton onClick={handleDisLikeClick} size="small">
-                    {disliked ? (
-                        <ThumbDownIcon sx={{ color: 'primary.main' }} />
-                    ) : (
-                        <ThumbDownAltOutlinedIcon />
-                    )}
-                </IconButton>
+                    <IconButton onClick={handleDisLikeClick} size="small">
+                        {disliked ? (
+                            <ThumbDownIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <ThumbDownAltOutlinedIcon />
+                        )}
+                    </IconButton>
 
-                <IconButton onClick={handleOpenDrawer} size="small">
-                    <ChatBubbleOutlineIcon />
-                </IconButton>
-                <span className="conteo-comentarios">{comentariosCount}</span>
+                    <IconButton onClick={handleOpenDrawer} size="small">
+                        <ChatBubbleOutlineIcon />
+                    </IconButton>
+                    <span className="conteo-comentarios">{comentariosCount}</span>
 
-                <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
-                <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
+                    <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
+                    <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
+                </Box>
+                <div className="acciones-derecha">
+                    <IconButton onClick={handleShareRecetaClick} size="small" sx={{ position: 'relative', top: '0.5px' }}>
+                        <ShareIcon />
+                    </IconButton>
+                    <IconButton onClick={handleFavoritoClick} size="small">
+                        {favorite ? (
+                            <StarIcon sx={{ color: 'primary.main' }} />
+                        ) : (
+                            <StarBorderIcon />
+                        )}
+                    </IconButton>
+                </div>
             </Box>
-            <div className="acciones-derecha">
-                <IconButton onClick={handleShareRecetaClick} size="small" sx={{ position: 'relative', top: '0.5px' }}>
-                    <ShareIcon />
-                </IconButton>
-                <IconButton onClick={handleFavoritoClick} size="small">
-                    {favorite ? (
-                        <StarIcon sx={{ color: 'primary.main' }} />
-                    ) : (
-                        <StarBorderIcon />
-                    )}
-                </IconButton>
-            </div>
-        </Box>
 
-        <Box sx={{ px: 2, mt: 1 }}>
-            <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography>
-        </Box>
+            <Box sx={{ px: 2, mt: 1 }}>
+                <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography>
+            </Box>
 
-        <Box sx={{ px: 2, mt: 1 }}>
-            <Typography variant="body2">{descripcionMostrada}</Typography>
-            {debeMostrarBotonLeerMas && (
-                <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}>
-                    {mostrarMas ? 'Leer menos' : 'Leer más'}
-                </Button>
-            )}
-        </Box>
+            <Box sx={{ px: 2, mt: 1 }}>
+                <Typography variant="body2">{descripcionMostrada}</Typography>
+                {debeMostrarBotonLeerMas && (
+                    <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}>
+                        {mostrarMas ? 'Leer menos' : 'Leer más'}
+                    </Button>
+                )}
+            </Box>
 
-        <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
-            {receta.ingredientes && receta.ingredientes.length > 0 && (
-                <Box className="ingredientes-receta" sx={{ mt: 1 }}>
-                    <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
-                    <Typography component="span" variant="body2">
-                        {receta.ingredientes.map((ingrediente, index) => (
-                            <span key={ingrediente.id}>
-                                {`${ingrediente.nombre} ${ingrediente.cantidad} ${ingrediente.unidadDeMedida}${index < receta.ingredientes.length - 1 ? ', ' : ''}`}
-                            </span>
-                        ))}
-                    </Typography>
-                </Box>
-            )}
-            {receta.utensilios && receta.utensilios.length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                    <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontSize: '1rem' }}>
-                        Utensilios
-                    </Typography>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                        {receta.utensilios.map((utensilio) => (
-                            <Chip
-                                key={utensilio.id}
-                                label={utensilio.nombre}
-                                sx={{
-                                    bgcolor: 'grey.200',
-                                    fontWeight: 'medium',
-                                }}
-                            />
-                        ))}
+            <Box className="informacion-adicional" sx={{ px: 2, pb: 2 }}>
+                {receta.ingredientes && receta.ingredientes.length > 0 && (
+                    <Box className="ingredientes-receta" sx={{ mt: 1 }}>
+                        <Typography component="span" variant="body2" fontWeight="bold">Ingredientes: </Typography>
+                        <Typography component="span" variant="body2">
+                            {receta.ingredientes.map((ingrediente, index) => (
+                                <span key={ingrediente.id}>
+                                    {`${ingrediente.nombre} ${ingrediente.cantidad} ${ingrediente.unidadDeMedida}${index < receta.ingredientes.length - 1 ? ', ' : ''}`}
+                                </span>
+                            ))}
+                        </Typography>
                     </Box>
-                </Box>
-            )}
-            {receta.etiquetas && receta.etiquetas.length > 0 && (
-                <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
-                    <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
-                    {receta.etiquetas
-                        .sort((a, b) => {
-                            const aEsDesafio = a.toLowerCase() === 'desafio';
-                            const bEsDesafio = b.toLowerCase() === 'desafio';
+                )}
+                {receta.utensilios && receta.utensilios.length > 0 && (
+                    <Box sx={{ mt: 1 }}>
+                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontSize: '1rem' }}>
+                            Utensilios
+                        </Typography>
+                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                            {receta.utensilios.map((utensilio) => (
+                                <Chip
+                                    key={utensilio.id}
+                                    label={utensilio.nombre}
+                                    sx={{
+                                        bgcolor: 'grey.200',
+                                        fontWeight: 'medium',
+                                    }}
+                                />
+                            ))}
+                        </Box>
+                    </Box>
+                )}
+                {receta.etiquetas && receta.etiquetas.length > 0 && (
+                    <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
+                        <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
+                        {receta.etiquetas
+                            .sort((a, b) => {
+                                const aEsDesafio = a.toLowerCase() === 'desafio';
+                                const bEsDesafio = b.toLowerCase() === 'desafio';
 
-                            if (aEsDesafio) return -1;
-                            if (bEsDesafio) return 1;
-                            
-                            return 0;
-                        }).map((etiqueta, index) => (
-                            <Chip
-                                key={index}
-                                label={etiqueta}
-                                size="small"
-                                variant="outlined" 
-                                sx={{
-                                    color: 'text.primary',
-                                    borderColor: 'divider',
-                                    ...(etiqueta === 'Desafio' && {
-                                        background: 'linear-gradient(to right, #FF7B00, #FFD700)',
-                                        color: 'white',
-                                        fontWeight: 'bold',
-                                        '&:hover': {
-                                            opacity: 0.9
-                                        }
-                                    }),
-                                }}
-                            />
-                        ))}
-                </Box>
-            )}
-        </Box>
+                                if (aEsDesafio) return -1;
+                                if (bEsDesafio) return 1;
 
-        <div className="vista-previa-comentarios">
-            {comentarios && comentarios.length > 0 ? (
-                comentarios.slice(0, 3).map((comentario, index) => (
-                    <div key={comentario.id || index} className="item-comentario">
-                        <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
-                        <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
-                        <span className="tiempo-comentario">
-                            • {formatoTiempoRelativo(comentario.fecha)}
-                        </span>
-                    </div>
-                ))
-            ) : (
-                <div className="sin-comentarios">Sé el primero en comentar...</div>
-            )}
-        </div>
+                                return 0;
+                            }).map((etiqueta, index) => (
+                                <Chip
+                                    key={index}
+                                    label={etiqueta}
+                                    size="small"
+                                    variant="outlined"
+                                    sx={{
+                                        color: 'text.primary',
+                                        borderColor: 'divider',
+                                        ...(etiqueta === 'Desafio' && {
+                                            background: 'linear-gradient(to right, #FF7B00, #FFD700)',
+                                            color: 'white',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                opacity: 0.9
+                                            }
+                                        }),
+                                    }}
+                                />
+                            ))}
+                    </Box>
+                )}
+            </Box>
+
+            <div className="vista-previa-comentarios">
+                {comentarios && comentarios.length > 0 ? (
+                    comentarios.slice(0, 3).map((comentario, index) => (
+                        <div key={comentario.id || index} className="item-comentario">
+                            <ChatBubbleOutlineIcon className="icono-comentario-pequeno" />
+                            <span className="autor-comentario">{comentario.usuario?.nombreUsuario}:</span> <span className="texto-comentario">{comentario.texto}</span>
+                            <span className="tiempo-comentario">
+                                • {formatoTiempoRelativo(comentario.fecha)}
+                            </span>
+                        </div>
+                    ))
+                ) : (
+                    <div className="sin-comentarios">Sé el primero en comentar...</div>
+                )}
+            </div>
 
 
-        <DrawerComentarios
-            open={drawerAbierto}
-            onClose={handleCloseDrawer}
-            idReceta={receta.id}
-            onComentarioAgregado={handleComentarioAgregado}
-            comentarioIdDestacado={searchParams.get('comentario')}
-        />
-    </Paper>
+            <DrawerComentarios
+                open={drawerAbierto}
+                onClose={handleCloseDrawer}
+                idReceta={receta.id}
+                onComentarioAgregado={handleComentarioAgregado}
+                comentarioIdDestacado={searchParams.get('comentario')}
+            />
+        </Paper>
     );
 };
 
