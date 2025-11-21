@@ -60,7 +60,7 @@ namespace FoB.Infrastructure.Repositories
         }
          public async Task<List<DominioDto>> GetUtensilio(string texto)
         {
-            var etiquetas = await _context.Utensilios
+            var utensilios = await _context.Utensilios
                 .Where(e => EF.Functions.Like(e.Nombre.ToLower(), $"%{texto.ToLower()}%"))
                 .Select(e => new DominioDto
                 {
@@ -69,7 +69,7 @@ namespace FoB.Infrastructure.Repositories
                 })
                 .ToListAsync();
 
-            return etiquetas;
+            return utensilios;
         }
     }
 }

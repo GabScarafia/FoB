@@ -75,6 +75,21 @@ internal sealed class RecetaRepository : IRecetaRepository
                 nuevaReceta.RecetaEtiquetas.Add(EtiquetasReceta);
             }
         }
+        
+        // Lógica para procesar categorías
+        if (receta.Utensilios != null && receta.Utensilios.Count > 0)
+        {
+            foreach (var item in receta.Utensilios)
+            {
+                var utensilios = await UtensiliosCreateIfNotExist(item);
+                RecetaUtensilio EtiquetasUtensilios = new()
+                {
+                    Utensilio = utensilios,
+                    Receta = nuevaReceta
+                };
+                nuevaReceta.RecetaUtensilio.Add(EtiquetasUtensilios);
+            }
+        }
 
         // Lógica para procesar pasos
         if (receta.Pasos != null && receta.Pasos.Count > 0)
@@ -151,26 +166,27 @@ internal sealed class RecetaRepository : IRecetaRepository
             return Etiquetas;
         }
     }
+    private async Task<Utensilios> UtensiliosCreateIfNotExist(EtiquetaRequest EtiquetasRequest)
+    {
+        var utensilios = await _context.Set<Utensilios>().FirstOrDefaultAsync(x => x.Id == EtiquetasRequest.Id || x.Nombre == EtiquetasRequest.Nombre);
+        if (utensilios != null)
+            return utensilios;
+        else
+        {
+            utensilios = new Utensilios() { Nombre = EtiquetasRequest.Nombre, Descripcion = EtiquetasRequest.Descripcion };
+            await _context.Set<Utensilios>().AddAsync(utensilios);
+            await _context.SaveChangesAsync();
+            return utensilios;
+        }
+    }
 
     public async Task<IEnumerable<RecetaResponse>> TendenciasAsync(int pageNumber = 1, int pageSize = 15) // <-- PARÁMETROS CORREGIDOS
     {
         // int pageSize = 10; // <-- ELIMINAMOS ESTA LÍNEA
 
         IQueryable<Receta> query = _context.Set<Receta>()
-            .Include(x => x.Usuario)
-                .ThenInclude(x => x.UsuarioImagen)
-            .Include(x => x.RecetaImagen)
-            .Include(x => x.Voto)
-            .Include(x => x.Comentario)
-            .Include(x => x.IngredienteReceta)
-                .ThenInclude(x => x.Ingrediente)
-            .Include(r => r.IngredienteReceta)
-                .ThenInclude(ir => ir.Unidad)
-            .Include(x => x.RecetaEtiquetas)
-                .ThenInclude(x => x.Etiquetas)
-            .Include(x => x.Paso) // <-- AÑADIDO
-                .ThenInclude(p => p.RecetaImagen) // <-- AÑADIDO (para la img del paso)
             .AsSplitQuery()
+            .AsNoTracking()
             .Where(x => x.Activa == true && x.UsuarioId != _currentUser.User.Id);
 
         // Sort by creation date (desc) and then by average rating (desc)
@@ -180,7 +196,25 @@ internal sealed class RecetaRepository : IRecetaRepository
         // Pagination (USA LOS PARÁMETROS)
         query = query.Skip((pageNumber - 1) * pageSize).Take(pageSize);
 
-        // Tu .Select() ya estaba correcto, usando ImagenUrl
+        // 4. INCLUDES (Necesarios para el mapeo completo de RecetaResponse)
+        query = query.Include(x => x.Usuario)
+                .ThenInclude(x => x.UsuarioImagen)
+            .Include(x => x.RecetaImagen)
+            .Include(x => x.Voto)
+            .Include(x => x.Comentario)
+                .ThenInclude(x => x.Usuario)
+                    .ThenInclude(u => u.UsuarioImagen)
+            .Include(x => x.IngredienteReceta)
+                .ThenInclude(x => x.Ingrediente)
+            .Include(r => r.IngredienteReceta)
+                .ThenInclude(ir => ir.Unidad)
+            .Include(x => x.RecetaEtiquetas)
+                .ThenInclude(x => x.Etiquetas)
+            .Include(x => x.RecetaUtensilio)
+                .ThenInclude(x => x.Utensilio)
+            .Include(x => x.Paso)
+                .ThenInclude(p => p.RecetaImagen);
+        
         var list = await query.Select(x => new RecetaResponse
         {
             Id = x.Id,
@@ -221,6 +255,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 UnidadDeMedida = i.Unidad.Nombre
             }).ToList(),
             Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
+            Utensilios = x.RecetaUtensilio.Select(c => c.Utensilio.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
             {
                 Numero = p.Numero,
@@ -325,6 +360,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                 .ThenInclude(ir => ir.Unidad)
             .Include(x => x.RecetaEtiquetas)
                 .ThenInclude(x => x.Etiquetas)
+            .Include(x => x.RecetaUtensilio)
+                .ThenInclude(x => x.Utensilio)
             .Include(x => x.Paso)
                 .ThenInclude(p => p.RecetaImagen);
 
@@ -388,6 +425,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 UnidadDeMedida = i.Unidad.Nombre
             }).ToList(),
             Etiquetas = x.RecetaEtiquetas.Select(c => c.Etiquetas.Nombre).ToList(),
+            Utensilios = x.RecetaUtensilio.Select(c => c.Utensilio.Nombre).ToList(),
             Pasos = x.Paso.Select(p => new PasoResponse
             {
                 Numero = p.Numero,
@@ -612,6 +650,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
                 .Include(r => r.Paso)
                 .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
+                .Include(r => r.RecetaUtensilio).ThenInclude(rc => rc.Utensilio)
                 .Include(r => r.Voto)
                 .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
                 .AsSplitQuery()
@@ -674,6 +713,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                     // --- FIN CAMBIO ---
                 }).ToList() ?? new List<PasoResponse>(),
                 Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
+                Utensilios = receta.RecetaUtensilio?.Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
                 CantidadVotos = receta.Voto.Where(x=>x.ComentarioId == null).Count(),
                 MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,

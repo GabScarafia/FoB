@@ -16,6 +16,7 @@ public class RecetaRequest
 
     public List<IngredienteRecetaRequest> Ingredientes { get; set; }
     public List<EtiquetaRequest> Etiquetas { get; set; }
+    public List<EtiquetaRequest> Utensilios { get; set; }
     public List<PasoRequest> Pasos { get; set; }
 
 }

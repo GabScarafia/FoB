@@ -44,7 +44,7 @@ public class DominioController : ControllerBase
 
     }
 
-     [HttpGet("Utensilio")]
+    [HttpGet("Utensilios")]
     public async Task<IActionResult> Utensilio([FromQuery] string texto)
     {
         var etiquetas = await _etiquetasService.GetUtensilio(texto);

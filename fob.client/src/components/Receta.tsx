@@ -104,7 +104,7 @@ export interface PropsReceta {
         tiempoPreparacion: string;
         ingredientes: Ingrediente[];
         etiquetas: string[];
-        utensilios: Utensilio[];
+        utensilios: string[];
         pasos: Paso[];
     };
     onDrawerToggle: (open: boolean) => void;
@@ -649,9 +649,9 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                             {receta.utensilios.map((utensilio) => (
                                 <Chip
-                                    key={utensilio.id}
-                                    label={utensilio.nombre}
-                                    sx={{ bgcolor: 'grey.200', fontWeight: 'medium' }}
+                                    key={utensilio}
+                                    label={utensilio}
+                                    sx={{ bgcolor: 'grey.200', fontWeight: 'medium',color: 'text.primary' }}
                                 />
                             ))}
                         </Box>

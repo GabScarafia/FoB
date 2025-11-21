@@ -39,6 +39,7 @@ public class RecetaResponse
     public virtual List<IngredienteResponse> Ingredientes { get; set; } = new List<IngredienteResponse>();
 
     public virtual List<string> Etiquetas { get; set; } = new List<string>();
+    public virtual List<string> Utensilios { get; set; } = new List<string>();
 
     public virtual UsuarioResponse Autor { get; set; }
 
