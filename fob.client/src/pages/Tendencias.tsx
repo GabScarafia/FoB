@@ -3,14 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Receta from 'components/Receta';
 import { useNavigate } from 'react-router-dom';
 
-// Importaciones de Material-UI
-import Dialog from '@mui/material/Dialog';
-import Slide from '@mui/material/Slide';
-import LogoAppBlanco from '../assets/images/logo-blanco.png';
-import LogoAppAzul from '../assets/images/logo.png'; // <-- ¡LOGO AZUL AHORA USADO EN MODO CLARO!
 import IconButton from '@mui/material/IconButton';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import WhatshotIcon from '@mui/icons-material/Whatshot';
 import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
@@ -20,6 +13,7 @@ import { Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL } from '../apiConfig';
 import fotoPerfilLocal from '../assets/images/avatar.png'; // <-- IMPORT NECESARIO
+import LogoAppBlanco from '../assets/images/logo-blanco.png';
 
 import './Tendencias.css';
 
@@ -58,7 +52,6 @@ const getNormalizedUrl = (
 const Tendencias = () => {
     const theme = useTheme();
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
-    const [recetaSeleccionada, setRecetaSeleccionada] = useState<RecetaType | null>(null);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
@@ -66,8 +59,6 @@ const Tendencias = () => {
     const { authData, clearAuthData } = useAuth();
     // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
-
-    const [openDialog, setOpenDialog] = useState(false);
 
     const mainRef = useRef<HTMLElement | null>(null);
     const originalMainPaddingTop = useRef<string | null>(null);
@@ -77,6 +68,7 @@ const Tendencias = () => {
     const [cargandoMas, setCargandoMas] = useState(false);
     const [hasMore, setHasMore] = useState(true);
     const PAGE_SIZE = 15; // <-- Tamaño de página 15
+    const [scrollToRecetaId, setScrollToRecetaId] = useState<number | null>(null);
 
     // --- ESTADOS PARA EL HEADER DINÁMICO ---
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
@@ -278,15 +270,24 @@ const Tendencias = () => {
 
     }, [cargando, cargandoMas, hasMore, tendencias, cargarTendencias]);
 
-    // ... (Manejadores de Dialog y Navegación - Sin cambios)
-    const handleRecetaClick = (receta: RecetaType) => {
-        setRecetaSeleccionada(receta);
-        setOpenDialog(true);
-    };
+    useEffect(() => {
+        if (viewMode === 'feed' && scrollToRecetaId && mainRef.current) {
+            const element = document.getElementById(`tendencia-${scrollToRecetaId}`);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Reseteamos el ID para que no vuelva a hacer scroll en re-renders
+                setScrollToRecetaId(null);
+            }
+        }
+    }, [viewMode, scrollToRecetaId, tendencias]); // Depende de tendencias para asegurar que el elemento exista
 
-    const handleCloseDialog = () => {
-        setOpenDialog(false);
-        setRecetaSeleccionada(null);
+    const handleRecetaClick = (receta: RecetaType) => {
+        // Si ya estamos en modo feed, no hacemos nada especial
+        if (viewMode === 'feed') return;
+
+        // Cambiamos a modo feed y guardamos el ID para hacer scroll
+        setScrollToRecetaId(receta.id);
+        setViewMode('feed');
     };
 
     const handleUsuarioClick = (userId: number) => {
@@ -354,24 +355,24 @@ const Tendencias = () => {
 
         return (
             <div className="feed-tendencias">
-                {tendencias.map(receta => (
-                    <Receta
-                        key={receta.id}
-                        receta={{
-                            ...receta,
-                            noMeGusta: receta.noMeGusta ?? false,
-                            esFavorito: receta.esFavorito ?? false,
-                            seguido: receta.seguido ?? false,
-                        }}
-                        onDrawerToggle={() => { }}
-                        currentUserId={authData?.id ?? null}
-                        onDeleteReceta={async (recetaId) => {
-                            // Al eliminar, lo quitamos de la lista y recargamos
-                            setTendencias(prev => prev.filter(r => r.id !== recetaId));
-                        }}
-                        onUsuarioClick={handleUsuarioClick}
-                    />
-                ))}
+                {tendencias.map(receta => {
+                    return (
+                        <div id={`tendencia-${receta.id}`} key={receta.id}>
+                            <Receta
+                                receta={{
+                                    ...receta,
+                                    noMeGusta: receta.noMeGusta ?? false,
+                                    esFavorito: receta.esFavorito ?? false,
+                                    seguido: receta.seguido ?? false,
+                                }}
+                                onDrawerToggle={() => { }}
+                                currentUserId={authData?.id ?? null}
+                                onDeleteReceta={handleDeleteFromFeed}
+                                onUsuarioClick={handleUsuarioClick}
+                            />
+                        </div>
+                    );
+                })}
             </div>
         );
     };
@@ -469,103 +470,6 @@ const Tendencias = () => {
                     </div>
                 )}
             </div>
-
-            {/* ... (Tu Dialog y su contenido no cambian) ... */}
-            <Dialog
-                fullScreen
-                open={openDialog}
-                onClose={handleCloseDialog}
-                slots={{ transition: Slide }}
-                slotProps={{
-                    transition: {
-                        direction: 'up',
-                    },
-                    paper: {
-                        sx: {
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            '& .receta-container': {
-                                width: '100%',
-                                maxWidth: 500,
-                                margin: '0 auto',
-                            },
-                        },
-                    },
-                }}
-            >
-
-                <Box className="header-contenedor-principal" sx={{ top: '10px' }}>
-                    <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : '#white' }}>
-                        <Box
-                            component="img"
-                            // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
-                            src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppBlanco}
-                            alt="Logo App" // Agregado alt text
-                            sx={{
-                                width: 40,
-                                height: 'auto',
-                                mr: 1,
-                            }}
-                        />
-                        <span className="tendencias-titulo">#Tendencias</span>
-                    </Box>
-                </Box>
-
-                <Box
-                    sx={{
-                        flexGrow: 1,
-                        overflowY: 'auto',
-                        p: 0,
-                        width: '100%', // Asegura que ocupe todo el ancho
-                        backgroundColor: 'background.default',
-                        mt: '20px', // Margen superior para separar del header
-                    }}
-                >
-                    {recetaSeleccionada && (
-                        // No necesitas 'receta-contenido', el 'Receta' ya está centrado por 'paper.sx'
-                        <Receta
-                            receta={{
-                                ...recetaSeleccionada,
-                                noMeGusta: recetaSeleccionada.noMeGusta ?? false,
-                                esFavorito: recetaSeleccionada.esFavorito ?? false,
-                                seguido: recetaSeleccionada.seguido ?? false,
-                            }}
-                            onDrawerToggle={() => { }}
-                            currentUserId={authData?.id ?? null}
-                            onDeleteReceta={async () => { }} // No se puede borrar desde tendencias
-                            onUsuarioClick={handleUsuarioClick}
-                        />
-                    )}
-
-                </Box>
-
-                <Box sx={{
-                    width: '100%',
-                    height: 55,
-                    background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    p: 2,
-                }}>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={handleCloseDialog}
-                        aria-label="close"
-                        sx={{ color: '#ffffffff' }}
-                    >
-                        <ArrowBackIcon />
-                    </IconButton>
-
-                    <WhatshotIcon sx={{ color: '#ffffffff' }} />
-
-                    <IconButton color="inherit" aria-label="spacer" sx={{ visibility: 'hidden' }}>
-                        <ArrowBackIcon />
-                    </IconButton>
-                </Box>
-            </Dialog>
         </>
     );
 };
