@@ -148,7 +148,7 @@ namespace FoB.Infrastructure.Repositories
                     var actor = usuario; // el que comentó
                     var noti = new Notificacion
                     {
-                        FechaDeEnvio = DateTime.UtcNow,
+                        FechaDeEnvio = DateTime.Now,
                         Leida = false,
                         Mensaje = $"{actor?.NombreUsuario ?? "Alguien"} comentó tu publicación",
                         Tipo = "Nuevo Comentario",

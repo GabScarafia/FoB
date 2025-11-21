@@ -2,6 +2,7 @@
 
 using FoB.Application.Dtos;
 using FoB.Application.Interfaces;
+using FoB.Infrastructure.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,12 +15,14 @@ public class ComentarioController : ControllerBase
 {
     private readonly IComentarioRepository _repository;
     private readonly ICurrentUser _currentUser; // ¡NUEVO! Inyectamos ICurrentUser
+    private readonly IRecetaRepository _recetaRepository;
 
     // Modificamos el constructor para inyectar ICurrentUser
-    public ComentarioController(IComentarioRepository repository, ICurrentUser currentUser)
+    public ComentarioController(IComentarioRepository repository, ICurrentUser currentUser, IRecetaRepository recetaRepository)
     {
         _repository = repository;
         _currentUser = currentUser;
+        _recetaRepository = recetaRepository;   
     }
 
     // GET api/comentario/receta/{idReceta}

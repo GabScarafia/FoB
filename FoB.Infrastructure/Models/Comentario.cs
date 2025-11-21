@@ -28,4 +28,6 @@ public partial class Comentario
     public virtual Comentario RespuestaAComentario { get; set; }
 
     public virtual Usuario Usuario { get; set; }
+
+    public virtual ICollection<Voto> Voto { get; set; } = new List<Voto>();
 }

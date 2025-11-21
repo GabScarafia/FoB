@@ -22,6 +22,10 @@ namespace FoB.Application.Dtos
         public int? RespuestaAComentarioId { get; set; }
 
         public List<ComentarioDTO> Respuestas { get; set; } = new List<ComentarioDTO>();
+
+        public int CantidadLikes { get; set; }
+        public bool LeGustaAlUsuario { get; set; }
+
     }
 }
 

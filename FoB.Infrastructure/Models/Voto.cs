@@ -21,6 +21,8 @@ public partial class Voto
 
     public int? ComentarioId { get; set; }
 
+    public virtual Comentario Comentario { get; set; }
+
     public virtual Receta Receta { get; set; }
 
     public virtual Usuario Usuario { get; set; }

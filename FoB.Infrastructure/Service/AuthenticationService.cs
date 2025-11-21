@@ -65,7 +65,7 @@ public class AuthenticationService : IAuthenticationService
 
         var tokenHandler = new JwtSecurityTokenHandler();
         var securityKey = Encoding.ASCII.GetBytes(_JWTSettings.Key!);
-        DateTime expDate = DateTime.UtcNow.AddMinutes(_JWTSettings.DurationInMinutes);
+        DateTime expDate = DateTime.Now.AddMinutes(_JWTSettings.DurationInMinutes);
         var roleClaims = new List<Claim>();
         foreach (var item in user.UsuarioRol.Select(x => x.Rol))
             roleClaims.Add(new Claim(ClaimTypes.Role, item.Descripcion));

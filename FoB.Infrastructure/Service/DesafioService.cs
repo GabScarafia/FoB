@@ -178,7 +178,7 @@ namespace FoB.Infrastructure.Service
             var rankingRecalculado = new List<RankingDto>();
 
             // La fecha de corte para el ranking actual es AHORA.
-            var fechaActualDeCorte = DateTime.UtcNow;
+            var fechaActualDeCorte = DateTime.Now;
 
             foreach (var participacion in participaciones)
             {
