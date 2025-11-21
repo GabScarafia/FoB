@@ -1,4 +1,4 @@
-import * as React from "react";
+﻿import * as React from "react";
 import {
     Dialog,
     DialogContent,
@@ -33,7 +33,7 @@ import { BASE_URL } from "../apiConfig";
 interface CreateRecetaDialogProps {
     open: boolean;
     onClose: () => void;
-    onRecetaCreada: () => void; 
+    onRecetaCreada: () => void;
     ingrediente?: string;
     desafioId?: number;
 }
@@ -46,7 +46,7 @@ type UnidadType = { id: number; nombre: string; simbolo: string };
 
 interface IngredienteRecetaPayload {
     nombre: string;
-    ingredienteId: number; 
+    ingredienteId: number;
     cantidad: number;
     unidadDeMedida: string;
     unidadId: number;
@@ -92,17 +92,17 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [dificultad, setDificultad] = React.useState('');
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
-    
+
     // --- 1. ESTADO NUEVO ---
     // Guardamos el "image/jpeg" o "video/mp4" de la portada
-    const [mainContentType, setMainContentType] = React.useState<string | null>(null); 
-    
+    const [mainContentType, setMainContentType] = React.useState<string | null>(null);
+
     const [minutes, setMinutes] = React.useState<string>('');
     const [titulo, setTitulo] = React.useState('');
     const [descripcion, setDescripcion] = React.useState('');
 
     const [ingredientes, setIngredientes] = React.useState<IngredienteRecetaPayload[]>([]);
-    
+
     const [nuevoIngrediente, setNuevoIngrediente] = React.useState<NuevoIngredienteState>({
         ingrediente: null,
         cantidad: '',
@@ -174,7 +174,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
     React.useEffect(() => {
         const fetchUnidades = async () => {
             const texto = debouncedInputUnidad.trim();
-            if (texto.length >= 1) { 
+            if (texto.length >= 1) {
                 setCargandoUnidades(true);
                 try {
                     const response = await fetch(`${BASE_URL}/Dominio/Unidades?texto=${encodeURIComponent(texto)}`, {
@@ -228,7 +228,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
         if (authData?.token) {
             fetchEtiquetas();
         }
-    }, [debouncedInputEtiqueta, authData?.token, etiquetas]); 
+    }, [debouncedInputEtiqueta, authData?.token, etiquetas]);
 
     // EFECTO PARA AUTO-AGREGAR ETIQUETAS (Ingrediente/Desafío)
     React.useEffect(() => {
@@ -348,7 +348,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                     ...prev,
                     ingrediente: matchingIngredient,
                 }));
-                setInputIngrediente(matchingIngredient.nombre); 
+                setInputIngrediente(matchingIngredient.nombre);
             }
         }
     };
@@ -379,8 +379,8 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
         const file = event.target.files?.[0];
         if (file) {
             // Guardamos el contentType (ej: "video/mp4")
-            setMainContentType(file.type); 
-            
+            setMainContentType(file.type);
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setPreviewImage(reader.result as string);
@@ -485,7 +485,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
             dificultad: dificultad === 'Facil' ? 0 : dificultad === 'Medio' ? 1 : dificultad === 'Dificil' ? 2 : 3,
             tiempoPreparacion: tiempoEnMinutos,
             ingredientes: ingredientes.map(ing => ({
-                nombre: ing.nombre, 
+                nombre: ing.nombre,
                 cantidad: ing.cantidad,
                 unidadId: ing.unidadId,
                 id: ing.ingredienteId,
@@ -522,7 +522,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
             console.log('Receta creada:', responseBody);
             const event = new CustomEvent('recetaCreada');
             document.dispatchEvent(event);
-            onClose(); 
+            onClose();
         } catch (error) {
             console.error('Error al crear la receta:', error);
         } finally {
@@ -570,21 +570,21 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                 {previewImage && (
                     <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', mb: 2 }}>
                         {mainContentType && mainContentType.startsWith('video/') ? (
-                            <video 
-                                src={previewImage} 
-                                style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }} 
-                                controls 
-                                autoPlay 
-                                muted 
-                                loop 
+                            <video
+                                src={previewImage}
+                                style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
+                                controls
+                                autoPlay
+                                muted
+                                loop
                                 playsInline
                                 controlsList="nodownload" // Para ocultar el botón de descarga
                             />
                         ) : (
-                            <img 
-                                src={previewImage} 
-                                alt="Vista previa" 
-                                style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }} 
+                            <img
+                                src={previewImage}
+                                alt="Vista previa"
+                                style={{ maxWidth: '100%', maxHeight: 200, objectFit: 'contain', borderRadius: 8 }}
                             />
                         )}
                     </Box>
@@ -601,9 +601,9 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         borderRadius: 2,
                         p: 3,
                         cursor: 'pointer',
-                        ...(previewImage && { 
-                            border: 'none', 
-                            backgroundColor: 'action.hover' 
+                        ...(previewImage && {
+                            border: 'none',
+                            backgroundColor: 'action.hover'
                         }),
                     }}
                     onClick={handleBoxClick}
@@ -718,7 +718,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                 <input
                                     type="file"
                                     // --- 7. INPUT DEL PASO MODIFICADO (Soporta Video) ---
-                                    accept="image/*,video/*" 
+                                    accept="image/*,video/*"
                                     style={{ display: 'none' }}
                                     id={`paso-imagen-input-${pasoActualIndex}`}
                                     onChange={e => handlePasoImagenChange(e, pasoActualIndex)}
@@ -728,11 +728,11 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                         {pasos[pasoActualIndex].imagen ? 'Cambiar media' : 'Agregar foto/video'}
                                     </Button>
                                 </label>
-                                
+
                                 {/* --- 8. VISTA PREVIA DEL PASO MODIFICADA (Soporta Video) --- */}
                                 {pasos[pasoActualIndex].imagen && (
                                     <Box sx={{ display: 'inline-block', position: 'relative', verticalAlign: 'middle' }}>
-                                        
+
                                         {pasos[pasoActualIndex].contentType && pasos[pasoActualIndex].contentType!.startsWith('video/') ? (
                                             <video
                                                 src={pasos[pasoActualIndex].imagen as string}
@@ -749,7 +749,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                                 style={{ width: 60, height: 60, objectFit: 'cover', borderRadius: 8, border: '1px solid #ccc' }}
                                             />
                                         )}
-                                        
+
                                         <IconButton
                                             size="small"
                                             sx={{ position: 'absolute', top: 0, right: 0, background: (theme) => alpha(theme.palette.background.paper, 0.7) }}
@@ -770,7 +770,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         Ingredientes
                     </Typography>
                     <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                        
+
                         <Autocomplete
                             options={ingredienteOptions}
                             getOptionLabel={(option) => option.nombre}
@@ -851,10 +851,10 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                 />
                             )}
                         />
-                        
-                        <IconButton 
-                            onClick={handleAddIngrediente} 
-                            color="primary" 
+
+                        <IconButton
+                            onClick={handleAddIngrediente}
+                            color="primary"
                             sx={{ p: 0.5 }}
                             disabled={!nuevoIngrediente.ingrediente || !nuevoIngrediente.cantidad || !nuevoIngrediente.unidad}
                         >
@@ -880,7 +880,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                                     fontWeight: 'bold',
                                 }}
                             >
-                                {`${ing.nombre} ${ing.cantidad} ${ing.unidadDeMedida}`} 
+                                {`${ing.nombre} ${ing.cantidad} ${ing.unidadDeMedida}`}
                                 <IconButton
                                     size="small"
                                     onClick={() => handleRemoveIngrediente(index)}
@@ -969,21 +969,32 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         sx={{ width: '100%' }}
                     />
                     <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 1 }}>
-                        {etiquetas.map((et) => (
-                            <Chip
-                                key={et.id}
-                                label={et.nombre}
-                                onDelete={() => handleRemoveEtiqueta(et.id)}
-                                sx={{
-                                    bgcolor: '#182969',
-                                    color: 'white',
-                                    fontWeight: 'bold',
-                                    '& .MuiChip-deleteIcon': {
+                        {etiquetas.map((et) => {
+                            const isDesafio = et.nombre.toLowerCase() === 'desafio';
+                            return (
+                                <Chip
+                                    key={et.id}
+                                    label={et.nombre}
+                                    onDelete={() => handleRemoveEtiqueta(et.id)}
+                                    sx={{
+                                        bgcolor: '#182969',
                                         color: 'white',
-                                    }
-                                }}
-                            />
-                        ))}
+                                        fontWeight: 'bold',
+                                        '& .MuiChip-deleteIcon': {
+                                            color: 'white',
+                                        },
+                                        ...(isDesafio && {
+                                            background: 'linear-gradient(to right, #FF7B00, #FFD700)',
+                                            color: 'white',
+                                            fontWeight: 'bold',
+                                            '&:hover': {
+                                                opacity: 0.9
+                                            }
+                                        }),
+                                    }}
+                                />
+                            );
+                        })}
                     </Box>
                 </Box>
 
@@ -1034,7 +1045,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         }
                     }}
                 >
-                    {isPublicando ? <CircularProgress size={24} sx={{color: 'white'}} /> : "Publicar Receta"}
+                    {isPublicando ? <CircularProgress size={24} sx={{ color: 'white' }} /> : "Publicar Receta"}
                 </Button>
             </DialogContent>
 
