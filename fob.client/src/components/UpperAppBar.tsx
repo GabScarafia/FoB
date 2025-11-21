@@ -112,30 +112,53 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  };
 
  const handleNotificationClick = async (n: NotificacionItem) => {
- if (!n.leida) markAsRead(n.id);
- handleCloseNotifications();
+  // Marca como leída si corresponde y espera a que termine para evitar condiciones de carrera
+  if (!n.leida) {
+    try {
+      await markAsRead(n.id);
+    } catch (e) {
+      console.error('No se pudo marcar la notificación como leída antes de navegar:', e);
+    }
+  }
 
-        if (n.url) {
-            // Si la URL es del tipo /receta/32?comentario=108, la transformamos
-            if (n.url.startsWith('/receta/')) {
-                const urlParts = n.url.split('?');
-                const recetaId = urlParts[0].split('/')[2];
-                const params = new URLSearchParams(urlParts[1]);
-                const comentarioId = params.get('comentario');
+  handleCloseNotifications();
 
-                // Navegamos a la ruta correcta que el router sí entiende
-                navigate(`/perfil/${n.emisor?.id}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
-            } else {
-                // Para todas las demás URLs, navegamos directamente
-                navigate(n.url);
-            }
-        }
+  if (!n.url) return;
+
+  // Si la URL es del tipo /receta/32?comentario=108, la transformamos a la ruta que usa el router
+  if (n.url.startsWith('/receta/')) {
+    const urlParts = n.url.split('?');
+    const recetaId = urlParts[0].split('/')[2];
+    const queryString = urlParts[1] ?? '';
+    const params = new URLSearchParams(queryString);
+    const comentarioId = params.get('comentario');
+
+    // Navegamos a la ruta correcta que el router entiende
+    navigate(
+      `/perfil/${n.emisor?.id}/publicaciones?receta=${recetaId}` +
+        (comentarioId ? `&comentario=${comentarioId}` : '')
+    );
+    return;
+  }
+
+  // Para todas las demás URLs, navegamos directamente
+  navigate(n.url);
  };
 
+ // Formatea la fecha en formato 24 horas y local 'es-ES' (ej: 20/11/2025 14:32)
  const formatDate = (iso?: string | null) => {
- if (!iso) return '';
- const d = new Date(iso);
- return d.toLocaleString();
+   if (!iso) return '';
+   const d = new Date(iso);
+   const options: Intl.DateTimeFormatOptions = {
+     day: '2-digit',
+     month: '2-digit',
+     year: 'numeric',
+     hour: '2-digit',
+     minute: '2-digit',
+     hour12: false
+   };
+   // Añadimos ' hs' al final para mostrar "14:32 hs"
+   return d.toLocaleString('es-ES', options) + ' hs';
  };
 
  const formatMessage = (n: NotificacionItem): string => {
@@ -258,7 +281,7 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  </Tooltip>
  )}
  <Tooltip title="Abrir">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); handleNotificationClick(n); }}>
+ <IconButton size="small" onClick={(e) => { e.stopPropagation(); if (n.url) { handleCloseNotifications(); navigate(n.url); } }}>
  <OpenInNewIcon fontSize="small" />
  </IconButton>
  </Tooltip>
