@@ -200,6 +200,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 } else {
                     setLiked(true);
                     setLikesCount(prevCount => prevCount + 1);
+                    if (disliked) setDisliked(false); // Si doy like, quito el dislike
                 }
                 if (disliked) {
                     setDisliked(false);
@@ -235,12 +236,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             if (response.ok) {
                 if (disliked) {
                     setDisliked(false);
-                } else {
+                } else { // El usuario está dando dislike
                     setDisliked(true);
-                }
-                if (liked) {
-                    setLiked(false);
-                    setLikesCount(prevCount => prevCount - 1);
+                    if (liked) { // Si antes había un like
+                        setLiked(false);
+                        setLikesCount(prevCount => prevCount - 1); // Se resta 1 al contador
+                    }
                 }
             } else {
                 const errorData = await response.json();

@@ -221,7 +221,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Where(x=>x.ComentarioId == null).Count(),
+            CantidadVotos = x.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
             CantidadComentarios = x.Comentario.Count(),
             Estado = x.Estado,
             ImagenUrl = x.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null
@@ -372,7 +372,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Where(v => v.ComentarioId == null).Count(),
+            CantidadVotos = x.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
             // Optimización: Usar variables locales en la query no siempre funciona bien en EF Core complejo, 
             // mejor dejar la lógica inline para asegurar traducción a SQL.
             MeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
@@ -493,6 +493,20 @@ internal sealed class RecetaRepository : IRecetaRepository
         {
             if (votoExistente == null)
             {
+                // Si estoy dando like, borro un dislike previo si existe.
+                if (interaccion.Tipo == InteraccionTipoEnum.Like)
+                {
+                    var votoOpuesto = await _context.Set<Voto>().FirstOrDefaultAsync(v => v.RecetaId == interaccion.IdReceta && v.UsuarioId == idUsuario && v.Tipo == InteraccionTipoEnum.Dislike.ToString() && v.ComentarioId == null);
+                    if (votoOpuesto != null) _context.Set<Voto>().Remove(votoOpuesto);
+                }
+                // Si estoy dando dislike, borro un like previo si existe.
+                else if (interaccion.Tipo == InteraccionTipoEnum.Dislike)
+                {
+                    var votoOpuesto = await _context.Set<Voto>().FirstOrDefaultAsync(v => v.RecetaId == interaccion.IdReceta && v.UsuarioId == idUsuario && v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null);
+                    if (votoOpuesto != null) _context.Set<Voto>().Remove(votoOpuesto);
+                }
+
+
                 int valorTipo = interaccion.Tipo == InteraccionTipoEnum.Like ? 1 :
                                         (interaccion.Tipo == InteraccionTipoEnum.Dislike ? -1 :
                                         (interaccion.Tipo == InteraccionTipoEnum.Favorito ? 5 : 
@@ -731,7 +745,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 }).ToList() ?? new List<PasoResponse>(),
                 Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
                 Utensilios = receta.RecetaUtensilio?.Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
-                CantidadVotos = receta.Voto.Where(x=>x.ComentarioId == null).Count(),
+                CantidadVotos = receta.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
                 MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,
                 VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
