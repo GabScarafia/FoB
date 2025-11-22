@@ -112,9 +112,10 @@ export interface PropsReceta {
     currentUserId: number | null;
     onDeleteReceta: (recetaId: number) => Promise<void>;
     onUsuarioClick?: (userId: number) => void;
+    ocultarBotonSeguir?: boolean; // Nueva propiedad
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick, ocultarBotonSeguir }) => {
     const navigate = useNavigate();
     const haProcesadoApertura = React.useRef(false);
     const [searchParams] = useSearchParams();
@@ -161,6 +162,36 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const handleDeleteClick = async () => {
         handleCloseMenu();
         onDeleteReceta(receta.id);
+    };
+
+    const handleFollowClick = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Evita que el click se propague al contenedor del autor
+        if (!authData?.token || esRecetaPropia) return;
+
+        const method = isFollowing ? 'DELETE' : 'POST';
+        const previousIsFollowing = isFollowing;
+
+        // Actualización optimista de la UI
+        setIsFollowing(!previousIsFollowing);
+
+        try {
+            const response = await fetch(`${BASE_URL}/Follow/${receta.autor.id}`, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${authData.token}` }
+            });
+
+            if (!response.ok) {
+                // Si falla, revertimos el cambio en la UI
+                setIsFollowing(previousIsFollowing);
+                console.error('Error al intentar seguir/dejar de seguir');
+                alert('Ocurrió un error al procesar la solicitud.');
+            }
+        } catch (error) {
+            // Revertimos también si hay un error de red
+            setIsFollowing(previousIsFollowing);
+            console.error('Error de red al seguir/dejar de seguir:', error);
+            alert('Error de conexión. Inténtalo de nuevo.');
+        }
     };
 
     const handleEditClick = () => {
@@ -482,59 +513,79 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 p: 2,
                 borderBottom: (theme) => `1px solid ${theme.palette.mode === 'light' ? theme.palette.divider : 'rgba(255, 255, 255, 0.15)'}`
             }}>
-                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
-                    <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
-                    <div>
-                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
-                        <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
-                    </div>
-                </div>
-                <div className="meta-receta-y-menu">
-                    <div className="meta-receta">
-                        <span className="tipo-contenido">{receta.dificultad}</span>
-                        <div className="estrellas-calificacion">
-                            {renderizarEstrellas(receta.dificultad)}
+                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer', flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
+                        <div>
+                            <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                            <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
                         </div>
                     </div>
-                    {esRecetaPropia && (
-                        <>
-                            <IconButton
-                                aria-label="más opciones"
-                                id="basic-button"
-                                aria-controls={openMenu ? 'basic-menu' : undefined}
-                                aria-haspopup="true"
-                                aria-expanded={openMenu ? 'true' : undefined}
-                                onClick={handleClickMenu}
-                                sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
-                            >
-                                <MoreVertIcon />
-                            </IconButton>
-                            <Menu
-                                id="basic-menu"
-                                anchorEl={anchorEl}
-                                open={openMenu}
-                                onClose={handleCloseMenu}
-                                MenuListProps={{
-                                    'aria-labelledby': 'basic-button',
-                                }}
-                                disableScrollLock={true}
-                            >
-                                <MenuItem onClick={handleEditClick}>
-                                    <ListItemIcon>
-                                        <EditIcon fontSize="small" />
-                                    </ListItemIcon>
-                                    <ListItemText>Editar</ListItemText>
-                                </MenuItem>
-                                <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
-                                    <ListItemIcon>
-                                        <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
-                                    </ListItemIcon>
-                                    <ListItemText>Eliminar</ListItemText>
-                                </MenuItem>
-                            </Menu>
-                        </>
-                    )}
                 </div>
+
+                {/* Contenedor para la parte derecha: botón, meta y menú */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    {isFollowing === false && !esRecetaPropia && !ocultarBotonSeguir && (
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={handleFollowClick}
+                            sx={{
+                                textTransform: 'none',
+                                fontSize: '0.75rem',
+                                px: 1.5,
+                                bottom: '3px',
+                            }}
+                        >
+                            Seguir
+                        </Button>
+                    )}
+                    <div className="meta-receta-y-menu">                        <div className="meta-receta">
+                            <span className="tipo-contenido">{receta.dificultad}</span>
+                            <div className="estrellas-calificacion">
+                                {renderizarEstrellas(receta.dificultad)}
+                            </div>
+                        </div>
+                        {esRecetaPropia && (
+                            <>
+                                <IconButton
+                                    aria-label="más opciones"
+                                    id="basic-button"
+                                    aria-controls={openMenu ? 'basic-menu' : undefined}
+                                    aria-haspopup="true"
+                                    aria-expanded={openMenu ? 'true' : undefined}
+                                    onClick={handleClickMenu}
+                                    sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}
+                                >
+                                    <MoreVertIcon />
+                                </IconButton>
+                                <Menu
+                                    id="basic-menu"
+                                    anchorEl={anchorEl}
+                                    open={openMenu}
+                                    onClose={handleCloseMenu}
+                                    MenuListProps={{
+                                        'aria-labelledby': 'basic-button',
+                                    }}
+                                    disableScrollLock={true}
+                                >
+                                    <MenuItem onClick={handleEditClick}>
+                                        <ListItemIcon>
+                                            <EditIcon fontSize="small" />
+                                        </ListItemIcon>
+                                        <ListItemText>Editar</ListItemText>
+                                    </MenuItem>
+                                    <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
+                                        <ListItemIcon>
+                                            <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
+                                        </ListItemIcon>
+                                        <ListItemText>Eliminar</ListItemText>
+                                    </MenuItem>
+                                </Menu>
+                            </>
+                        )}
+                    </div>
+                </Box>
             </Box>
 
             {/* --- BLOQUE DE RENDERIZADO --- */}

@@ -945,6 +945,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                             currentUserId={currentUserId ?? null}
                                             onDeleteReceta={handleOpenModal}
                                             onUsuarioClick={handleUsuarioClick}
+                                            ocultarBotonSeguir={true}
                                         />
                                     );
                                 })}
