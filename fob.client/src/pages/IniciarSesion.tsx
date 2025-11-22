@@ -73,7 +73,7 @@ const IniciarSesion: React.FC = () => {
             <div className="loading-overlay">
                 <div className="loading-content">
                     <img src={logoImage} alt="Logo Fondo Blanco" className="loading-logo" />
-                    <div className="loading-spinner"></div>
+                    <div className="loading-spinner-container"></div>
                 </div>
             </div>
         )}
@@ -123,6 +123,24 @@ const IniciarSesion: React.FC = () => {
                 <Link to="/registrarse" style={{ textDecoration: 'none', width: '100%' }}>
                     <Boton className="boton-ir-a-registro">REGISTRARSE</Boton>
                 </Link>
+                <style>
+                    {`
+                        .loading-overlay .loading-spinner-container {
+                            border: 5px solid rgba(255, 255, 255, 0.2); /* Círculo de fondo semitransparente */
+                            border-top-color: #fff; /* Segmento blanco que gira */
+                            width: 50px;
+                            height: 50px;
+                            border-radius: 50%;
+                            animation: spin 1s linear infinite;
+                        }
+
+                        @keyframes spin {
+                            to {
+                                transform: rotate(360deg);
+                            }
+                        }
+                    `}
+                </style>
             </div>
         </div>
         </>
