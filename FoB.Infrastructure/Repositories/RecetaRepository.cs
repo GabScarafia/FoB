@@ -623,6 +623,14 @@ internal sealed class RecetaRepository : IRecetaRepository
         var currentUserId = _currentUser.User.Id;
 
         var recetaToDelete = await _context.Receta
+                                        .Include(r => r.RecetaImagen)
+                                        .Include(r => r.IngredienteReceta)
+                                        .Include(r => r.RecetaEtiquetas)
+                                        .Include(r => r.RecetaUtensilio)
+                                        .Include(r => r.Paso)
+                                            .ThenInclude(p => p.RecetaImagen)
+                                        .Include(r => r.Voto)
+                                        .Include(r => r.Comentario)
                                         .FirstOrDefaultAsync(r => r.Id == recetaId && r.UsuarioId == currentUserId);
 
         if (recetaToDelete == null)
@@ -630,6 +638,15 @@ internal sealed class RecetaRepository : IRecetaRepository
             // La receta no existe o el usuario actual no es el autor
             return false;
         }
+
+        // Eliminación explícita de las colecciones relacionadas
+        _context.RemoveRange(recetaToDelete.RecetaImagen);
+        _context.RemoveRange(recetaToDelete.IngredienteReceta);
+        _context.RemoveRange(recetaToDelete.RecetaEtiquetas);
+        _context.RemoveRange(recetaToDelete.RecetaUtensilio);
+        _context.RemoveRange(recetaToDelete.Paso);
+        _context.RemoveRange(recetaToDelete.Voto);
+        _context.RemoveRange(recetaToDelete.Comentario);
 
         _context.Receta.Remove(recetaToDelete);
         await _context.SaveChangesAsync();
