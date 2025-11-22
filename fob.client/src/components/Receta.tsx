@@ -517,6 +517,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 MenuListProps={{
                                     'aria-labelledby': 'basic-button',
                                 }}
+                                disableScrollLock={true}
                             >
                                 <MenuItem onClick={handleEditClick}>
                                     <ListItemIcon>
