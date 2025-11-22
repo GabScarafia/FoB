@@ -349,7 +349,12 @@ const Perfil: React.FC = () => {
                         <Button variant="contained" className="perfil-boton" onClick={handleEditarPerfilClick} sx={{ mr:1 }}>
                             Editar Perfil
                         </Button>
-                        <Button variant="outlined" className="perfil-boton" onClick={handleShareProfileClick}>
+                        <Button 
+                            variant="outlined" 
+                            className="perfil-boton" 
+                            onClick={handleShareProfileClick}
+                            sx={{ borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}
+                        >
                             Compartir perfil
                         </Button>
                     </>
@@ -363,7 +368,7 @@ const Perfil: React.FC = () => {
                         disabled={!token || isProcessingFollow}
                         sx={{
                             flexGrow:1,
-                            backgroundColor: !isFollowing ? 'rgb(3169176)' : 'transparent',
+                            backgroundColor: !isFollowing ? 'rgb(31, 69, 176)' : 'transparent',
                             color: !isFollowing ? 'white' : undefined,
                             '&:hover': {
                                 backgroundColor: isFollowing ? 'rgba(31,69,176,0.08)' : 'rgb(2455139)',
@@ -379,7 +384,11 @@ const Perfil: React.FC = () => {
                         {isFollowing ? 'Siguiendo' : 'Seguir'}
                     </Button>
 
-                    <Button variant="outlined" className="perfil-boton" onClick={handleShareProfileClick} sx={{ minWidth:140 }}>
+                    <Button 
+                        variant="outlined" 
+                        className="perfil-boton" 
+                        onClick={handleShareProfileClick} 
+                        sx={{ minWidth:140, borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}>
                         Compartir perfil
                     </Button>
                     </Box>
