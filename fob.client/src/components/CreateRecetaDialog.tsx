@@ -1,4 +1,4 @@
-﻿import * as React from "react";
+﻿﻿﻿﻿import * as React from "react";
 import {
     Dialog,
     DialogContent,
@@ -33,9 +33,10 @@ import { BASE_URL } from "../apiConfig";
 interface CreateRecetaDialogProps {
     open: boolean;
     onClose: () => void;
-    onRecetaCreada: () => void;
+    onRecetaCreada?: () => void; // Opcional
     ingrediente?: string;
     desafioId?: number;
+    recetaParaEditar?: any | null; // Nueva prop para la receta a editar
 }
 
 // ----------------------------------------------------
@@ -88,7 +89,7 @@ function useDebounce<T>(value: T, delay: number): T {
     return debouncedValue;
 }
 
-export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingrediente, desafioId }: CreateRecetaDialogProps) {
+export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingrediente, desafioId, recetaParaEditar }: CreateRecetaDialogProps) {
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [dificultad, setDificultad] = React.useState('');
     const [previewImage, setPreviewImage] = React.useState<string | null>(null);
@@ -138,6 +139,48 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
     const [pasoActualIndex, setPasoActualIndex] = React.useState(0);
 
     const { authData } = useAuth();
+
+    // --- EFECTO PARA PRECARGAR DATOS SI ES EDICIÓN ---
+    React.useEffect(() => {
+        if (recetaParaEditar && open) {
+            setTitulo(recetaParaEditar.titulo || '');
+            setDescripcion(recetaParaEditar.descripcion || '');
+            
+            if (recetaParaEditar.imagenUrl) {
+                const fullUrl = recetaParaEditar.imagenUrl.startsWith('/') ? `${BASE_URL}${recetaParaEditar.imagenUrl}` : recetaParaEditar.imagenUrl;
+                setPreviewImage(fullUrl);
+                setMainContentType(recetaParaEditar.contentType || 'image/jpeg');
+            }
+
+            const dificultades = ['Facil', 'Medio', 'Dificil', 'Experto'];
+            setDificultad(dificultades[recetaParaEditar.dificultad] || '');
+
+            if (recetaParaEditar.tiempoPreparacion) {
+                const timeParts = String(recetaParaEditar.tiempoPreparacion).split(':');
+                const totalMinutes = (+timeParts[0]) * 60 + (+timeParts[1]);
+                setMinutes(String(totalMinutes));
+            }
+
+            setIngredientes(recetaParaEditar.ingredientes?.map((ing: any) => ({
+                nombre: ing.nombre,
+                ingredienteId: ing.id,
+                cantidad: ing.cantidad,
+                unidadDeMedida: ing.unidadDeMedida,
+                unidadId: ing.unidadId,
+            })) || []);
+
+            setEtiquetas(recetaParaEditar.etiquetas?.map((et: any) => typeof et === 'string' ? { id: Date.now() + Math.random(), nombre: et } : et) || []);
+            setUtencilios(recetaParaEditar.utensilios?.map((ut: any) => typeof ut === 'string' ? { id: Date.now() + Math.random(), nombre: ut } : ut) || []);
+
+            setPasos(recetaParaEditar.pasos?.map((paso: any) => ({
+                titulo: paso.titulo || '',
+                descripcion: paso.descripcion || '',
+                imagen: paso.imagenUrl ? (paso.imagenUrl.startsWith('/') ? `${BASE_URL}${paso.imagenUrl}` : paso.imagenUrl) : null,
+                contentType: paso.contentType || null
+            })) || [{ titulo: '', descripcion: '', imagen: null, contentType: null }]);
+        }
+    }, [recetaParaEditar, open]);
+
 
     // ... (Efectos de Debounce para ingredientes, unidades y etiquetas no cambian) ...
     // EFECTO PARA BÚSQUEDA DE INGREDIENTES
@@ -452,6 +495,8 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
     // (Para enviar ambos contentTypes)
     const handleSubmit = async () => {
 
+        const isEditing = !!recetaParaEditar;
+
         if (isPublicando) return;
         setIsPublicando(true);
 
@@ -461,19 +506,25 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
             return;
         }
 
+        // Helper para convertir data URL a base64
+        const getBase64FromDataUrl = (dataUrl: string | null) => {
+            if (!dataUrl) return null;
+            if (dataUrl.startsWith('data:')) {
+                return dataUrl.split(',')[1];
+            }
+            return null; // No es un data URL nuevo, no se reenvía
+        }
+
         const pasosValidos = pasos.filter(paso => {
             const tituloValido = paso.titulo && paso.titulo.trim() !== '';
             const descripcionValida = paso.descripcion && paso.descripcion.trim() !== '';
             return tituloValido || descripcionValida;
         }).map(paso => ({
             ...paso, // <-- Esto ya incluye el 'contentType' del paso
-            imagen: paso.imagen ? paso.imagen.split(',')[1] : null
+            imagen: getBase64FromDataUrl(paso.imagen)
         }));
 
-        let imagenBase64 = null;
-        if (previewImage) {
-            imagenBase64 = previewImage.split(',')[1];
-        }
+        const imagenBase64 = getBase64FromDataUrl(previewImage);
         const totalMinutes = parseInt(minutes);
         const tiempoEnMinutos = isNaN(totalMinutes) ? 0 : totalMinutes;
 
@@ -485,21 +536,24 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
             dificultad: dificultad === 'Facil' ? 0 : dificultad === 'Medio' ? 1 : dificultad === 'Dificil' ? 2 : 3,
             tiempoPreparacion: tiempoEnMinutos,
             ingredientes: ingredientes.map(ing => ({
-                nombre: ing.nombre,
+                id: ing.ingredienteId, // <-- CORRECCIÓN: Se envía el ID del ingrediente
                 cantidad: ing.cantidad,
                 unidadId: ing.unidadId,
-                id: ing.ingredienteId,
-                descripcion: ''
+                nombre: ing.nombre, // El nombre también puede ser útil para el backend
+                descripcion: '' // Mantener si la API lo requiere
             })),
-            etiquetas: etiquetas.map(et => ({ nombre: et.nombre, id: et.id })),
-            utensilios: utencilios.map(ut => ({ nombre: ut.nombre, id: ut.id })),
+            etiquetas: etiquetas.map(et => ({ id: et.id, nombre: et.nombre })), // <-- CORRECCIÓN: Se envía el ID de la etiqueta
+            utensilios: utencilios.map(ut => ({ id: ut.id, nombre: ut.nombre })), // <-- CORRECCIÓN: Se envía el ID del utensilio
             pasos: pasosValidos, // <-- 'pasosValidos' ya incluye el contentType de cada paso
-            ...(desafioId && { desafioId })
+            ...(desafioId && !isEditing && { desafioId }) // DesafioId solo en creación
         };
 
         try {
-            const response = await fetch(`${BASE_URL}/Recetas`, {
-                method: "POST",
+            const url = isEditing ? `${BASE_URL}/Recetas/${recetaParaEditar.id}` : `${BASE_URL}/Recetas`;
+            const method = isEditing ? "PUT" : "POST";
+
+            const response = await fetch(url, {
+                method: method,
                 headers: {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${authData.token}`
@@ -519,10 +573,17 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                 throw new Error(`Error en la solicitud: ${response.status} ${response.statusText} - ${JSON.stringify(responseBody)}`);
             }
 
-            console.log('Receta creada:', responseBody);
-            const event = new CustomEvent('recetaCreada');
-            document.dispatchEvent(event);
-            onClose();
+            console.log(`Receta ${isEditing ? 'actualizada' : 'creada'}:`, responseBody);
+            // Usamos un evento para notificar a otras partes de la app que recarguen
+            const eventName = isEditing ? 'recetaActualizada' : 'recetaCreada';
+            window.dispatchEvent(new CustomEvent(eventName));
+
+            if (onRecetaCreada) {
+                onRecetaCreada();
+            }
+            
+            // ¡CLAVE! Llamar a onClose para cerrar el diálogo
+            onClose(); 
         } catch (error) {
             console.error('Error al crear la receta:', error);
         } finally {
@@ -551,7 +612,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
             <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, pt: 2, pb: 10 }}>
 
                 <TextField
-                    label="Título del post"
+                    label={recetaParaEditar ? "Editar título" : "Título del post"}
                     variant="outlined"
                     fullWidth
                     value={titulo}
@@ -1045,7 +1106,7 @@ export default function CreateRecetaDialog({ open, onClose, onRecetaCreada, ingr
                         }
                     }}
                 >
-                    {isPublicando ? <CircularProgress size={24} sx={{ color: 'white' }} /> : "Publicar Receta"}
+                    {isPublicando ? <CircularProgress size={24} sx={{ color: 'white' }} /> : (recetaParaEditar ? "Guardar Cambios" : "Publicar Receta")}
                 </Button>
             </DialogContent>
 

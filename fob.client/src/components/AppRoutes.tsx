@@ -7,6 +7,7 @@ import Feed from "../pages/Feed";
 import Perfil from "../pages/Perfil";
 import PublicacionScrollablePage from '../pages/PublicacionScrollablePage';
 import ComentariosPage from "../pages/Comentarios";
+import EditarReceta from "../pages/EditarReceta"; // Importar la nueva página
 import { useAuth } from "../context/AuthContext";
 import EditarPerfil from "../pages/EditarPerfil"; 
 
@@ -56,6 +57,15 @@ export default function AppRoutes({ onDrawerToggle }: AppRoutesProps) {
                 element={
                     <ProtectedRoute>
                         <EditarPerfil />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/receta/editar/:id"
+                element={
+                    <ProtectedRoute>
+                        <EditarReceta />
                     </ProtectedRoute>
                 }
             />

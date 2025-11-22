@@ -11,6 +11,7 @@ import StarBorderIcon from '@mui/icons-material/StarBorder';
 import StarIcon from '@mui/icons-material/Star';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import EditIcon from '@mui/icons-material/Edit';
 import ShareIcon from '@mui/icons-material/Share';
 import ThumbUpAltOutlinedIcon from '@mui/icons-material/ThumbUpAltOutlined';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
@@ -160,6 +161,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const handleDeleteClick = async () => {
         handleCloseMenu();
         onDeleteReceta(receta.id);
+    };
+
+    const handleEditClick = () => {
+        handleCloseMenu();
+        navigate(`/receta/editar/${receta.id}`);
     };
 
     const handleComentarioAgregado = (nuevoComentario: Comentario) => {
@@ -512,6 +518,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                     'aria-labelledby': 'basic-button',
                                 }}
                             >
+                                <MenuItem onClick={handleEditClick}>
+                                    <ListItemIcon>
+                                        <EditIcon fontSize="small" />
+                                    </ListItemIcon>
+                                    <ListItemText>Editar</ListItemText>
+                                </MenuItem>
                                 <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}>
                                     <ListItemIcon>
                                         <DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} />
