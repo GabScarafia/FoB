@@ -1,7 +1,8 @@
-/* Contenedor principal para posicionamiento relativo */
+/* Contenedor principal */
 .barra-busqueda-contenedor-principal {
     position: relative;
     max-width: 800px;
+    width: 100%; /* Asegura que ocupe el ancho disponible */
     margin: 20px auto;
     box-sizing: border-box;
     display: flex;
@@ -9,26 +10,33 @@
     z-index: 1000;
 }
 
-/* Sección del input y el icono de búsqueda */
+/* Sección del input y el icono */
 .barra-busqueda-input-seccion {
     display: flex;
     align-items: center;
     padding: 8px 15px;
+    /* Padding derecho ajustado para evitar corte, aunque con flexbox debería bastar */
+    padding-right: 20px; 
     background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
-    border-radius: 30px;search-results-lis
+    border-radius: 30px;
     box-sizing: border-box;
     height: 50px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    overflow: hidden; /* Para mantener los bordes redondeados limpios */
 }
 
 .logo-app {
     height: 35px;
     margin-right: 15px;
     filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.3));
+    flex-shrink: 0; /* Evita que el logo se aplaste */
 }
 
+/* Input de búsqueda */
 .input-busqueda {
     flex-grow: 1;
+    /* min-width: 0 es CRÍTICO en flexbox para que el input se encoja si falta espacio */
+    min-width: 0; 
     margin: 0;
     padding: 0;
     border: none;
@@ -38,40 +46,37 @@
     outline: none;
 }
 
-    .input-busqueda::placeholder {
-        color: rgba(255, 255, 255, 0.7);
-    }
+.input-busqueda::placeholder {
+    color: rgba(255, 255, 255, 0.7);
+}
 
-    .input-busqueda:focus {
-        border-color: transparent;
-    }
-
+/* Icono de búsqueda (lupa) */
 .icono-busqueda {
-    font-size: 1.8em;
+    font-size: 1.8em !important; /* Forzamos el tamaño del icono MUI */
     color: white;
     cursor: pointer;
-    margin-left: 15px;
+    margin-left: 10px; /* Reducimos un poco el margen */
+    flex-shrink: 0; /* CRÍTICO: Evita que el icono se aplaste o se corte */
     transition: color 0.3s ease;
 }
 
-    .icono-busqueda:hover {
-        color: #f0f0f0;
-    }
-
-/* --- AÑADIDO --- */
-
-/* Estilo para el icono de flecha "atrás" */
-.icono-atras {
-    font-size: 1.8em;
-    color: white;
-    cursor: pointer;
-    margin-right: 15px; /* Reemplaza el margen del logo */
-    transition: color 0.3s ease;
-}
-.icono-atras:hover {
+.icono-busqueda:hover {
     color: #f0f0f0;
 }
 
+/* Icono atrás */
+.icono-atras {
+    font-size: 1.8em !important;
+    color: white;
+    cursor: pointer;
+    margin-right: 15px;
+    flex-shrink: 0;
+    transition: color 0.3s ease;
+}
+
+.icono-atras:hover {
+    color: #f0f0f0;
+}
 /* Animación de fundido para la transición */
 @keyframes fadeIn {
     from {

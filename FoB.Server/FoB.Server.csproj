@@ -11,8 +11,8 @@
 
   <ItemGroup>
     <Content Remove="wwwroot\assets\avatar-DsqCMPPI.PNG" />
-    <Content Remove="wwwroot\assets\index-0PZ9J5E8.js" />
-    <Content Remove="wwwroot\assets\index-BIdoi11C.css" />
+    <Content Remove="wwwroot\assets\index-BwDxzNc-.js" />
+    <Content Remove="wwwroot\assets\index-D0FpuYw-.css" />
     <Content Remove="wwwroot\assets\logo-blanco-CtbNWzD4.PNG" />
     <Content Remove="wwwroot\assets\logo-DOpalBzT.png" />
     <Content Remove="wwwroot\index.html" />
@@ -44,8 +44,8 @@
 
   <ItemGroup>
     <None Include="wwwroot\assets\avatar-DsqCMPPI.PNG" />
-    <None Include="wwwroot\assets\index-0PZ9J5E8.js" />
-    <None Include="wwwroot\assets\index-BIdoi11C.css" />
+    <None Include="wwwroot\assets\index-BwDxzNc-.js" />
+    <None Include="wwwroot\assets\index-D0FpuYw-.css" />
     <None Include="wwwroot\assets\logo-blanco-CtbNWzD4.PNG" />
     <None Include="wwwroot\assets\logo-DOpalBzT.png" />
     <None Include="wwwroot\index.html" />

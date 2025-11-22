@@ -1,33 +1,44 @@
-/* Contenedor principal de cada tarjeta de receta */
+/* Receta.css */
+
+/* --- Contenedores Principales --- */
 .tarjeta-receta {
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    margin: 20px;
+    background-color: var(--color-background-paper, #fff);
+    border-radius: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    margin: 20px auto; 
     overflow: hidden;
+    width: 100%;
+    max-width: 500px;
 }
-/* Nuevo contenedor de la imagen para el carrusel */
+
+/* Contenedor del Carrusel */
 .carrusel-imagen {
     width: 100%;
-    /* Define la altura fija que deseas para el carrusel */
     height: 400px; 
-    display: block;
-    /* Necesitas una forma de centrar la imagen si es más pequeña */
     display: flex; 
     justify-content: center;
     align-items: center;
-    /* Asegúrate de que no haya desbordamiento */
     overflow: hidden; 
-    /* Opcional: Establece un fondo si hay espacio vacío */
-    background-color: #f0f0f0; 
+    background-color: #000; 
+    position: relative;
 }
-/* Encabezado de la receta (info del autor y meta) */
+
+/* IMAGEN O VIDEO DEL CARRUSEL */
+.imagen-receta {
+    width: 100%;
+    height: 100%;
+    display: block;
+    /* object-fit: cover;  <-- BORRA O COMENTA ESTA LÍNEA SI EXISTE */
+    border-radius: 0;
+}
+
+/* --- Encabezado --- */
 .encabezado-receta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
-    border-bottom: 1px solid #eee;
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.08); /* El borde usa transparencia para servir en dark/light */
 }
 
 .info-autor {
@@ -36,235 +47,147 @@
 }
 
 .foto-perfil {
-    width: 50px;
-    height: 50px;
+    width: 45px;
+    height: 45px;
     border-radius: 50%;
-    margin-right: 10px;
+    margin-right: 12px;
     object-fit: cover;
 }
 
 .nombre-autor {
     font-weight: bold;
-    font-size: 1.1rem;
+    font-size: 1rem;
+    line-height: 1.2;
 }
 
 .tiempo-publicacion {
-    font-size: 0.8em;
+    font-size: 0.75rem;
+    /* CORRECCIÓN: En lugar de color fijo, usamos opacidad */
+    color: inherit;
+    opacity: 0.6;
+}
+
+/* --- Meta Info (Dificultad / Estrellas) --- */
+.meta-receta-y-menu {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .meta-receta {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-end;
 }
 
 .tipo-contenido {
-    font-size: 0.8em;
-    border-radius: 4px;
-}
-
-/* T�tulo de la receta */
-.titulo-receta {
-    padding: 0 15px;
-    margin-top: 5px;
-}
-
-.titulo-receta h3 {
-    font-size: 1.2em;
-    margin: 0;
-    padding: 0;
-    font-weight: bold;
-}
-
-
-.meta-receta-y-menu {
-    display: flex;
-    align-items: center; /* Alinea verticalmente los elementos */
-    gap: 8px; /* Espacio entre la dificultad y el menú */
-}
-
-.meta-receta {
-    display: flex;
-    align-items: center;
-    /* Ajusta el margen derecho si es necesario para dar espacio al menú */
-    /* margin-right: 10px; */
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    opacity: 0.7; /* Opacidad para que se adapte al tema */
 }
 
 .estrellas-calificacion {
     display: flex;
-    align-items: center;
+    color: #ffb400; /* Color dorado siempre visible */
 }
 
-.estrellas-calificacion .estrella {
-    font-size: 1.2em;
+.estrella {
+    font-size: 1rem;
 }
 
-.estrellas-calificacion .estrella.rellena {
-}
-
-/* Contenedor de la imagen */
-.contenedor-imagen-receta {
-    width: 100%;
-    display: block;
-}.imagen-receta {
-    /* Ocupa el 100% del contenedor fijo */
-    width: 100%;
-    height: 100%;
-    display: block;
-    
-    /* ¡CLAVE! Escala la imagen para que quepa completamente dentro del contenedor 
-       fijo sin ser recortada. Dejará espacios vacíos si las proporciones no coinciden. */
-    object-fit: contain; 
-    
-    /* No debe haber bordes para asegurar que la imagen se muestre completa */
-    border-radius: 0;
-}
-
-/* Secci�n de acciones (me gusta, comentarios, guardar) */
+/* --- Acciones (Likes, etc) --- */
 .acciones-receta {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 15px;
-    border-top: 1px solid #eee;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(0,0,0,0.08);
 }
 
 .acciones-izquierda, .acciones-derecha {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
 }
 
-/* Base para todos los iconos de acci�n */
-.icono-accion {
-    font-size: 28px !important;
-    cursor: pointer;
-    transition: color 0.2s ease-in-out, transform 0.1s ease-out;
-    /* Estas propiedades son importantes para que el SVG del �cono ocupe el espacio correcto */
-    width: 1em;
-    height: 1em;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* CORRECCIÓN: Contadores */
+.conteo-me-gusta, .conteo-comentarios, .conteo-tiempo {
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-left: -6px;
+    /* Eliminado color: #444. Usamos inherit y opacity. */
+    color: inherit;
+    opacity: 0.8; 
 }
 
-/* Efecto al pasar el mouse sobre cualquier icono de acci�n */
-.icono-accion:hover {
-    transform: scale(1.1);
-}
-
-.conteo-me-gusta, .conteo-comentarios {
-    font-size: 0.9em;
-    font-weight: bold;
-    margin-left: -5px;
-}
-
-.icono-tiempo {
-    font-size: 28px !important;
-    pointer-events: none;
-    cursor: default;
-}
-
-.conteo-tiempo {
-    font-size: 0.9em;
-    font-weight: bold;
-    margin-left: -5px;
-}
-
-/* Nuevos estilos para la secci�n de ingredientes y categor�as */
-.informacion-adicional {
-    /* Los estilos de padding y margin ahora se manejan con `sx` en Receta.tsx */
-}
-
-/* Descripci�n de la receta */
-.descripcion-receta {
-    line-height: 1.4;
-}
-
-/* Vista previa de comentarios */
+/* --- Comentarios --- */
 .vista-previa-comentarios {
-    padding: 0 15px 15px;
-    font-size: 0.85em;
+    padding: 0 16px 16px;
+    font-size: 0.9rem;
 }
 
 .item-comentario {
     display: flex;
     align-items: center;
-    margin-bottom: 5px;
-    white-space: nowrap;
+    margin-bottom: 4px;
     overflow: hidden;
-    text-overflow: ellipsis;
 }
 
-/* icono de comentario peque�o */
 .icono-comentario-pequeno {
-    font-size: 1em !important;
-    margin-right: 5px;
+    font-size: 1rem !important;
+    margin-right: 6px;
+    opacity: 0.6; /* Icono sutil */
     flex-shrink: 0;
-}
-
-.texto-comentario {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 .autor-comentario {
     font-weight: bold;
-    margin-right: 5px;
+    margin-right: 6px;
+    font-size: 0.9rem;
+}
+
+/* CORRECCIÓN: Texto del comentario */
+.texto-comentario {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    /* Eliminado color: #333. Ahora hereda del padre (Paper) */
+    color: inherit;
 }
 
 .tiempo-comentario {
-    font-size: 0.8em;
-    margin-left: 5px;
+    font-size: 0.75rem;
+    margin-left: 6px;
+    opacity: 0.5; /* Gris sutil automático */
+    flex-shrink: 0;
 }
 
+/* CORRECCIÓN: Sin comentarios */
 .sin-comentarios {
     font-style: italic;
+    /* Eliminado color: #999 */
+    color: inherit;
+    opacity: 0.5;
     text-align: center;
-    padding-top: 5px;
+    padding: 10px 0;
+    font-size: 0.85rem;
 }
 
-/* Estilos para el bot�n "Leer m�s" */
-.boton-leer-mas {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 0.9em;
-    font-weight: bold;
-    padding: 0;
-    margin-left: 5px;
-    text-decoration: none;
-    transition: color 0.2s ease-in-out;
+/* Estilo por defecto para el VIDEO (en el feed se ve cover/recortado) */
+video.imagen-receta {
+    object-fit: cover;
 }
 
-.boton-leer-mas:hover {
-    text-decoration: underline;
+/* MAGIA: Cuando el video está en pantalla completa, forzamos contain (original) */
+video.imagen-receta:fullscreen {
+    object-fit: contain;
 }
 
-
-.boton-pasos {
-.pasos-receta{
-    display: flex;
-    justify-content: center;
+/* Soporte para navegadores (Chrome, Safari, Firefox) */
+video.imagen-receta:-webkit-full-screen {
+    object-fit: contain;
 }
-
-/* Lista de pasos */
-.lista-pasos {
-    list-style-type: none;
-    padding: 0;
-    margin: 0;
+video.imagen-receta:-moz-full-screen {
+    object-fit: contain;
 }
-
-/* Cada paso individual */
-.lista-pasos li {
-}
-
-/* Título de cada paso */
-.lista-pasos h4 {
-}
-
-/* Descripción del paso */
-.lista-pasos p {
-    line-height: 1.6;
-}}

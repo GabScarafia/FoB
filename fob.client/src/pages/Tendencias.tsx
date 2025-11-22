@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-// import { useTendenciasService } from '../services/tendenciasService'; // <-- No lo usamos para poder paginar
 import Receta from 'components/Receta';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,20 +7,18 @@ import ViewListIcon from '@mui/icons-material/ViewList';
 import GridViewIcon from '@mui/icons-material/GridView';
 import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
 import CircularProgress from '@mui/material/CircularProgress';
-import type { Comentario } from 'components/DrawerComentarios';
 import { Box } from '@mui/material';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL } from '../apiConfig';
-import fotoPerfilLocal from '../assets/images/avatar.png'; // <-- IMPORT NECESARIO
+import fotoPerfilLocal from '../assets/images/avatar.png';
 import LogoAppBlanco from '../assets/images/logo-blanco.png';
 
 import './Tendencias.css';
 
-import type { RecetaType, Usuario } from '../types/Receta';
+import type { RecetaType } from '../types/Receta';
 import { useTheme } from '@mui/material/styles';
 
-// --- INICIO DE CÓDIGO NUEVO ---
-// (Estas funciones helper están bien)
+// --- HELPERS ---
 const getMediaTypeFromContentType = (contentType: string): 'image' | 'video' => {
     if (contentType && contentType.startsWith('video/')) {
         return 'video';
@@ -46,42 +43,54 @@ const getNormalizedUrl = (
 
     return `data:${contentType};base64,${mediaStr}`;
 }
-// --- FIN DE LA CORRECCIÓN ---
-
 
 const Tendencias = () => {
     const theme = useTheme();
     const [tendencias, setTendencias] = useState<RecetaType[]>([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    // const { obtenerTendencias } = useTendenciasService(); // <-- Reemplazado por fetch directo
     const [viewMode, setViewMode] = useState<'grid' | 'feed'>('grid');
     const { authData, clearAuthData } = useAuth();
-    // const [seEjecutoUnaVez, setSeEjecutoUnaVez] = useState(false); // <-- Eliminado
     const navigate = useNavigate();
 
     const mainRef = useRef<HTMLElement | null>(null);
     const originalMainPaddingTop = useRef<string | null>(null);
 
-    // === NUEVOS ESTADOS DE PAGINACIÓN ===
+    // === ESTADOS DE PAGINACIÓN ===
     const [page, setPage] = useState(1);
     const [cargandoMas, setCargandoMas] = useState(false);
     const [hasMore, setHasMore] = useState(true);
-    const PAGE_SIZE = 15; // <-- Tamaño de página 15
+    const PAGE_SIZE = 15;
     const [scrollToRecetaId, setScrollToRecetaId] = useState<number | null>(null);
 
     // --- ESTADOS PARA EL HEADER DINÁMICO ---
     const [isHeaderVisible, setIsHeaderVisible] = useState(true);
     const lastScrollTop = useRef(0);
 
+    // === INTERSECTION OBSERVER (SCROLL INFINITO MEJORADO) ===
+    const observer = useRef<IntersectionObserver | null>(null);
 
-    // useEffect para la clase 'tendencias-page' (Sin cambios)
+    const lastRecetaElementRef = useCallback((node: HTMLDivElement) => {
+        if (cargando || cargandoMas) return; // Si está cargando, no observar nada aún
+        
+        if (observer.current) observer.current.disconnect(); // Desconectar el anterior
+
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasMore) {
+                // Si el último elemento es visible y hay más, cargamos
+                cargarTendencias(false);
+            }
+        });
+
+        if (node) observer.current.observe(node);
+    }, [cargando, cargandoMas, hasMore]); // Quitamos cargarTendencias de deps directas para evitar loops si no es memoized, aunque idealmente lo está abajo.
+
+    // useEffect para manipular estilos del main container
     useEffect(() => {
         const mainElement = document.querySelector('main');
         if (mainElement) {
             mainElement.classList.add('tendencias-page');
             mainRef.current = mainElement;
-            // store original paddingTop to restore later
             if (originalMainPaddingTop.current === null) {
                 originalMainPaddingTop.current = window.getComputedStyle(mainElement).paddingTop || null;
             }
@@ -90,15 +99,14 @@ const Tendencias = () => {
         return () => {
             if (mainRef.current) {
                 mainRef.current.classList.remove('tendencias-page');
-            }
-            // restore original padding when unmounting
-            if (mainRef.current && originalMainPaddingTop.current !== null) {
-                mainRef.current.style.paddingTop = originalMainPaddingTop.current;
+                if (originalMainPaddingTop.current !== null) {
+                    mainRef.current.style.paddingTop = originalMainPaddingTop.current;
+                }
             }
         };
     }, []);
 
-    // === LÓGICA DE CARGA DE DATOS MODIFICADA ===
+    // === LÓGICA DE CARGA DE DATOS ===
     const cargarTendencias = useCallback(async (isInitialLoad = false) => {
         if (!authData?.token) {
             setCargando(false);
@@ -110,7 +118,6 @@ const Tendencias = () => {
             setPage(1);
             setHasMore(true);
         } else {
-            // Ya estamos cargando más, no hacer nada
             if (cargandoMas) return;
             setCargandoMas(true);
         }
@@ -127,7 +134,6 @@ const Tendencias = () => {
 
             if (!response.ok) {
                 if (response.status === 401) {
-                    // Token inválido/expirado: limpiar auth y redirigir
                     try { clearAuthData(); } catch (e) { }
                     navigate('/iniciar-sesion');
                     return;
@@ -135,7 +141,7 @@ const Tendencias = () => {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const data = await response.json(); // <-- El backend wrapper { Mensaje, Recetas }
+            const data = await response.json();
             const recetasObtenidas: RecetaType[] = data.recetas;
 
             if (isInitialLoad) {
@@ -167,30 +173,30 @@ const Tendencias = () => {
             setCargando(false);
             setCargandoMas(false);
         }
-    }, [authData?.token, page, cargandoMas, hasMore]); // Dependencias
+    }, [authData?.token, page, cargandoMas, hasMore]); // Dependencias corregidas
 
-    // useEffect para carga inicial (MODIFICADO)
+    // Carga inicial
     useEffect(() => {
         if (authData?.token) {
             cargarTendencias(true);
         }
-    }, [authData?.token]); // Se dispara solo cuando el token está listo
+    }, [authData?.token]);
 
-    // --- LÓGICA DE SCROLL (REFACTORIZADA PARA ESTABILIDAD) ---
+
+    // --- LÓGICA DE VISIBILIDAD DEL HEADER (NO AFECTA CARGA DE DATOS) ---
     useEffect(() => {
         const mainElement = mainRef.current;
+        // Solo aplicamos lógica de ocultar header en modo FEED
         if (!mainElement || viewMode !== 'feed') {
-            setIsHeaderVisible(true); // Asegura que el header esté visible en modo grid
+            setIsHeaderVisible(true);
             return;
         }
 
         const handleScroll = () => {
             const scrollTop = mainElement.scrollTop;
-
-            // Lógica para ocultar/mostrar el header
-            if (scrollTop > lastScrollTop.current && scrollTop > 80) { // Scroll hacia abajo y pasamos un umbral
+            if (scrollTop > lastScrollTop.current && scrollTop > 80) {
                 setIsHeaderVisible(false);
-            } else if (scrollTop < lastScrollTop.current) { // Scroll hacia arriba
+            } else if (scrollTop < lastScrollTop.current) {
                 setIsHeaderVisible(true);
             }
             lastScrollTop.current = scrollTop <= 0 ? 0 : scrollTop;
@@ -199,93 +205,46 @@ const Tendencias = () => {
         mainElement.addEventListener('scroll', handleScroll);
         return () => mainElement.removeEventListener('scroll', handleScroll);
 
-    }, [viewMode]); // Se ejecuta solo cuando cambia el modo de vista.
+    }, [viewMode]);
 
-    // --- LÓGICA DE SCROLL INFINITO (SEPARADA) ---
-    useEffect(() => {
-        const mainElement = mainRef.current;
-        if (!mainElement || !hasMore || cargandoMas) return;
-
-        const checkScroll = () => {
-            if (mainElement.scrollTop + mainElement.clientHeight >= mainElement.scrollHeight - 300) {
-                cargarTendencias(false);
-            }
-        };
-        mainElement.addEventListener('scroll', checkScroll);
-        return () => mainElement.removeEventListener('scroll', checkScroll);
-    }, [cargandoMas, hasMore, cargarTendencias]); // Dependencias específicas para scroll infinito.
-
-    // --- NUEVO: EFECTO PARA CONTROLAR EL HEADER PRINCIPAL ---
+    // --- GESTIÓN DE LAYOUT HEADER PRINCIPAL ---
     useEffect(() => {
         if (viewMode === 'feed') {
-            // Oculta el header principal (BarraBusqueda)
             window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: false }));
-            // Remove top padding on main so selector moves up into the freed space
             if (mainRef.current) {
                 mainRef.current.style.paddingTop = '0px';
             }
         } else {
-            // Muestra el header principal al volver a la vista de grid
             window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
-            // Restore original padding
             if (mainRef.current && originalMainPaddingTop.current !== null) {
                 mainRef.current.style.paddingTop = originalMainPaddingTop.current;
             }
         }
-        // La limpieza se hace más robusta: solo se dispara si el componente se desmonta
-        // mientras estaba en modo 'feed'.
         return () => {
             if (viewMode === 'feed')
                 window.dispatchEvent(new CustomEvent('setHeaderVisibility', { detail: true }));
-            // ensure padding is restored
             if (mainRef.current && originalMainPaddingTop.current !== null) {
                 mainRef.current.style.paddingTop = originalMainPaddingTop.current;
             }
         };
     }, [viewMode]);
 
-    useEffect(() => {
-        // Esta función revisa si el contenido llena la pantalla
-        const checkForMore = () => {
-            // Si no estamos cargando, y SÍ hay más páginas, Y la altura total
-            // del documento es MENOR o IGUAL a la altura de la ventana...
-            if (!cargando && !cargandoMas && hasMore && mainRef.current) {
-
-                // Usamos el 'mainRef' (el contenedor con scroll)
-                const contentHeight = mainRef.current.scrollHeight;
-                const viewportHeight = mainRef.current.clientHeight;
-
-                if (contentHeight <= viewportHeight) {
-                    // ...entonces cargamos la siguiente página automáticamente.
-                    console.log("No hay scroll, cargando más...");
-                    cargarTendencias(false);
-                }
-            }
-        };
-
-        // Lo ejecutamos un instante después del renderizado para que el DOM se actualice
-        const timer = setTimeout(checkForMore, 100);
-
-        return () => clearTimeout(timer);
-
-    }, [cargando, cargandoMas, hasMore, tendencias, cargarTendencias]);
-
+    // Scroll automático a un item específico al cambiar a modo feed
     useEffect(() => {
         if (viewMode === 'feed' && scrollToRecetaId && mainRef.current) {
-            const element = document.getElementById(`tendencia-${scrollToRecetaId}`);
-            if (element) {
-                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Reseteamos el ID para que no vuelva a hacer scroll en re-renders
-                setScrollToRecetaId(null);
-            }
+            // Damos un pequeño timeout para asegurar que el render terminó
+            setTimeout(() => {
+                const element = document.getElementById(`tendencia-${scrollToRecetaId}`);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    setScrollToRecetaId(null);
+                }
+            }, 100);
         }
-    }, [viewMode, scrollToRecetaId, tendencias]); // Depende de tendencias para asegurar que el elemento exista
+    }, [viewMode, scrollToRecetaId]);
 
     const handleRecetaClick = (receta: RecetaType) => {
-        // Si ya estamos en modo feed, no hacemos nada especial
         if (viewMode === 'feed') return;
-
-        // Cambiamos a modo feed y guardamos el ID para hacer scroll
         setScrollToRecetaId(receta.id);
         setViewMode('feed');
     };
@@ -294,31 +253,31 @@ const Tendencias = () => {
         navigate(`/perfil/${userId}`);
     };
 
-    // --- FUNCIÓN PARA RENDERIZAR LA GALERÍA (MODIFICADA) ---
+    const handleDeleteFromFeed = (recetaId: number) => {
+        setTendencias(prev => prev.filter(r => r.id !== recetaId));
+    };
+
+
+    // --- RENDER GALERÍA (GRID) ---
     const renderGaleriaTendencias = () => {
-        // Ahora usa 'tendencias' que es la lista que se actualiza con el scroll
         if (tendencias.length === 0) {
-            // No muestra nada si está cargando, el spinner principal se encarga
             if (cargando) return null;
-            // Si no está cargando y no hay tendencias, muestra el mensaje
             return <div className="sin-recetas">No hay tendencias para mostrar.</div>;
         }
 
         return (
             <div className="grilla-tendencias">
-                {tendencias.map((receta) => {
-
-                    // --- INICIO DE LÓGICA CORREGIDA (Bug) ---
+                {tendencias.map((receta, index) => {
                     const mediaType = getMediaTypeFromContentType(receta.contentType);
-                    // Pasamos 'fotoPerfilLocal' como fallback, por si 'imagenUrl' es nula
                     const mediaUrl = getNormalizedUrl(receta.imagenUrl, receta.contentType, fotoPerfilLocal);
-                    // --- FIN DE LÓGICA CORREGIDA ---
-
-                    // (Si la mediaUrl sigue siendo el fallback, se mostrará el avatar)
+                    
+                    // Verificar si es el último elemento para adjuntar la ref del observer
+                    const isLastElement = index === tendencias.length - 1;
 
                     return (
                         <div
                             key={receta.id}
+                            ref={isLastElement ? lastRecetaElementRef : null}
                             className="galeria-item"
                             onClick={() => handleRecetaClick(receta)}
                         >
@@ -344,9 +303,8 @@ const Tendencias = () => {
             </div>
         );
     };
-    // FIN DE LA FUNCIÓN DE RENDERIZADO
 
-    // --- NUEVA FUNCIÓN PARA RENDERIZAR EL FEED ---
+    // --- RENDER FEED (LISTA) ---
     const renderFeedTendencias = () => {
         if (tendencias.length === 0) {
             if (cargando) return null;
@@ -355,9 +313,16 @@ const Tendencias = () => {
 
         return (
             <div className="feed-tendencias">
-                {tendencias.map(receta => {
+                {tendencias.map((receta, index) => {
+                    // Verificar si es el último elemento para adjuntar la ref del observer
+                    const isLastElement = index === tendencias.length - 1;
+
                     return (
-                        <div id={`tendencia-${receta.id}`} key={receta.id}>
+                        <div 
+                            id={`tendencia-${receta.id}`} 
+                            key={receta.id}
+                            ref={isLastElement ? lastRecetaElementRef : null}
+                        >
                             <Receta
                                 receta={{
                                     ...receta,
@@ -377,11 +342,10 @@ const Tendencias = () => {
         );
     };
 
-    const handleDeleteFromFeed = (recetaId: number) => {
-        setTendencias(prev => prev.filter(r => r.id !== recetaId));
-    };
 
-    // MODIFICADO: Muestra spinner solo en carga inicial
+    // --- RENDER PRINCIPAL ---
+
+    // Spinner carga inicial pantalla completa (dentro del componente)
     if (cargando && tendencias.length === 0) {
         return (
             <div className="cargando-tendencias">
@@ -391,7 +355,6 @@ const Tendencias = () => {
         );
     }
 
-    // MODIFICADO: Muestra error solo si no hay tendencias
     if (error && tendencias.length === 0) {
         return <div className="error-container">{error}</div>;
     }
@@ -399,15 +362,14 @@ const Tendencias = () => {
     return (
         <>
             <div className="tendencias-container">
-                {/* --- HEADER BLANCO/AZUL: mostrar en modo FEED (igual que al abrir una publicacion) --- */}
+                {/* --- HEADER FLOTANTE (SOLO EN FEED) --- */}
                 {viewMode === 'feed' && (
                     <Box className="header-contenedor-principal" sx={{ position: 'sticky', top: 0, zIndex: 1100 }}>
-                        <Box className="header-input-seccion" sx={{ py: 1, color: theme.palette.mode === 'dark' ? 'white' : 'white' }}>
+                        <Box className="header-input-seccion" sx={{ py: 1, color: 'white' }}>
                             <Box
                                 component="img"
-                                // LÓGICA DE SELECCIÓN DE LOGO AQUÍ
-                                src={theme.palette.mode === 'dark' ? LogoAppBlanco : LogoAppBlanco}
-                                alt="Logo App" // Agregado alt text
+                                src={LogoAppBlanco}
+                                alt="Logo App"
                                 sx={{ width: 40, height: 'auto', mr: 1 }}
                             />
                             <span className="tendencias-titulo">#Tendencias</span>
@@ -415,13 +377,13 @@ const Tendencias = () => {
                     </Box>
                 )}
 
-                {/* --- NUEVO: Selector de Vista --- */}
+                {/* --- SELECTOR DE VISTA --- */}
                 <Box
                     className="tendencias-view-selector"
                     sx={{
                         position: 'sticky',
                         zIndex: 1050,
-                        top: (viewMode === 'feed' && isHeaderVisible) ? '56px' : '0px', // Ajusta el 'top' para que quede debajo del header de feed
+                        top: (viewMode === 'feed' && isHeaderVisible) ? '56px' : '0px',
                         transition: 'top 0.3s ease-in-out',
                         display: 'flex',
                         justifyContent: 'center',
@@ -453,17 +415,17 @@ const Tendencias = () => {
                     </IconButton>
                 </Box>
 
-                {/* --- Renderizado Condicional --- */}
+                {/* --- CONTENIDO --- */}
                 {viewMode === 'grid' ? renderGaleriaTendencias() : renderFeedTendencias()}
 
-                {/* --- NUEVO: INDICADOR DE CARGA DE SCROLL --- */}
+                {/* --- INDICADOR DE CARGA INFERIOR (PAGINACIÓN) --- */}
                 {cargandoMas && (
                     <div className="cargando-tendencias" style={{ height: '100px', marginTop: '20px' }}>
                         <CircularProgress color="primary" />
                     </div>
                 )}
 
-                {/* --- NUEVO: MENSAJE DE FIN DE SCROLL --- */}
+                {/* --- MENSAJE FINAL --- */}
                 {!hasMore && tendencias.length > 0 && (
                     <div style={{ textAlign: 'center', padding: '40px', color: '#888', fontWeight: 'bold' }}>
                         Fin de las tendencias.

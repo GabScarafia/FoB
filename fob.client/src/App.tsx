@@ -1,11 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
-// 1. IMPORTACIONES AÑADIDAS
 import { 
     CssBaseline, 
     Box, 
     ThemeProvider, 
-    useScrollTrigger, // <-- AÑADIDO
-    Slide             // <-- AÑADIDO
+    useScrollTrigger, 
+    Slide             
 } from "@mui/material"; 
 import { getTheme } from "./theme";
 import AppRoutes from "./components/AppRoutes";
@@ -17,20 +16,13 @@ import { useAuth } from "./context/AuthContext";
 import "./App.css"; 
 import ImagenRebotante from "components/ImagenRebotante";
 
-// ================================================================
-// 2. 🌙 NUEVO COMPONENTE HELPER "HideOnScroll"
-// ================================================================
+// --- HideOnScroll Helper ---
 interface HideOnScrollProps {
   children: React.ReactElement;
 }
 
-/**
- * Componente que envuelve a otro y lo oculta 
- * con una animación 'Slide' cuando el usuario hace scroll.
- */
 function HideOnScroll(props: HideOnScrollProps) {
   const { children } = props;
-  // 'trigger' será true si el usuario ha hecho scroll hacia abajo
   const trigger = useScrollTrigger();
 
   return (
@@ -40,10 +32,7 @@ function HideOnScroll(props: HideOnScrollProps) {
   );
 }
 
-
-// ================================================================
-// 🌙 Componente principal que contiene la lógica del layout
-// ================================================================
+// --- Main Component ---
 const MainApp = ({
   toggleTheme,
   mode,
@@ -60,9 +49,25 @@ const MainApp = ({
      location.pathname === "/registrarse";
    const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-const handleDrawerToggle = (isOpen: boolean) => {
-  setIsDrawerOpen(isOpen);
-};
+  // Estado para controlar el Header Global
+  const [isGlobalHeaderVisible, setIsGlobalHeaderVisible] = useState(true);
+
+  useEffect(() => {
+    const handleToggleHeader = (e: Event) => {
+      const customEvent = e as CustomEvent; 
+      setIsGlobalHeaderVisible(customEvent.detail);
+    };
+
+    window.addEventListener('toggleGlobalHeader', handleToggleHeader);
+
+    return () => {
+      window.removeEventListener('toggleGlobalHeader', handleToggleHeader);
+    };
+  }, []);
+
+  const handleDrawerToggle = (isOpen: boolean) => {
+    setIsDrawerOpen(isOpen);
+  };
 
   return (
     <Box sx={{ 
@@ -73,9 +78,9 @@ const handleDrawerToggle = (isOpen: boolean) => {
     }}> 
     <CssBaseline /> 
  
-    {!isAuthPage && isLoggedIn && (
-        // 3. APPBAR ENVUELTO EN EL COMPONENTE
-      <HideOnScroll>
+    {/* Header Global condicional */}
+    {!isAuthPage && isLoggedIn && isGlobalHeaderVisible && (
+        <HideOnScroll>
             <UpperAppBar toggleTheme={toggleTheme} mode={mode} />
         </HideOnScroll>
     )}
@@ -86,14 +91,14 @@ const handleDrawerToggle = (isOpen: boolean) => {
      flexGrow: 1,
      py: isAuthPage ? 0 : 3,
      width: "100%",
-     bgcolor: "background.default",          // 4. PADDING-TOP AJUSTADO (asumiendo 56px móvil, 48px desktop)
-     pt: { xs: isAuthPage ? 0 : 7, sm: isAuthPage ? 0 : 6 }, 
+     bgcolor: "background.default",          
+     // Padding Top dinámico: Si el header global está oculto, quitamos el padding extra
+     pt: { xs: isAuthPage ? 0 : (isGlobalHeaderVisible ? 7 : 0), sm: isAuthPage ? 0 : (isGlobalHeaderVisible ? 6 : 0) }, 
      }}
      >
      <AppRoutes onDrawerToggle={handleDrawerToggle} />
      </Box>
 
-{/* Ocultar la ButtonBar si el drawer está abierto */}
     {!isAuthPage && isLoggedIn && !isDrawerOpen && <ButtonBar />}
   </Box>
 );
@@ -119,8 +124,12 @@ export default function App() {
       <ThemeProvider theme={theme}>
         <Box sx={{
           width: "100%",
+          minHeight: "100vh", 
           bgcolor: "background.default", 
-          transition: "background-color 0.4s ease, color 0.4s ease",      }}>        {/* Pequeña corrección: usa / en lugar de \ para paths */}
+          transition: "background-color 0.4s ease, color 0.4s ease",
+          // CORRECCIÓN: Eliminado overflow: "hidden" para que funcionen los position: fixed hijos
+          position: "relative" 
+        }}>
           <ImagenRebotante imageSrc="src/assets/images/ronaldinho.jpg" />
           <MainApp toggleTheme={toggleTheme} mode={mode} />
         </Box>

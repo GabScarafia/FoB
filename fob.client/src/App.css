@@ -31,3 +31,24 @@ main.MuiBox-root {
 .css-apa4wc-MuiPaper-root ,.css-1fyzp41-MuiPaper-root-MuiAppBar-root {
     bottom: -1px !important;
 }
+/* --- BLOQUE NUEVO: RESETEO GLOBAL DE SCROLL --- */
+html, body, #root {
+    width: 100%;
+    max-width: 100vw; /* Asegura que no pase del ancho del dispositivo */
+    overflow-x: hidden; /* OBLIGA a ocultar el desbordamiento horizontal */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    position: relative; /* Necesario para que el overflow funcione bien en iOS */
+}
+
+/* Asegurar que todos los elementos calculen el ancho incluyendo el padding/borde */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+/* ---------------------------------------------- */
+
+/* Estilos para el header (los que ya tenías) */
+.MuiToolbar-root {
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
+}
