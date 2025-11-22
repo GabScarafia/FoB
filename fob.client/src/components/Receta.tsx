@@ -651,7 +651,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 <Chip
                                     key={utensilio}
                                     label={utensilio}
-                                    sx={{ bgcolor: 'grey.200', fontWeight: 'medium',color: 'text.primary' }}
+                                    variant="outlined"
+                                    sx={{
+                                        fontWeight: 'medium',
+                                        color: 'text.primary',
+                                        borderColor: 'divider'
+                                    }}
                                 />
                             ))}
                         </Box>
