@@ -231,6 +231,7 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
  </Tooltip>
 
  <Menu
+ disableScrollLock={true}
  anchorEl={anchorEl}
  open={open}
  onClose={handleCloseNotifications}

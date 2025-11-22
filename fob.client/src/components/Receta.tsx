@@ -1,4 +1,4 @@
-﻿﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useSwipeable } from 'react-swipeable';
 import { Paper, Box, Typography, Menu, MenuItem, ListItemIcon, IconButton, Button, Chip, alpha, ListItemText } from '@mui/material';
 import './Receta.css';
@@ -91,9 +91,10 @@ export interface PropsReceta {
     currentUserId: number | null;
     onDeleteReceta: (recetaId: number) => Promise<void>;
     onUsuarioClick?: (userId: number) => void;
+    ocultarBotonSeguir?: boolean; // Nueva propiedad del Remoto
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick, ocultarBotonSeguir }) => {
     const navigate = useNavigate();
     const haProcesadoApertura = React.useRef(false);
     const [searchParams] = useSearchParams();
@@ -110,12 +111,18 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const [mostrarMas, setMostrarMas] = useState(false);
     const [comentariosCount, setComentariosCount] = useState(receta.cantidadComentarios);
     const [comentarios, setComentarios] = useState<Comentario[]>(receta.vistaPreviaComentarios || []);
+
+    // Estado del botón seguir (Del remoto)
+    const [isFollowing, setIsFollowing] = useState(receta.seguido);
+
     const { authData } = useAuth();
     const [drawerAbierto, setDrawerAbierto] = useState(false);
     const LIMITE_CARACTERES = 100;
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const openMenu = Boolean(anchorEl);
     const [isProcessingLike, setIsProcessingLike] = useState(false);
+
+    const esRecetaPropia = currentUserId === receta.autor.id;
 
     // Abrir drawer si viene por URL
     useEffect(() => {
@@ -133,6 +140,37 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
     const handleCloseMenu = () => setAnchorEl(null);
     const handleDeleteClick = async () => { handleCloseMenu(); onDeleteReceta(receta.id); };
     const handleEditClick = () => { handleCloseMenu(); navigate(`/receta/editar/${receta.id}`); };
+
+    // --- LÓGICA BOTÓN SEGUIR (Del remoto) ---
+    const handleFollowClick = async (e: React.MouseEvent) => {
+        e.stopPropagation(); // Evita que el click se propague al contenedor del autor
+        if (!authData?.token || esRecetaPropia) return;
+
+        const method = isFollowing ? 'DELETE' : 'POST';
+        const previousIsFollowing = isFollowing;
+
+        // Actualización optimista de la UI
+        setIsFollowing(!previousIsFollowing);
+
+        try {
+            const response = await fetch(`${BASE_URL}/Follow/${receta.autor.id}`, {
+                method: method,
+                headers: { 'Authorization': `Bearer ${authData.token}` }
+            });
+
+            if (!response.ok) {
+                // Si falla, revertimos el cambio en la UI
+                setIsFollowing(previousIsFollowing);
+                console.error('Error al intentar seguir/dejar de seguir');
+                alert('Ocurrió un error al procesar la solicitud.');
+            }
+        } catch (error) {
+            // Revertimos también si hay un error de red
+            setIsFollowing(previousIsFollowing);
+            console.error('Error de red al seguir/dejar de seguir:', error);
+            alert('Error de conexión. Inténtalo de nuevo.');
+        }
+    };
 
     // --- INTERACCIONES ---
     const handleComentarioAgregado = (nuevoComentario: Comentario) => {
@@ -241,7 +279,6 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
 
     const fotoPerfilUrl = getNormalizedUrl(receta.autor?.imagenUrl, 'image/jpeg', fotoPerfilLocal);
     const fechaFormateada = formatoTiempoRelativo(receta.fechaCreacion);
-    const esRecetaPropia = currentUserId === receta.autor.id;
 
     const handleUsuarioClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -305,49 +342,77 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     { background: 'rgba(255, 255, 255, 0.08)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(255, 255, 255, 0.15)', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' })
             })}
         >
-            {/* 1. ENCABEZADO */}
+            {/* 1. ENCABEZADO (CON LÓGICA REMOTA DEL BOTÓN SEGUIR) */}
             <Box className="encabezado-receta" sx={{ p: 2, borderBottom: (theme) => `1px solid ${theme.palette.mode === 'light' ? theme.palette.divider : 'rgba(255, 255, 255, 0.15)'}` }}>
-                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer' }}>
-                    <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
-                    <div>
-                        <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
-                        <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
+                <div className="info-autor" onClick={handleUsuarioClick} style={{ cursor: 'pointer', flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <img src={fotoPerfilUrl} alt="Foto de Perfil" className="foto-perfil" />
+                        <div>
+                            <div className="nombre-autor">{receta.autor?.nombreUsuario}</div>
+                            <div className="tiempo-publicacion">Publicado {fechaFormateada}</div>
+                        </div>
                     </div>
                 </div>
-                <div className="meta-receta-y-menu">
-                    <div className="meta-receta">
-                        <span className="tipo-contenido">{receta.dificultad}</span>
-                        <div className="estrellas-calificacion">{renderizarEstrellas(receta.dificultad)}</div>
-                    </div>
-                    {esRecetaPropia && (
-                        <>
-                            <IconButton onClick={handleClickMenu} sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}> <MoreVertIcon /> </IconButton>
-                            <Menu anchorEl={anchorEl} open={openMenu} onClose={handleCloseMenu}>
-                                <MenuItem onClick={handleEditClick}> <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon> <ListItemText>Editar</ListItemText> </MenuItem>
-                                <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}> <ListItemIcon><DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} /></ListItemIcon> <ListItemText>Eliminar</ListItemText> </MenuItem>
-                            </Menu>
-                        </>
+
+                {/* Contenedor para la parte derecha: botón seguir, meta y menú */}
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                    {/* LÓGICA BOTÓN SEGUIR */}
+                    {isFollowing === false && !esRecetaPropia && !ocultarBotonSeguir && (
+                        <Button
+                            variant="contained"
+                            size="large"
+                            onClick={handleFollowClick}
+                            sx={{
+                                textTransform: 'none',
+                                fontSize: '0.75rem',
+                                px: 1.5,
+                                bottom: '3px',
+                                background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
+                                color: 'white',
+                                '&:hover': {
+                                    opacity: 0.9
+                                }
+                            }}
+                        >
+                            Seguir
+                        </Button>
                     )}
-                </div>
+
+                    <div className="meta-receta-y-menu">
+                        <div className="meta-receta">
+                            <span className="tipo-contenido">{receta.dificultad}</span>
+                            <div className="estrellas-calificacion">{renderizarEstrellas(receta.dificultad)}</div>
+                        </div>
+                        {esRecetaPropia && (
+                            <>
+                                <IconButton onClick={handleClickMenu} sx={{ color: 'text.secondary', p: 0.5, ml: 1 }}> <MoreVertIcon /> </IconButton>
+                                <Menu anchorEl={anchorEl} open={openMenu} onClose={handleCloseMenu} disableScrollLock={true}>
+                                    <MenuItem onClick={handleEditClick}> <ListItemIcon><EditIcon fontSize="small" /></ListItemIcon> <ListItemText>Editar</ListItemText> </MenuItem>
+                                    <MenuItem onClick={handleDeleteClick} sx={{ color: 'red' }}> <ListItemIcon><DeleteOutlineIcon fontSize="small" sx={{ color: 'red' }} /></ListItemIcon> <ListItemText>Eliminar</ListItemText> </MenuItem>
+                                </Menu>
+                            </>
+                        )}
+                    </div>
+                </Box>
             </Box>
 
-            {/* 2. CARRUSEL (MEDIA) */}
-           <div className="carrusel-imagen" {...swipeHandlers}>
+            {/* 2. CARRUSEL (MEDIA) - USANDO TU CONFIGURACIÓN LOCAL (CONTAIN PARA FOTOS) */}
+            <div className="carrusel-imagen" {...swipeHandlers}>
                 {itemActual && itemActual.mediaType === 'image' && (
                     <img
                         src={itemActual.mediaUrl}
                         alt={itemActual.isMainImage ? "Receta principal" : `Paso ${itemActual.pasoInfo?.numero}`}
                         className="imagen-receta"
                         draggable={false}
-                        // CAMBIO: Volvemos a contain para imágenes (ver foto entera)
-                        style={{ 
-                            width: '100%', 
-                            height: '100%', 
-                            objectFit: 'contain'  
-                        }} 
+                        // CONFIGURACIÓN LOCAL: Contain para imágenes
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'contain'
+                        }}
                     />
                 )}
-              {itemActual && itemActual.mediaType === 'video' && (
+                {itemActual && itemActual.mediaType === 'video' && (
                     <video
                         src={itemActual.mediaUrl}
                         className="imagen-receta"
@@ -357,11 +422,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                         playsInline
                         controlsList="nodownload"
                         draggable={false}
-                        // MODIFICADO: Quitamos 'objectFit' de aquí para que mande el CSS
-                        style={{ 
-                            width: '100%', 
-                            height: '100%', 
-                            // objectFit: 'cover',  <--- BORRADO (lo maneja el CSS ahora)
+                        // CONFIGURACIÓN LOCAL: El cover de video lo maneja el CSS o el estilo inline aquí si lo tenías
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            // objectFit: 'cover', <--- BORRADO COMO PEDISTE EN LOCAL
                             backgroundColor: 'black'
                         }}
                     >
@@ -413,7 +478,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             <Box sx={{ px: 2, mt: 1 }}> <Typography variant="h6" component="h3" fontWeight="bold">{receta.titulo}</Typography> </Box>
             <Box sx={{ px: 2, mt: 1 }}>
                 <Typography variant="body2">{descripcionMostrada}</Typography>
-                {debeMostrarBotonLeerMas && ( <Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}> {mostrarMas ? 'Leer menos' : 'Leer más'} </Button> )}
+                {debeMostrarBotonLeerMas && (<Button size="small" variant="text" onClick={handleToggleDescripcion} sx={{ p: 0, mt: 1 }}> {mostrarMas ? 'Leer menos' : 'Leer más'} </Button>)}
             </Box>
 
             {/* 7. DETALLES (Ingredientes, Utensilios, Etiquetas) */}
@@ -434,12 +499,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     <Box className="etiquetas-receta" sx={{ mt: 1, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 0.5 }}>
                         <Typography variant="body2" fontWeight="bold" sx={{ mr: 0.5 }}>Etiquetas:</Typography>
                         {receta.etiquetas.map((etiqueta, index) => (
-                            <Chip key={index} label={etiqueta} size="small" variant="outlined" 
-                                sx={{ 
-                                    color: 'text.primary', 
-                                    borderColor: 'divider', 
-                                    ...(etiqueta === 'Desafio' || etiqueta === 'DESAFIO' ? { background: 'linear-gradient(to right, #FF7B00, #FFD700)', color: 'white', fontWeight: 'bold', border: 'none' } : {}) 
-                                }} 
+                            <Chip key={index} label={etiqueta} size="small" variant="outlined"
+                                sx={{
+                                    color: 'text.primary',
+                                    borderColor: 'divider',
+                                    ...(etiqueta === 'Desafio' || etiqueta === 'DESAFIO' ? { background: 'linear-gradient(to right, #FF7B00, #FFD700)', color: 'white', fontWeight: 'bold', border: 'none' } : {})
+                                }}
                             />
                         ))}
                     </Box>
@@ -456,7 +521,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                             <span className="tiempo-comentario"> • {formatoTiempoRelativo(comentario.fecha)} </span>
                         </div>
                     ))
-                ) : ( <div className="sin-comentarios">Sé el primero en comentar...</div> )}
+                ) : (<div className="sin-comentarios">Sé el primero en comentar...</div>)}
             </div>
 
             <DrawerComentarios open={drawerAbierto} onClose={handleCloseDrawer} idReceta={receta.id} onComentarioAgregado={handleComentarioAgregado} comentarioIdDestacado={searchParams.get('comentario')} />
