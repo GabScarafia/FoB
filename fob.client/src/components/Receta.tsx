@@ -535,6 +535,12 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                                 fontSize: '0.75rem',
                                 px: 1.5,
                                 bottom: '3px',
+                                // Aplicar el mismo degradado que la ButtonBar
+                                background: 'linear-gradient(to right, #1f46b2, #1a2a6c, #002242)',
+                                color: 'white', // Asegurar que el texto sea visible
+                                '&:hover': {
+                                    opacity: 0.9 // Un efecto hover simple para el degradado
+                                }
                             }}
                         >
                             Seguir
