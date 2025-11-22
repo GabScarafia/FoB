@@ -643,24 +643,13 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 )}
                 {/* CORRECCIÓN: Uso de ?.length y mapeo seguro para utensilios */}
                 {receta.utensilios?.length > 0 && (
-                    <Box sx={{ mt: 1 }}>
-                        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 1, fontSize: '1rem' }}>
-                            Utensilios
+                    <Box className="utensilios-receta" sx={{ mt: 1 }}>
+                        <Typography component="span" variant="body2" fontWeight="bold">
+                            Utensilios:{' '}
                         </Typography>
-                        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                            {receta.utensilios.map((utensilio) => (
-                                <Chip
-                                    key={utensilio}
-                                    label={utensilio}
-                                    variant="outlined"
-                                    sx={{
-                                        fontWeight: 'medium',
-                                        color: 'text.primary',
-                                        borderColor: 'divider'
-                                    }}
-                                />
-                            ))}
-                        </Box>
+                        <Typography component="span" variant="body2">
+                            {receta.utensilios.join(', ')}
+                        </Typography>
                     </Box>
                 )}
                 {/* CORRECCIÓN: Uso de ?.length y mapeo seguro para etiquetas */}
