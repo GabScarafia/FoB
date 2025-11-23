@@ -379,9 +379,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     )}
 
                     <div className="meta-receta-y-menu">
-                        <div className="meta-receta">
+                        <div 
+                            className="meta-receta"
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center'
+                            }}
+                        >
                             <span className="tipo-contenido">{receta.dificultad}</span>
-                            <div className="estrellas-calificacion">{renderizarEstrellas(receta.dificultad)}</div>
+                            <div 
+                                className="estrellas-calificacion" 
+                                style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'center' 
+                                }}
+                            >
+                                {renderizarEstrellas(receta.dificultad)}
+                            </div>
                         </div>
                         {esRecetaPropia && (
                             <>
