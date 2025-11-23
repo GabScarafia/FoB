@@ -1,4 +1,4 @@
-﻿using FoB.Application.Dtos;
+using FoB.Application.Dtos;
 using FoB.Application.Entities.Receta;
 using FoB.Application.Interfaces;
 using FoB.Infrastructure.Context;
@@ -33,20 +33,17 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Feed")]
-    public async Task<IActionResult> Feed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5, [FromQuery] string? termino = null) // <-- PARÁMETROS CORREGIDOS
+    public async Task<IActionResult> Feed([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 5, [FromQuery] string? termino = null)
     {
-        // Pasamos ambos parámetros al repositorio
         var recetas = await _recetaRepository.FeedAsync(pageNumber, pageSize, termino);
 
         if (recetas == null || !recetas.Any())
         {
-            // Si pageNumber > 1, significa que simplemente no hay más recetas para cargar
             if (pageNumber > 1)
             {
                 return Ok(new { Mensaje = "No hay más publicaciones.", Recetas = new List<RecetaResponse>() });
             }
 
-            // Si es la primera página (pageNumber = 1) y no hay nada, mostramos los mensajes de bienvenida
             bool estaSiguiendo = await _recetaRepository.EstaSiguiendoAlguienAsync();
 
             if (estaSiguiendo)
@@ -62,31 +59,61 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Tendencias")]
-    public async Task<IActionResult> Tendencias([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 15) // <-- PARÁMETROS CORREGIDOS
+    public async Task<IActionResult> Tendencias([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 15)
     {
-        // Pasamos ambos parámetros al repositorio
         var recetas = await _recetaRepository.TendenciasAsync(pageNumber, pageSize);
 
-        // Añadimos la misma lógica de respuesta que el Feed
         if (recetas == null || !recetas.Any())
         {
             if (pageNumber > 1)
             {
-                // Si pide la página 2 y no hay nada, es que se acabaron
                 return Ok(new { Mensaje = "No hay más tendencias.", Recetas = new List<RecetaResponse>() });
             }
-            // Si es la página 1 y no hay nada
             return Ok(new { Mensaje = "No hay tendencias para mostrar.", Recetas = new List<RecetaResponse>() });
         }
 
-        // Devuelve el wrapper { Mensaje, Recetas } que el frontend espera
         return Ok(new { Mensaje = "Tendencias cargadas.", Recetas = recetas });
     }
 
     [HttpPost]
     public async Task<IActionResult> CreateReceta([FromBody] RecetaRequest? recetaRequest)
     {
+        if (recetaRequest == null) return BadRequest("Datos inválidos.");
         return Ok(await _recetaRepository.CreateAsync(recetaRequest));
+    }
+
+    // ---------------------------------------------------------
+    // MÉTODO PARA EDICIÓN
+    // ---------------------------------------------------------
+    [HttpPut("{id}")]
+    public async Task<IActionResult> UpdateReceta([FromRoute] int id, [FromBody] RecetaUpdateRequest recetaRequest)
+    {
+
+        
+        if (recetaRequest == null)
+        {
+            _logger.LogWarning("UpdateReceta: El cuerpo de la solicitud llegó nulo.");
+            return BadRequest("Datos de receta inválidos o vacíos.");
+        }
+
+        _logger.LogInformation("UpdateReceta llamado para ID: {Id}", id);
+
+        try 
+        {
+            var updated = await _recetaRepository.UpdateAsync(id, recetaRequest);
+            
+            if (!updated)
+            {
+                return NotFound(new { message = "Receta no encontrada o no tienes permisos para editarla." });
+            }
+
+            return Ok(new { message = "Receta actualizada correctamente." });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al actualizar la receta {Id}", id);
+            return StatusCode(500, new { message = "Error interno al actualizar la receta." });
+        }
     }
 
     [HttpPost("LikeOrDislike/{idReceta}")]
@@ -94,13 +121,13 @@ public class RecetasController : ControllerBase
     {
         return Ok(await _recetaRepository.LikeOrDislike(idReceta));
     }
-    
+
     [HttpPost("Interaccion")]
     public async Task<IActionResult> Interaccion([FromBody] InteraccionDto interaccion)
     {
         return Ok(await _recetaRepository.Interaccion(interaccion));
     }
-    
+
     [HttpDelete("{id}")]
     [ProducesResponseType((int)HttpStatusCode.NoContent)]
     [ProducesResponseType((int)HttpStatusCode.NotFound)]
@@ -117,10 +144,9 @@ public class RecetasController : ControllerBase
     }
 
     [HttpGet("Get")]
-    [Authorize] // Solo usuarios autenticados pueden ver recetas (puedes quitarlo si querés permitir acceso público)
+    [Authorize]
     public async Task<ActionResult<IEnumerable<RecetaResponse>>> GetRecetas([FromQuery] int? userId)
     {
-        // Si no se pasó userId, usamos el del usuario autenticado
         var idUsuario = userId ?? _currentUser.User?.Id;
 
         if (idUsuario == null)
@@ -131,9 +157,8 @@ public class RecetasController : ControllerBase
 
         try
         {
-            // Traemos todas las recetas del usuario con toda la información
             var recetasDb = await _context.Receta
-                .Where( r => r.Activa == true && r.UsuarioId == idUsuario )
+                .Where(r => r.Activa == true && r.UsuarioId == idUsuario)
                 .Include(r => r.Usuario)
                 .Include(r => r.RecetaImagen)
                 .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
@@ -150,7 +175,6 @@ public class RecetasController : ControllerBase
                 return Ok(new { Mensaje = "Aún no hay recetas.", Recetas = new List<RecetaResponse>() });
             }
 
-            // Mapear a DTO
             var recetasResponse = recetasDb
                 .OrderByDescending(r => r.FechaCreacion)
                 .Select(receta => new RecetaResponse
@@ -178,7 +202,8 @@ public class RecetasController : ControllerBase
                             Id = ir.Ingrediente.Id,
                             Nombre = ir.Ingrediente.Nombre,
                             Cantidad = ir.Cantidad,
-                            UnidadDeMedida = ir.Unidad.Nombre
+                            UnidadDeMedida = ir.Unidad.Nombre,
+                            UnidadId = ir.Unidad.Id
                         }).ToList() ?? new List<IngredienteResponse>(),
                     Pasos = receta.Paso?
                         .Select(p => new PasoResponse
@@ -228,5 +253,4 @@ public class RecetasController : ControllerBase
 
         return Ok(result);
     }
-
 }

@@ -14,6 +14,7 @@ public interface IRecetaRepository
     Task<bool> DeleteAsync(int recetaId);
 
     public Task<RecetaResponse> GetById(int idReceta);
+    public Task<bool> UpdateAsync(int recetaId, RecetaUpdateRequest receta);
 
 
     /// <summary>

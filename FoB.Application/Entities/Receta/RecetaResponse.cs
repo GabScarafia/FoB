@@ -90,4 +90,5 @@ public class IngredienteResponse
     public string Nombre { get; set; }
     public float? Cantidad { get; set; }
     public string? UnidadDeMedida { get; set; }
+    public int UnidadId { get; set; }
 }

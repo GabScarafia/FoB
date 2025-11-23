@@ -30,8 +30,9 @@ export interface RecetaType {
   descripcion: string;
   vistaPreviaComentarios?: Comentario[];
   tiempoPreparacion: string;
-  ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; }>;
+  ingredientes: Array<{ id: number; nombre: string; cantidad: number; unidadDeMedida: string; unidadId: number; }>;
   etiquetas: Array<any>;
+  utensilios: Array<any>;
   pasos: Array<any>;
   desafioId?: number;
 }

@@ -155,10 +155,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 // Log raw response for debugging: ensure API returns nombre, ingrediente, descripcion
                 const rawText = await response.text();
-                console.log('DEBUG: /Desafios/Actual raw response text ->', rawText);
+                //console.log('DEBUG: /Desafios/Actual raw response text ->', rawText);
                 let parsed: any = null;
                 try { parsed = JSON.parse(rawText); } catch (e) { parsed = rawText; console.error('DEBUG: parsing /Desafios/Actual failed', e); }
-                console.log('DEBUG: /Desafios/Actual parsed ->', parsed);
+                //console.log('DEBUG: /Desafios/Actual parsed ->', parsed);
                 const data: DesafioSemanalDto = parsed as DesafioSemanalDto;
                 setDesafioSemanal(data);
 

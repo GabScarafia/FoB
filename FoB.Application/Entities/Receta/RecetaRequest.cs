@@ -4,7 +4,7 @@ public class RecetaRequest
 {
     public string Titulo { get; set; }
     public string Descripcion { get; set; }
-    public byte[] Imagen { get; set; }
+    public byte[]? Imagen { get; set; }
     public string? ContentType { get; set; }
     public DificultadEnum Dificultad { get; set; }
 
@@ -14,11 +14,30 @@ public class RecetaRequest
 
     public int? TiempoPreparacion { get; set; }
 
-    public List<IngredienteRecetaRequest> Ingredientes { get; set; }
-    public List<EtiquetaRequest> Etiquetas { get; set; }
-    public List<EtiquetaRequest> Utensilios { get; set; }
-    public List<PasoRequest> Pasos { get; set; }
+    public List<IngredienteRecetaRequest>? Ingredientes { get; set; }
+    public List<EtiquetaRequest>? Etiquetas { get; set; }
+    public List<EtiquetaRequest>? Utensilios { get; set; }
+    public List<PasoRequest>? Pasos { get; set; }
 
+}
+
+// DTO específico para actualizaciones parciales: todas las propiedades son opcionales/nullables
+public class RecetaUpdateRequest
+{
+    public string? Titulo { get; set; }
+    public string? Descripcion { get; set; }
+    public byte[]? Imagen { get; set; }
+    public string? ContentType { get; set; }
+    public int? Dificultad { get; set; }
+    public int? DesafioId { get; set; }
+    public int? TiempoPreparacion { get; set; }
+    public List<IngredienteRecetaRequest>? Ingredientes { get; set; }
+    public List<EtiquetaRequest>? Etiquetas { get; set; }
+    public List<EtiquetaRequest>? Utensilios { get; set; }
+    public List<PasoRequest>? Pasos { get; set; }
+
+    // Si se quiere eliminar la imagen principal existente
+    public bool? RemoveImagen { get; set; }
 }
 
 public class PasoRequest

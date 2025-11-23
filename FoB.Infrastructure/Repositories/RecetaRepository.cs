@@ -1,4 +1,4 @@
-﻿using FoB.Application.Dtos;
+using FoB.Application.Dtos;
 using FoB.Application.Entities.Receta;
 using FoB.Application.Interfaces;
 using FoB.Infrastructure.Context;
@@ -727,7 +727,8 @@ internal sealed class RecetaRepository : IRecetaRepository
                     Id = ir.Ingrediente.Id,
                     Nombre = ir.Ingrediente.Nombre,
                     Cantidad = ir.Cantidad,
-                    UnidadDeMedida = ir.Unidad.Nombre
+                    UnidadDeMedida = ir.Unidad.Nombre,
+                    UnidadId = ir.Unidad.Id
                 }).ToList() ?? new List<IngredienteResponse>(),
                 Pasos = receta.Paso?.Select(p => new PasoResponse
                 {
@@ -802,4 +803,134 @@ internal sealed class RecetaRepository : IRecetaRepository
             Visits = 0
         };
     }
+
+    // actualizar receta
+    public async Task<bool> UpdateAsync(int recetaId, RecetaUpdateRequest receta)
+    {
+        var currentUserId = _currentUser.User.Id;
+
+        var recetaDb = await _context.Receta
+            .Include(r => r.RecetaImagen)
+            .Include(r => r.IngredienteReceta)
+            .Include(r => r.RecetaEtiquetas)
+            .Include(r => r.RecetaUtensilio)
+            .Include(r => r.Paso).ThenInclude(p => p.RecetaImagen)
+            .FirstOrDefaultAsync(r => r.Id == recetaId && r.UsuarioId == currentUserId);
+
+        if (recetaDb == null)
+            return false;
+
+        if (!string.IsNullOrWhiteSpace(receta.Titulo)) recetaDb.Titulo = receta.Titulo;
+        if (!string.IsNullOrWhiteSpace(receta.Descripcion)) recetaDb.Descripcion = receta.Descripcion;
+        if (receta.Dificultad.HasValue) recetaDb.Dificultad = ((DificultadEnum)receta.Dificultad.Value).ToString();
+        recetaDb.FechaModificacion = DateTime.Now;
+
+        if (receta.TiempoPreparacion.HasValue)
+            recetaDb.TiempoPreparacion = TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(receta.TiempoPreparacion.Value));
+
+        if (receta.Imagen != null && receta.Imagen.Length > 0)
+        {
+            var mainImage = recetaDb.RecetaImagen.FirstOrDefault(img => img.PasoId == null);
+            if (mainImage != null)
+            {
+                mainImage.Imagen = receta.Imagen;
+                mainImage.ContentType = receta.ContentType;
+            }
+            else
+            {
+                recetaDb.RecetaImagen.Add(new RecetaImagen { Imagen = receta.Imagen, ContentType = receta.ContentType });
+            }
+        }
+
+        // Collections only if provided
+        if (receta.Ingredientes != null)
+        {
+            if (recetaDb.IngredienteReceta != null && recetaDb.IngredienteReceta.Any())
+                _context.IngredienteReceta.RemoveRange(recetaDb.IngredienteReceta);
+
+            if (receta.Ingredientes.Count > 0)
+            {
+                recetaDb.IngredienteReceta = recetaDb.IngredienteReceta ?? new List<IngredienteReceta>();
+                foreach (var item in receta.Ingredientes)
+                {
+                    var ingrediente = await IngredienteCreateIfNotExist(item);
+                    var ingredienteReceta = new IngredienteReceta { Ingrediente = ingrediente, UnidadId = item.UnidadId, Cantidad = item.Cantidad.GetValueOrDefault(), Receta = recetaDb };
+                    recetaDb.IngredienteReceta.Add(ingredienteReceta);
+                }
+            }
+        }
+
+        if (receta.Etiquetas != null)
+        {
+            if (recetaDb.RecetaEtiquetas != null && recetaDb.RecetaEtiquetas.Any()) _context.RecetaEtiquetas.RemoveRange(recetaDb.RecetaEtiquetas);
+            if (receta.Etiquetas.Count > 0)
+            {
+                recetaDb.RecetaEtiquetas = recetaDb.RecetaEtiquetas ?? new List<RecetaEtiquetas>();
+                foreach (var item in receta.Etiquetas)
+                {
+                    var etiqueta = await EtiquetasCreateIfNotExist(item);
+                    recetaDb.RecetaEtiquetas.Add(new RecetaEtiquetas { Etiquetas = etiqueta, Receta = recetaDb });
+                }
+            }
+        }
+
+        if (receta.Utensilios != null)
+        {
+            if (recetaDb.RecetaUtensilio != null && recetaDb.RecetaUtensilio.Any()) _context.RecetaUtensilio.RemoveRange(recetaDb.RecetaUtensilio);
+            if (receta.Utensilios.Count > 0)
+            {
+                recetaDb.RecetaUtensilio = recetaDb.RecetaUtensilio ?? new List<RecetaUtensilio>();
+                foreach (var item in receta.Utensilios)
+                {
+                    var utensilio = await UtensiliosCreateIfNotExist(item);
+                    recetaDb.RecetaUtensilio.Add(new RecetaUtensilio { Utensilio = utensilio, Receta = recetaDb });
+                }
+            }
+        }
+
+        if (receta.Pasos != null)
+        {
+            var pasosExistentes = await _context.Paso.Where(p => p.RecetaId == recetaDb.Id).ToListAsync();
+            if (pasosExistentes.Any())
+            {
+                var imagenesPasos = await _context.RecetaImagen.Where(img => img.RecetaId == recetaDb.Id && img.PasoId != null).ToListAsync();
+                if (imagenesPasos.Any()) _context.RecetaImagen.RemoveRange(imagenesPasos);
+                _context.Paso.RemoveRange(pasosExistentes);
+            }
+
+            if (receta.Pasos.Count > 0)
+            {
+                recetaDb.Paso = recetaDb.Paso ?? new List<Paso>();
+                for (int i = 0; i < receta.Pasos.Count; i++)
+                {
+                    var pasoDto = receta.Pasos[i];
+                    var paso = new Paso { Titulo = pasoDto.Titulo, Descripcion = pasoDto.Descripcion, Numero = i + 1, Receta = recetaDb };
+                    recetaDb.Paso.Add(paso);
+
+                    if (!string.IsNullOrEmpty(pasoDto.Imagen))
+                    {
+                        byte[] imagenPaso = Convert.FromBase64String(pasoDto.Imagen);
+                        var recetaImagen = new RecetaImagen { Imagen = imagenPaso, Paso = paso, ContentType = pasoDto.ContentType };
+                        recetaDb.RecetaImagen.Add(recetaImagen);
+                        if (paso.RecetaImagen == null) paso.RecetaImagen = new List<RecetaImagen>();
+                        paso.RecetaImagen.Add(recetaImagen);
+                    }
+                }
+            }
+        }
+
+        // NUEVO: Manejar eliminación de imagen principal si se solicita
+        if (receta.RemoveImagen.HasValue && receta.RemoveImagen.Value)
+        {
+            var mainImageToRemove = recetaDb.RecetaImagen.FirstOrDefault(img => img.PasoId == null);
+            if (mainImageToRemove != null)
+            {
+                _context.RecetaImagen.Remove(mainImageToRemove);
+            }
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }
