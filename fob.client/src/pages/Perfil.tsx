@@ -287,7 +287,7 @@ const Perfil: React.FC = () => {
             return (
                 <div key={receta.id} className="galeria-item">
                     {mediaType === 'video' && <VideoLibraryIcon className="video-watermark-icon" />}
-                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}`}>
+                    <Link to={`/perfil/${datosPerfil.id}/publicaciones?receta=${receta.id}&siguiendo=${isFollowing}`}>
                         {mediaType === 'image' ? (
                             <img
                                 src={mediaUrl}
@@ -352,8 +352,8 @@ const Perfil: React.FC = () => {
                         <Button 
                             variant="outlined" 
                             className="perfil-boton" 
-                            onClick={handleShareProfileClick}
-                            sx={{ borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}
+                            color="primary"
+                            onClick={handleShareProfileClick} 
                         >
                             Compartir perfil
                         </Button>
@@ -388,7 +388,8 @@ const Perfil: React.FC = () => {
                         variant="outlined" 
                         className="perfil-boton" 
                         onClick={handleShareProfileClick} 
-                        sx={{ minWidth:140, borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}>
+                        color="primary"
+                        sx={{ minWidth:140 }}>
                         Compartir perfil
                     </Button>
                     </Box>
