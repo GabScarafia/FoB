@@ -746,7 +746,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 }).ToList() ?? new List<PasoResponse>(),
                 Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
                 Utensilios = receta.RecetaUtensilio?.Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
-                CantidadVotos = (int)x.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
+                CantidadVotos = (int)receta.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
                 MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,
                 VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)

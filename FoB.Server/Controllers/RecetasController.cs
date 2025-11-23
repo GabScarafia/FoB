@@ -216,7 +216,7 @@ public class RecetasController : ControllerBase
                         .Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
                     Utensilios = receta.RecetaUtensilio?
                         .Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
-                    CantidadVotos = (int)x.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
+                    CantidadVotos = (int)receta.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
                     MeGusta = receta.Voto.Any(v => v.UsuarioId == idUsuario),
                     CantidadComentarios = receta.Comentario.Count,
                     VistaPreviaComentarios = receta.Comentario?
