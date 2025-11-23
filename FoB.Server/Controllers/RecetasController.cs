@@ -190,6 +190,7 @@ public class RecetasController : ControllerBase
                         : (TimeSpan?)null,
                     FechaCreacion = receta.FechaCreacion,
                     ImagenUrl = receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null ? $"/api/archivos/receta/{receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null).Id}" : null,
+                    ContentType = receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null ? receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null).ContentType : null,
                     Autor = receta.Usuario != null ? new UsuarioResponse
                     {
                         Id = receta.Usuario.Id,
@@ -233,6 +234,105 @@ public class RecetasController : ControllerBase
                 }).ToList();
 
             return Ok(new { Mensaje = "Recetas cargadas con éxito.", Recetas = recetasResponse });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error al cargar recetas del usuario {UserId}", idUsuario);
+            return StatusCode(500, new { Mensaje = "Error interno al cargar recetas.", Recetas = new List<RecetaResponse>() });
+        }
+    }
+    [HttpGet("Favoritos")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<RecetaResponse>>> GetRecetasFavoritas([FromQuery] int? userId)
+    {
+        var idUsuario = userId ?? _currentUser.User?.Id;
+
+        if (idUsuario == null)
+        {
+            _logger.LogWarning("Intento de acceder a recetas sin usuario autenticado");
+            return Unauthorized(new { Mensaje = "Usuario no autenticado." });
+        }
+
+        try
+        {
+            var recetasDb = await _context.Receta
+                .Where(r => r.Activa == true && r.Voto.Any(x=>x.Tipo == InteraccionTipoEnum.Favorito.ToString() && x.UsuarioId == idUsuario))
+                .AsSplitQuery()
+                .Include(r => r.Usuario)
+                .Include(r => r.RecetaImagen)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Ingrediente)
+                .Include(r => r.IngredienteReceta).ThenInclude(ir => ir.Unidad)
+                .Include(r => r.Paso)
+                .Include(r => r.RecetaEtiquetas).ThenInclude(rc => rc.Etiquetas)
+                .Include(r => r.RecetaUtensilio).ThenInclude(rc => rc.Utensilio)
+                .Include(r => r.Voto)
+                .Include(r => r.Comentario).ThenInclude(c => c.Usuario)
+                .ToListAsync();
+
+            if (!recetasDb.Any())
+            {
+                return Ok(new { Mensaje = "Aún no hay recetas.", Recetas = new List<RecetaResponse>() });
+            }
+
+            var recetasResponse = recetasDb
+                .OrderByDescending(r => r.FechaCreacion)
+                .Select(receta => new RecetaResponse
+                {
+                    Id = receta.Id,
+                    Titulo = receta.Titulo,
+                    Descripcion = receta.Descripcion,
+                    Dificultad = receta.Dificultad,
+                    TiempoPreparacion = receta.TiempoPreparacion != null
+                        ? new TimeSpan(receta.TiempoPreparacion.Value.Hour,
+                                       receta.TiempoPreparacion.Value.Minute,
+                                       receta.TiempoPreparacion.Value.Second)
+                        : (TimeSpan?)null,
+                    FechaCreacion = receta.FechaCreacion,
+                    ImagenUrl = receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null ? $"/api/archivos/receta/{receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null).Id}" : null,
+                    ContentType = receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null ? receta.RecetaImagen.FirstOrDefault(img => img.PasoId == null).ContentType : null,
+                    Autor = receta.Usuario != null ? new UsuarioResponse
+                    {
+                        Id = receta.Usuario.Id,
+                        Nombre = receta.Usuario.Nombre,
+                        NombreUsuario = receta.Usuario.NombreUsuario
+                    } : null,
+                    Ingredientes = receta.IngredienteReceta?
+                        .Select(ir => new IngredienteResponse
+                        {
+                            Id = ir.Ingrediente.Id,
+                            Nombre = ir.Ingrediente.Nombre,
+                            Cantidad = ir.Cantidad,
+                            UnidadDeMedida = ir.Unidad.Nombre,
+                            UnidadId = ir.Unidad.Id
+                        }).ToList() ?? new List<IngredienteResponse>(),
+                    Pasos = receta.Paso?
+                        .Select(p => new PasoResponse
+                        {
+                            Numero = p.Numero,
+                            Titulo = p.Titulo,
+                            Descripcion = p.Descripcion
+                        }).ToList() ?? new List<PasoResponse>(),
+                    Etiquetas = receta.RecetaEtiquetas?
+                        .Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
+                    Utensilios = receta.RecetaUtensilio?
+                        .Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
+                    CantidadVotos = (int)receta.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
+                    MeGusta = receta.Voto.Any(v => v.UsuarioId == idUsuario),
+                    CantidadComentarios = receta.Comentario.Count,
+                    VistaPreviaComentarios = receta.Comentario?
+                        .Where(c => c.Usuario != null)
+                        .OrderByDescending(c => c.Fecha)
+                        .Take(3)
+                        .Select(c => new ComentarioResponse
+                        {
+                            Id = c.Id,
+                            Texto = c.Texto,
+                            Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
+                            Fecha = c.Fecha
+                        }).ToList() ?? new List<ComentarioResponse>()
+                }).ToList();
+
+            return Ok(recetasResponse);
         }
         catch (Exception ex)
         {
