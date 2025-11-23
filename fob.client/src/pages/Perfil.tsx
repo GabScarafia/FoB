@@ -354,21 +354,52 @@ const Perfil: React.FC = () => {
             <Box className="perfil-botones">
                 {esPerfilPropio ? (
                     <>
-                        <Button variant="contained" className="perfil-boton" onClick={handleEditarPerfilClick} sx={{ mr:1 }}>Editar Perfil</Button>
-                        <Button variant="outlined" className="perfil-boton" onClick={handleShareProfileClick} sx={{ borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}>Compartir perfil</Button>
+                        <Button variant="contained" className="perfil-boton" onClick={handleEditarPerfilClick} sx={{ mr:1 }}>
+                            Editar Perfil
+                        </Button>
+                        <Button 
+                            variant="outlined" 
+                            className="perfil-boton" 
+                            color="primary"
+                            onClick={handleShareProfileClick} 
+                        >
+                            Compartir perfil
+                        </Button>
                     </>
                 ) : (
                     <Box sx={{ display: 'flex', gap:1, width: '100%' }}>
-                        <Button
-                            variant={isFollowing ? 'outlined' : 'contained'}
-                            className={`perfil-boton ${isFollowing ? 'siguiendo' : ''}`}
-                            onClick={handleFollowClick}
-                            disabled={!token || isProcessingFollow}
-                            sx={{ flexGrow:1, backgroundColor: !isFollowing ? 'rgb(31, 69, 176)' : 'transparent', color: !isFollowing ? 'white' : undefined }}
-                        >
-                            {isFollowing ? 'Siguiendo' : 'Seguir'}
-                        </Button>
-                        <Button variant="outlined" className="perfil-boton" onClick={handleShareProfileClick} sx={{ minWidth:140, borderColor: 'rgb(31, 69, 176)', color: 'rgb(31, 69, 176)' }}>Compartir perfil</Button>
+                     <Button
+                        variant={isFollowing ? 'outlined' : 'contained'}
+                        color={isFollowing ? 'primary' : 'primary'}
+                        className={`perfil-boton ${isFollowing ? 'siguiendo' : ''}`}
+                        onClick={handleFollowClick}
+                        disabled={!token || isProcessingFollow}
+                        sx={{
+                            flexGrow:1,
+                            backgroundColor: !isFollowing ? 'rgb(31, 69, 176)' : 'transparent',
+                            color: !isFollowing ? 'white' : undefined,
+                            '&:hover': {
+                                backgroundColor: isFollowing ? 'rgba(31,69,176,0.08)' : 'rgb(2455139)',
+                            },
+                            ...(isFollowing && {
+                                borderColor: 'rgb(3169176)',
+                                '&:hover': {
+                                    borderColor: 'rgb(3169176)',
+                                }
+                            })
+                        }}
+                    >
+                        {isFollowing ? 'Siguiendo' : 'Seguir'}
+                    </Button>
+
+                    <Button 
+                        variant="outlined" 
+                        className="perfil-boton" 
+                        onClick={handleShareProfileClick} 
+                        color="primary"
+                        sx={{ minWidth:140 }}>
+                        Compartir perfil
+                    </Button>
                     </Box>
                 )}
             </Box>

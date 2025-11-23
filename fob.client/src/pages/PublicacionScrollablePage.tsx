@@ -64,7 +64,13 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
     const [searchParams] = useSearchParams();
     const recetaIdInicial = searchParams.get('receta');
     const comentarioInicial = searchParams.get('comentario');
+    
+    // Convertimos el estado de "seguido" en un estado de React para poder actualizarlo.
+    const [perfilEsSeguido, setPerfilEsSeguido] = useState(searchParams.get('siguiendo') === 'true');
 
+    // Función para que los componentes hijos (Receta) notifiquen un cambio en el estado de seguimiento.
+    const handleSeguirEstadoChange = (nuevoEstado: boolean) => setPerfilEsSeguido(nuevoEstado);
+    
     const { authData } = useAuth();
     const token = authData?.token ?? null;
 
@@ -277,6 +283,8 @@ const PublicacionScrollablePage: React.FC<PublicacionScrollablePageProps> = ({
                                 currentUserId={currentUserId}
                                 onDeleteReceta={handleOpenModal}
                                 comentarioIdDestacado={comentarioInicial}
+                                ocultarBotonSeguir={perfilEsSeguido}
+                                onSeguirEstadoChange={handleSeguirEstadoChange} // Pasamos la nueva función
                             />
                         ) : (
                             <div className="loading-placeholder">

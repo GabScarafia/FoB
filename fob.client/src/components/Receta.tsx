@@ -91,10 +91,11 @@ export interface PropsReceta {
     currentUserId: number | null;
     onDeleteReceta: (recetaId: number) => Promise<void>;
     onUsuarioClick?: (userId: number) => void;
-    ocultarBotonSeguir?: boolean; // Nueva propiedad del Remoto
+    ocultarBotonSeguir?: boolean;
+    onSeguirEstadoChange?: (nuevoEstado: boolean) => void; // Nueva prop para notificar al padre
 }
 
-const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick, ocultarBotonSeguir }) => {
+const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, onDeleteReceta, onUsuarioClick, ocultarBotonSeguir, onSeguirEstadoChange }) => {
     const navigate = useNavigate();
     const haProcesadoApertura = React.useRef(false);
     const [searchParams] = useSearchParams();
@@ -163,6 +164,11 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 setIsFollowing(previousIsFollowing);
                 console.error('Error al intentar seguir/dejar de seguir');
                 alert('Ocurrió un error al procesar la solicitud.');
+            } else {
+                // Si la llamada es exitosa, notificamos al componente padre.
+                if (onSeguirEstadoChange) {
+                    onSeguirEstadoChange(!previousIsFollowing);
+                }
             }
         } catch (error) {
             // Revertimos también si hay un error de red
@@ -357,7 +363,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                 {/* Contenedor para la parte derecha: botón seguir, meta y menú */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     {/* LÓGICA BOTÓN SEGUIR */}
-                    {isFollowing === false && !esRecetaPropia && !ocultarBotonSeguir && (
+                    {!isFollowing && !esRecetaPropia && !ocultarBotonSeguir && (
                         <Button
                             variant="contained"
                             size="large"
@@ -379,9 +385,22 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     )}
 
                     <div className="meta-receta-y-menu">
-                        <div className="meta-receta">
+                        <div 
+                            className="meta-receta"
+                            style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center'
+                            }}
+                        >
                             <span className="tipo-contenido">{receta.dificultad}</span>
-                            <div className="estrellas-calificacion">{renderizarEstrellas(receta.dificultad)}</div>
+                            <div 
+                                className="estrellas-calificacion" 
+                                style={{ 
+                                    display: 'flex', 
+                                    justifyContent: 'center' 
+                                }}
+                            >
+                                {renderizarEstrellas(receta.dificultad)}
+                            </div>
                         </div>
                         {esRecetaPropia && (
                             <>
