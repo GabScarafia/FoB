@@ -50,7 +50,7 @@ export default function ButtonBar() {
     };
 
     const handleGoBack = () => {
-        navigate(`/perfil/${perfilId}`);
+        navigate(-1);
     };
 
     const handleCloseDialog = () => {
