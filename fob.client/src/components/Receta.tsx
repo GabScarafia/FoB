@@ -465,7 +465,7 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
                     <IconButton onClick={handleOpenDrawer} size="small"> <ChatBubbleOutlineIcon /> </IconButton>
                     <span className="conteo-comentarios">{comentariosCount}</span>
 
-                    <AccessTimeIcon sx={{ color: 'text.secondary', ml: 1 }} />
+                    <AccessTimeIcon sx={{ color: 'text.secondary', mx: 1 }} />
                     <span className="conteo-tiempo">{formatearTiempo(receta.tiempoPreparacion)}</span>
                 </Box>
                 <div className="acciones-derecha">

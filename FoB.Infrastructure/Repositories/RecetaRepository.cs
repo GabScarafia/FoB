@@ -221,7 +221,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
+            CantidadVotos = (int)x.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x=>x.Valor),
             CantidadComentarios = x.Comentario.Count(),
             Estado = x.Estado,
             ImagenUrl = x.RecetaImagen.FirstOrDefault(img => img.PasoId == null) != null
@@ -372,7 +372,7 @@ internal sealed class RecetaRepository : IRecetaRepository
             Titulo = x.Titulo,
             Descripcion = x.Descripcion,
             Dificultad = x.Dificultad,
-            CantidadVotos = x.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
+            CantidadVotos = (int)x.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
             // Optimización: Usar variables locales en la query no siempre funciona bien en EF Core complejo, 
             // mejor dejar la lógica inline para asegurar traducción a SQL.
             MeGusta = x.Voto.Any(v => v.UsuarioId == currentUserId && v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
@@ -746,7 +746,7 @@ internal sealed class RecetaRepository : IRecetaRepository
                 }).ToList() ?? new List<PasoResponse>(),
                 Etiquetas = receta.RecetaEtiquetas?.Select(rc => rc.Etiquetas.Nombre).ToList() ?? new List<string>(),
                 Utensilios = receta.RecetaUtensilio?.Select(rc => rc.Utensilio.Nombre).ToList() ?? new List<string>(),
-                CantidadVotos = receta.Voto.Count(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null),
+                CantidadVotos = (int)x.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
                 MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,
                 VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
