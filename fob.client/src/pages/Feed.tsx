@@ -31,7 +31,7 @@ const PAGE_SIZE = 5;
 interface DesafioDto {
     id: number;
     nombre: string;
-    ingredientes: string;
+    ingrediente: string;
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
@@ -153,7 +153,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 });
                 if (!response.ok) return;
 
-                const data: DesafioSemanalDto = await response.json();
+                // Log raw response for debugging: ensure API returns nombre, ingrediente, descripcion
+                const rawText = await response.text();
+                console.log('DEBUG: /Desafios/Actual raw response text ->', rawText);
+                let parsed: any = null;
+                try { parsed = JSON.parse(rawText); } catch (e) { parsed = rawText; console.error('DEBUG: parsing /Desafios/Actual failed', e); }
+                console.log('DEBUG: /Desafios/Actual parsed ->', parsed);
+                const data: DesafioSemanalDto = parsed as DesafioSemanalDto;
                 setDesafioSemanal(data);
 
                 // Verificar si ya participó para mostrar o no el modal automáticamente
@@ -219,7 +225,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             setPage(currentPage + 1); 
 
         } catch (err) {
-            setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
+            setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.")
+;
             console.error("Error recetas:", err);
             setHasMore(false);
         } finally {
@@ -290,7 +297,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     
     const handleCargarRecetaDesafio = () => {
         handleCloseDesafioModal(false);
-        setIngredienteDesafio(desafioSemanal?.desafioActual?.ingredientes);
+        setIngredienteDesafio(desafioSemanal?.desafioActual?.ingrediente);
         setDesafioIdActivo(desafioSemanal?.desafioActual?.id);
         setIsCreateDialogOpen(true);
     }
@@ -457,12 +464,28 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 position: "relative", overflow: "hidden",
                 "&::before": { content: '""', position: "absolute", top: 0, left: 0, width: "100%", height: "8px", background: "linear-gradient(90deg, #FF5722, #FF9800)" }
             }}>
+                <Typography
+                    variant="h4"
+                    sx={(theme) => ({
+                        fontWeight: 900,
+                        letterSpacing: 0.6,
+                        textShadow: "0 2px 4px rgba(0,0,0,0.2)",
+                        mb: 1,
+                        textAlign: 'center',
+                        color: theme.palette.mode === 'light' ? '#ff601e' : 'inherit'
+                    })}
+                >
+                    {desafio.nombre || 'Desafío'}
+                </Typography>
                 <Box sx={{ textAlign: "center", background: "linear-gradient(135deg, #ff7e5f 10%, #feb47b 90%)", borderRadius: "12px", p: 2, mb: 3, color: "white", boxShadow: "0 4px 10px rgba(0,0,0,0.15)" }}>
-                    <Typography variant="h6" sx={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 1, fontWeight: 700 }}>
-                        <KitchenIcon sx={{ fontSize: 26 }} /> Ingrediente Clave
-                    </Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 900, letterSpacing: 1, textShadow: "0 2px 4px rgba(0,0,0,0.2)" }}>
-                        “{desafio.ingredientes?.toUpperCase() ?? desafio.nombre}”
+
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1, mb: 1 }}>
+                        <KitchenIcon sx={{ fontSize: 26, opacity: 0.95 }} />
+                        <Typography variant="subtitle2" sx={{ fontWeight: 900, opacity: 0.95 }}>Ingrediente clave</Typography>
+                    </Box>
+
+                    <Typography variant="h5" sx={{ fontWeight: 800, letterSpacing: 0.8 }}>
+                        {desafio.ingrediente ? `"${desafio.ingrediente.toUpperCase()}"` : '—'}
                     </Typography>
                 </Box>
                 <Typography variant="body1" sx={{ mb: 3, color: "text.secondary", textAlign: "justify", lineHeight: 1.6 }}>{desafio.descripcion}</Typography>
