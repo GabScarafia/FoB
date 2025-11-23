@@ -1,6 +1,25 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { AppBar, Toolbar, IconButton, Typography, Box, Tooltip, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Button, Badge, Menu, MenuItem, Divider, Avatar, ListItemAvatar, ListItemText } from "@mui/material";
+import {
+    AppBar,
+    Toolbar,
+    IconButton,
+    Typography,
+    Box,
+    Tooltip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    Button,
+    Badge,
+    Menu,
+    MenuItem,
+    Avatar,
+    ListItemAvatar
+} from "@mui/material";
+
 import CloseIcon from "@mui/icons-material/Close";
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -12,343 +31,351 @@ import { useAuth } from "../context/AuthContext";
 import { BASE_URL } from '../apiConfig';
 
 interface UpperAppBarProps {
- mode: "light" | "dark";
- toggleTheme: () => void;
+    mode: "light" | "dark";
+    toggleTheme: () => void;
 }
 
 interface NotificacionItem {
- id: number;
- fecha: string;
- leida: boolean;
- mensaje: string;
- tipo: string;
- url: string | null;
- emisor?: { id: number; nombreUsuario: string; nombre: string; imagenUrl: string | null } | null;
+    id: number;
+    fecha: string;
+    leida: boolean;
+    mensaje: string;
+    tipo: string;
+    url: string | null;
+    emisor?: { id: number; nombreUsuario: string; nombre: string; imagenUrl: string | null } | null;
 }
 
 const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, toggleTheme }, ref) => {
- const { authData, clearAuthData } = useAuth();
- const navigate = useNavigate();
+    const { authData, clearAuthData } = useAuth();
+    const navigate = useNavigate();
 
- const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
+    const [openLogoutDialog, setOpenLogoutDialog] = React.useState(false);
 
- // Notifications
- const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
- const [notifications, setNotifications] = React.useState<NotificacionItem[]>([]);
- const [unreadCount, setUnreadCount] = React.useState<number>(0);
- const open = Boolean(anchorEl);
+    // Notifications
+    const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+    const [notifications, setNotifications] = React.useState<NotificacionItem[]>([]);
+    const [unreadCount, setUnreadCount] = React.useState<number>(0);
+    const open = Boolean(anchorEl);
 
- const fetchNotifications = async () => {
- if (!authData?.token) return;
- try {
- const resCount = await fetch(`${BASE_URL}/Notificacion/unread-count`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
- if (!resCount.ok) {
- if (resCount.status ===401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
- }
- if (resCount.ok) {
- const data = await resCount.json();
- setUnreadCount(data.count ||0);
- }
- const res = await fetch(`${BASE_URL}/Notificacion`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
- if (!res.ok) {
- if (res.status ===401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
- }
- if (res.ok) {
- const list = await res.json();
- setNotifications(list);
- }
- } catch (err) {
- console.error('Error fetching notifications', err);
- }
- };
+    const fetchNotifications = async () => {
+        if (!authData?.token) return;
+        try {
+            const resCount = await fetch(`${BASE_URL}/Notificacion/unread-count`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
+            if (!resCount.ok) {
+                if (resCount.status === 401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
+            }
+            if (resCount.ok) {
+                const data = await resCount.json();
+                setUnreadCount(data.count || 0);
+            }
+            const res = await fetch(`${BASE_URL}/Notificacion`, { headers: { 'Authorization': `Bearer ${authData.token}` } });
+            if (!res.ok) {
+                if (res.status === 401) { clearAuthData(); navigate('/iniciar-sesion'); return; }
+            }
+            if (res.ok) {
+                const list = await res.json();
+                setNotifications(list);
+            }
+        } catch (err) {
+            console.error('Error fetching notifications', err);
+        }
+    };
 
- React.useEffect(() => {
- if (authData?.token) {
- fetchNotifications();
- const interval = setInterval(fetchNotifications,10000); // cada10s
- return () => clearInterval(interval);
- }
- }, [authData?.token]);
+    React.useEffect(() => {
+        if (authData?.token) {
+            fetchNotifications();
+            const interval = setInterval(fetchNotifications, 10000); // cada 10s
+            return () => clearInterval(interval);
+        }
+    }, [authData?.token]);
 
- const handleOpenLogoutDialog = () => setOpenLogoutDialog(true);
- const handleCloseLogoutDialog = () => setOpenLogoutDialog(false);
- const handleConfirmLogout = () => { clearAuthData(); navigate('/iniciar-sesion'); handleCloseLogoutDialog(); };
+    const handleOpenLogoutDialog = () => setOpenLogoutDialog(true);
+    const handleCloseLogoutDialog = () => setOpenLogoutDialog(false);
+    const handleConfirmLogout = () => { clearAuthData(); navigate('/iniciar-sesion'); handleCloseLogoutDialog(); };
 
- const handleOpenNotifications = (event: React.MouseEvent<HTMLButtonElement>) => {
- setAnchorEl(event.currentTarget);
- fetchNotifications();
- };
- const handleCloseNotifications = () => setAnchorEl(null);
+    const handleOpenNotifications = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+        fetchNotifications();
+    };
+    const handleCloseNotifications = () => setAnchorEl(null);
 
- const markAsRead = async (id: number) => {
- try {
- await fetch(`${BASE_URL}/Notificacion/mark-read/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authData?.token}` } });
- setNotifications(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
- setUnreadCount(c => Math.max(0, c -1));
- } catch (err) { console.error(err); }
- };
+    const markAsRead = async (id: number) => {
+        try {
+            await fetch(`${BASE_URL}/Notificacion/mark-read/${id}`, { method: 'POST', headers: { 'Authorization': `Bearer ${authData?.token}` } });
+            setNotifications(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
+            setUnreadCount(c => Math.max(0, c - 1));
+        } catch (err) { console.error(err); }
+    };
 
- const markAllRead = async () => {
- try {
- await fetch(`${BASE_URL}/Notificacion/mark-read-all`, { method: 'POST', headers: { 'Authorization': `Bearer ${authData?.token}` } });
- setNotifications(prev => prev.map(n => ({ ...n, leida: true })));
- setUnreadCount(0);
- } catch (err) { console.error(err); }
- };
+    const markAllRead = async () => {
+        try {
+            await fetch(`${BASE_URL}/Notificacion/mark-read-all`, { method: 'POST', headers: { 'Authorization': `Bearer ${authData?.token}` } });
+            setNotifications(prev => prev.map(n => ({ ...n, leida: true })));
+            setUnreadCount(0);
+        } catch (err) { console.error(err); }
+    };
 
- const deleteNotification = async (id: number) => {
- try {
- await fetch(`${BASE_URL}/Notificacion/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authData?.token}` } });
- setNotifications(prev => prev.filter(n => n.id !== id));
- } catch (err) { console.error(err); }
- };
+    const deleteNotification = async (id: number) => {
+        try {
+            await fetch(`${BASE_URL}/Notificacion/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authData?.token}` } });
+            setNotifications(prev => prev.filter(n => n.id !== id));
+        } catch (err) { console.error(err); }
+    };
 
- const deleteAll = async () => {
- try {
- await fetch(`${BASE_URL}/Notificacion/all`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authData?.token}` } });
- setNotifications([]);
- setUnreadCount(0);
- } catch (err) { console.error(err); }
- };
+    const deleteAll = async () => {
+        try {
+            await fetch(`${BASE_URL}/Notificacion/all`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${authData?.token}` } });
+            setNotifications([]);
+            setUnreadCount(0);
+        } catch (err) { console.error(err); }
+    };
 
- const handleNotificationClick = async (n: NotificacionItem) => {
-   // Marca como leída si corresponde y espera a que termine para evitar condiciones de carrera
-   if (!n.leida) {
-     try {
-       await markAsRead(n.id);
-     } catch (e) {
-       console.error('No se pudo marcar la notificación como leída antes de navegar:', e);
-     }
-   }
+    const handleNotificationClick = async (n: NotificacionItem) => {
+        if (!n.leida) {
+            try { await markAsRead(n.id); } catch (e) { console.error(e); }
+        }
+        handleCloseNotifications();
+        if (!n.url) return;
 
-   handleCloseNotifications();
+        if (n.url.startsWith('/receta/')) {
+            const urlParts = n.url.split('?');
+            const recetaId = urlParts[0].split('/')[2];
+            const queryString = urlParts[1] ?? '';
+            const params = new URLSearchParams(queryString);
+            const comentarioId = params.get('comentarioId') || params.get('comentario');
 
-   if (!n.url) return;
+            try {
+                const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+                if (authData?.token) headers['Authorization'] = `Bearer ${authData.token}`;
+                const resp = await fetch(`${BASE_URL}/Recetas/${recetaId}`, { headers });
+                if (resp.ok) {
+                    const data = await resp.json();
+                    const ownerId = data?.autor?.id ?? data?.autor?.Id ?? data?.Autor?.id ?? data?.Autor?.Id;
+                    if (ownerId) {
+                        navigate(`/perfil/${ownerId}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
+                        return;
+                    }
+                }
+            } catch (err) { console.error(err); }
 
-   // Caso especial: notificación que apunta a /receta/{id}?drawerComentarios=true&comentarioId=...
-   // -> necesitamos resolver el propietario (autor) de la receta para navegar a:
-   // /perfil/{ownerId}/publicaciones?receta={recetaId}&comentario={comentarioId}
-   if (n.url.startsWith('/receta/')) {
-     const urlParts = n.url.split('?');
-     const recetaId = urlParts[0].split('/')[2];
-     const queryString = urlParts[1] ?? '';
-     const params = new URLSearchParams(queryString);
-     // El backend puede usar 'comentarioId' (como en Interaccion) o 'comentario' en otras URLS.
-     const comentarioId = params.get('comentarioId') || params.get('comentario');
+            const fallbackOwner = n.emisor?.id ?? authData?.id;
+            if (fallbackOwner) {
+                navigate(`/perfil/${fallbackOwner}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
+                return;
+            }
+            navigate('/feed');
+            return;
+        }
+        navigate(n.url);
+    };
 
-     // Intentamos obtener el autor de la receta desde la API
-     try {
-       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-       if (authData?.token) headers['Authorization'] = `Bearer ${authData.token}`;
-       const resp = await fetch(`${BASE_URL}/Recetas/${recetaId}`, { headers });
-       if (resp.ok) {
-         const data = await resp.json();
-         // multiple casing fallbacks según cómo venga el JSON
-         const ownerId = data?.autor?.id ?? data?.autor?.Id ?? data?.Autor?.id ?? data?.Autor?.Id;
-         if (ownerId) {
-           navigate(`/perfil/${ownerId}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
-           return;
-         }
-       } else {
-         console.warn(`No se pudo obtener autor de receta ${recetaId}: ${resp.status}`);
-       }
-     } catch (err) {
-       console.error('Error al obtener detalles de la receta para notificación:', err);
-     }
+    const formatDate = (iso?: string | null) => {
+        if (!iso) return '';
+        const d = new Date(iso);
+        const options: Intl.DateTimeFormatOptions = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false };
+        return d.toLocaleString('es-ES', options) + ' hs';
+    };
 
-     // Fallbacks: si no podemos obtener el owner, intentamos usar 'emisor' (menos ideal) o el user actual
-     const fallbackOwner = n.emisor?.id ?? authData?.id;
-     if (fallbackOwner) {
-       navigate(`/perfil/${fallbackOwner}/publicaciones?receta=${recetaId}${comentarioId ? `&comentario=${comentarioId}` : ''}`);
-       return;
-     }
+    const formatMessage = (n: NotificacionItem): string => {
+        if (!n.emisor?.nombreUsuario || !n.mensaje) return n.mensaje || '';
+        const pattern = new RegExp(`^${n.emisor.nombreUsuario}\\s*`);
+        return n.mensaje.replace(pattern, '');
+    };
 
-     // Último recurso: ir al feed
-     navigate('/feed');
-     return;
-   }
+    const [isVisible, setIsVisible] = React.useState<boolean>(true);
+    React.useEffect(() => {
+        const handler = (e: Event) => {
+            try {
+                const ce = e as CustomEvent<boolean>;
+                if (typeof ce.detail === 'boolean') setIsVisible(ce.detail);
+            } catch (err) { }
+        };
+        window.addEventListener('setHeaderVisibility', handler as EventListener);
+        return () => window.removeEventListener('setHeaderVisibility', handler as EventListener);
+    }, []);
 
-   // Para todas las demás URLs, navegamos directamente
-   navigate(n.url);
- };
+    return (
+        <AppBar position="fixed" ref={ref} sx={{ width: '100%', backgroundColor: 'transparent', boxShadow: 'none', display: isVisible ? undefined : 'none' }}>
+            <Toolbar sx={{ gap: 1 }}>
+                <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, fontWeight: 700 }}>
+                    Bienvenido {authData?.nombre}
+                </Typography>
 
- // Formatea la fecha en formato 24 horas y local 'es-ES' (ej: 20/11/2025 14:32)
- const formatDate = (iso?: string | null) => {
-   if (!iso) return '';
-   const d = new Date(iso);
-   const options: Intl.DateTimeFormatOptions = {
-     day: '2-digit',
-     month: '2-digit',
-     year: 'numeric',
-     hour: '2-digit',
-     minute: '2-digit',
-     hour12: false
-   };
-   // Añadimos ' hs' al final para mostrar "14:32 hs"
-   return d.toLocaleString('es-ES', options) + ' hs';
- };
+                {authData?.email && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Tooltip title="Notificaciones">
+                            <IconButton color="inherit" onClick={handleOpenNotifications} sx={{ p: 1.1 }}>
+                                <Badge badgeContent={unreadCount} color="error" overlap="circular">
+                                    <NotificationsIcon fontSize="medium" />
+                                </Badge>
+                            </IconButton>
+                        </Tooltip>
 
- const formatMessage = (n: NotificacionItem): string => {
-    if (!n.emisor?.nombreUsuario || !n.mensaje) {
-        return n.mensaje || '';
-    }
-    const pattern = new RegExp(`^${n.emisor.nombreUsuario}\\s*`);
-    return n.mensaje.replace(pattern, '');
- };
- // Control visibility from other pages via window.dispatchEvent(new CustomEvent('setHeaderVisibility',{detail: boolean}))
- const [isVisible, setIsVisible] = React.useState<boolean>(true);
- React.useEffect(() => {
- const handler = (e: Event) => {
- try {
- // CustomEvent carries detail property
- const ce = e as CustomEvent<boolean>;
- if (typeof ce.detail === 'boolean') setIsVisible(ce.detail);
- } catch (err) {
- // ignore
- }
- };
- window.addEventListener('setHeaderVisibility', handler as EventListener);
- return () => window.removeEventListener('setHeaderVisibility', handler as EventListener);
- }, []);
+                        <Menu
+                            disableScrollLock={true}
+                            anchorEl={anchorEl}
+                            open={open}
+                            onClose={handleCloseNotifications}
+                            PaperProps={{
+                                sx: {
+                                    width: 450,
+                                    maxWidth: '90vw',
+                                    maxHeight: 520,
+                                    borderRadius: 3,
+                                    p: 0,
+                                    boxShadow: 6,
+                                    overflow: 'hidden'
+                                }
+                            }}
+                            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+                        >
+                            {/* HEADER DEL MENU */}
+                            <Box sx={{
+                                p: 2,
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                bgcolor: 'background.paper',
+                                borderBottom: 1,
+                                borderColor: 'divider'
+                            }}>
+                                <Typography sx={{ fontWeight: 800, fontSize: 16 }}>Notificaciones</Typography>
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    <Tooltip title="Marcar todas como leídas">
+                                        <IconButton size="small" onClick={markAllRead}>
+                                            <DoneIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Eliminar todas">
+                                        <IconButton size="small" onClick={deleteAll} color="error">
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
+                            </Box>
 
- // Always render the AppBar (Slide expects a child); show/hide via CSS
- return (
- <AppBar position="fixed" ref={ref} sx={{ width: '100%', backgroundColor: 'transparent', boxShadow: 'none', display: isVisible ? undefined : 'none' }}>
- <Toolbar sx={{ gap:1 }}>
- <Typography variant="h6" noWrap component="div" sx={{ flexGrow:1, fontWeight:700 }}>
- Bienvenido {authData?.nombre}
- </Typography>
+                            {notifications.length === 0 && (
+                                <Box sx={{ p: 4, textAlign: 'center', color: 'text.secondary' }}>
+                                    <NotificationsIcon sx={{ fontSize: 40, opacity: 0.2, mb: 1 }} />
+                                    <Typography variant="body2">No tienes notificaciones nuevas</Typography>
+                                </Box>
+                            )}
 
- {authData?.email && (
- <Box sx={{ display: 'flex', alignItems: 'center', gap:1 }}>
- {/* Notification button - slightly larger touch target */}
- <Tooltip title="Notificaciones">
- <IconButton color="inherit" onClick={handleOpenNotifications} aria-label="notificaciones" sx={{ p:1.1 }}>
- <Badge badgeContent={unreadCount} color="error" overlap="circular">
- <NotificationsIcon fontSize="medium" />
- </Badge>
- </IconButton>
- </Tooltip>
+                            {/* LISTA DE NOTIFICACIONES */}
+                            <Box sx={{ overflowY: 'auto', maxHeight: 420 }}>
+                                {notifications.map(n => (
+                                    <MenuItem
+                                        key={n.id}
+                                        onClick={() => handleNotificationClick(n)}
+                                        sx={{
+                                            alignItems: 'flex-start',
+                                            whiteSpace: 'normal',
+                                            py: 1.5,
+                                            px: 2,
+                                            borderBottom: '1px solid',
+                                            borderColor: 'divider',
+                                            bgcolor: n.leida ? 'transparent' : (theme: Theme) => theme.palette.action.selected,
+                                            transition: 'background-color 0.2s',
+                                            '&:hover': {
+                                                bgcolor: (theme: Theme) => theme.palette.action.hover,
+                                            },
+                                            gap: 2
+                                        }}
+                                    >
+                                        <ListItemAvatar sx={{ minWidth: 0, mt: 0.5 }}>
+                                            <Avatar
+                                                src={n.emisor?.imagenUrl ?? undefined}
+                                                alt={n.emisor?.nombreUsuario ?? undefined}
+                                                sx={{ width: 48, height: 48 }}
+                                            />
+                                        </ListItemAvatar>
 
- <Menu
- disableScrollLock={true}
- anchorEl={anchorEl}
- open={open}
- onClose={handleCloseNotifications}
- PaperProps={{
- sx: {
- width:520,
- maxWidth: '95vw',
- maxHeight:520,
- borderRadius:2,
- p:1,
- boxShadow:6,
- }
- }}
- anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
- transformOrigin={{ vertical: 'top', horizontal: 'right' }}
- >
- <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb:1, px:1 }}>
- <Typography sx={{ fontWeight:800, fontSize:16 }}>Notificaciones</Typography>
- <Box sx={{ display: 'flex', gap:1 }}>
- <Button size="small" onClick={markAllRead} startIcon={<DoneIcon />} sx={{ textTransform: 'none' }}>
- Marcar todas
- </Button>
- <Button size="small" color="error" onClick={deleteAll} startIcon={<DeleteIcon />} sx={{ textTransform: 'none' }}>
- Eliminar todas
- </Button>
- </Box>
- </Box>
- <Divider sx={{ mb:1 }} />
- {notifications.length ===0 && (
- <Box sx={{ p:2, textAlign: 'center', color: 'text.secondary' }}>No hay notificaciones</Box>
- )}
- <Box sx={{ display: 'flex', flexDirection: 'column', gap:1, overflow: 'auto', maxHeight:420, pr:1 }}>
- {notifications.map(n => (
- <MenuItem
- key={n.id}
- onClick={() => handleNotificationClick(n)}
- // El onClick se mantiene en el contenedor principal para la navegación
- sx={{
- flexDirection: 'column', // 1. El item ahora es una columna
- alignItems: 'stretch', // Los hijos se estiran a lo ancho
- borderRadius:1,
- py:1,
- px:1.25,
- bgcolor: n.leida ? 'transparent' : (theme) => theme.palette.action.selected,
- '&:hover': { bgcolor: (theme) => theme.palette.action.hover },
- display: 'flex',
- gap: 1, // Espacio entre el contenido y los botones
- }}
- >
- <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'flex-start' }}>
- <ListItemAvatar sx={{ minWidth:0, mt: 0.5 }}>
- <Avatar src={n.emisor?.imagenUrl ?? undefined} alt={n.emisor?.nombreUsuario ?? undefined} sx={{ width:44, height:44 }} />
- </ListItemAvatar>
- <ListItemText
- primary={
- <Box sx={{ display: 'flex', flexDirection: 'column', gap:0.3 }}>
- <Box sx={{ display: 'flex', alignItems: 'center', gap:1, flexWrap: 'wrap' }}>
- <Typography variant="subtitle2" sx={{ fontWeight:700, whiteSpace: 'nowrap' }}>{n.emisor ? `@${n.emisor.nombreUsuario}` : 'Sistema'}</Typography>
- <Typography variant="body2" sx={{ color: 'text.primary', flexShrink: 1, wordBreak: 'break-word' }}>{formatMessage(n)}</Typography>
- </Box>
- </Box>
- }
- secondary={<Typography variant="caption" color="text.secondary">{formatDate(n.fecha)}</Typography>}
- sx={{ my: 0, flex: '1 1 auto', minWidth: 0 }}
- />
- </Box>
- 
- {/* 2. Contenedor para los botones, ahora horizontal y abajo */}
- <Box sx={{ display: 'flex', justifyContent: 'flex-end', gap: 1, pt: 1, borderTop: 1, borderColor: 'divider' }}>
- {!n.leida && (
- <Tooltip title="Marcar como leída">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }}>
- <DoneIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- )}
- <Tooltip title="Abrir">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); if (n.url) { handleCloseNotifications(); navigate(n.url); } }}>
- <OpenInNewIcon fontSize="small" />
- </IconButton>
- </Tooltip>
- <Tooltip title="Eliminar">
- <IconButton size="small" onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}>
- <DeleteIcon fontSize="small" color="error" />
- </IconButton>
- </Tooltip>
- </Box>
- </MenuItem>
- ))}
- </Box>
- </Menu>
+                                        {/* Contenedor principal del contenido */}
+                                        <Box sx={{ flex: 1, minWidth: 0 }}>
 
- <Tooltip title={mode === 'dark' ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}>
- <IconButton color="inherit" onClick={toggleTheme} sx={{ ml:0.5, p:1 }}>
- {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
- </IconButton>
- </Tooltip>
+                                            <Box sx={{
+                                                mb: 0.5,
+                                                display: '-webkit-box',
+                                                WebkitLineClamp: 2,
+                                                WebkitBoxOrient: 'vertical',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}>
+                                                <Typography variant="subtitle2" component="span" sx={{ fontWeight: 700, mr: 0.5 }}>
+                                                    {n.emisor ? `@${n.emisor.nombreUsuario}` : 'Sistema'}
+                                                </Typography>
+                                                {/* El mensaje ahora es un span simple sin flex/block propios */}
+                                                <Typography variant="body2" component="span" color="text.primary">
+                                                    {formatMessage(n)}
+                                                </Typography>
+                                            </Box>
 
- <IconButton color="inherit" onClick={handleOpenLogoutDialog} aria-label="clear auth data" sx={{ ml:0.5 }}>
- <CloseIcon />
- </IconButton>
+                                            {/* Fila Inferior: Fecha (Izq) + Acciones (Der) */}
+                                            <Box sx={{
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
+                                                alignItems: 'center',
+                                                mt: 0.5,
+                                                flexWrap: 'wrap',
+                                                gap: 1
+                                            }}>
+                                                <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: 'nowrap' }}>
+                                                    {formatDate(n.fecha)}
+                                                </Typography>
 
- <Dialog open={openLogoutDialog} onClose={handleCloseLogoutDialog} aria-labelledby="logout-dialog-title" aria-describedby="logout-dialog-description">
- <DialogTitle id="logout-dialog-title">Confirmar cierre de sesión</DialogTitle>
- <DialogContent>
- <DialogContentText id="logout-dialog-description">¿Está seguro que quiere cerrar sesión?</DialogContentText>
- </DialogContent>
- <DialogActions>
- <Button onClick={handleCloseLogoutDialog}>Cancelar</Button>
- <Button onClick={handleConfirmLogout} autoFocus>Cerrar Sesión</Button>
- </DialogActions>
- </Dialog>
- </Box>
- )}
- </Toolbar>
- </AppBar>
- );
+                                                {/* Grupo de botones de acción */}
+                                                <Box sx={{ display: 'flex', gap: 0.5 }} onClick={(e) => e.stopPropagation()}>
+                                                    {!n.leida && (
+                                                        <Tooltip title="Marcar como leída">
+                                                            <IconButton size="small" onClick={() => markAsRead(n.id)} sx={{ p: 0.5 }}>
+                                                                <DoneIcon fontSize="small" color="primary" />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    )}
+                                                    <Tooltip title="Abrir">
+                                                        <IconButton size="small" onClick={() => { if (n.url) { handleCloseNotifications(); navigate(n.url); } }} sx={{ p: 0.5 }}>
+                                                            <OpenInNewIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                    <Tooltip title="Eliminar">
+                                                        <IconButton size="small" onClick={() => deleteNotification(n.id)} sx={{ p: 0.5 }}>
+                                                            <DeleteIcon fontSize="small" color="error" />
+                                                        </IconButton>
+                                                    </Tooltip>
+                                                </Box>
+                                            </Box>
+                                        </Box>
+                                    </MenuItem>
+                                ))}
+                            </Box>
+                        </Menu>
+
+                        <Tooltip title={mode === 'dark' ? 'Modo claro' : 'Modo oscuro'}>
+                            <IconButton color="inherit" onClick={toggleTheme} sx={{ ml: 0.5 }}>
+                                {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
+                            </IconButton>
+                        </Tooltip>
+
+                        <IconButton color="inherit" onClick={handleOpenLogoutDialog} sx={{ ml: 0.5 }}>
+                            <CloseIcon />
+                        </IconButton>
+
+                        <Dialog open={openLogoutDialog} onClose={handleCloseLogoutDialog}>
+                            <DialogTitle>Confirmar cierre de sesión</DialogTitle>
+                            <DialogContent>
+                                <DialogContentText>¿Está seguro que quiere cerrar sesión?</DialogContentText>
+                            </DialogContent>
+                            <DialogActions>
+                                <Button onClick={handleCloseLogoutDialog}>Cancelar</Button>
+                                <Button onClick={handleConfirmLogout} autoFocus>Cerrar Sesión</Button>
+                            </DialogActions>
+                        </Dialog>
+                    </Box>
+                )}
+            </Toolbar>
+        </AppBar>
+    );
 });
 
 export default UpperAppBar;
