@@ -285,7 +285,7 @@ const UpperAppBar = React.forwardRef<HTMLDivElement, UpperAppBarProps>(({ mode, 
                                     >
                                         <ListItemAvatar sx={{ minWidth: 0, mt: 0.5 }}>
                                             <Avatar
-                                                src={n.emisor?.imagenUrl ?? undefined}
+                                                src={n.emisor?.imagenUrl ? `${BASE_URL}${n.emisor.imagenUrl}` : undefined}
                                                 alt={n.emisor?.nombreUsuario ?? undefined}
                                                 sx={{ width: 48, height: 48 }}
                                             />
