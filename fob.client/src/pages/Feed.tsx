@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useRef } from 'react';
 import Receta from '../components/Receta';
 import BarraBusqueda from '../components/ui/BarraBusqueda';
 import { useAuth } from "../context/AuthContext";
@@ -38,7 +38,7 @@ interface DesafioDto {
 }
 
 interface RankingItemDto {
-    posicion?: number; 
+    posicion?: number;
     usuarioId: number;
     puntos: number;
     nombreUsuario?: string;
@@ -55,19 +55,19 @@ interface FeedProps {
 }
 
 interface BusquedaResponse {
-    usuarios: Usuario[]; 
-    recetas: DatosReceta[]; 
+    usuarios: Usuario[];
+    recetas: DatosReceta[];
 }
 
 const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // === ESTADOS PRINCIPALES ===
-    const [recetas, setRecetas] = useState<DatosReceta[]>([]); 
-    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]); 
+    const [recetas, setRecetas] = useState<DatosReceta[]>([]);
+    const [recetasFiltradas, setRecetasFiltradas] = useState<DatosReceta[]>([]);
     const [usuariosFiltrados, setUsuariosFiltrados] = useState<Usuario[]>([]);
     const [cargando, setCargando] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
     const [mensaje, setMensaje] = useState<string | null>(null);
-    
+
     const { authData } = useAuth();
     const token = authData?.token;
     const currentUserId = authData?.id;
@@ -81,7 +81,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // === BÚSQUEDA ===
     const [searchTerm, setSearchTerm] = useState('');
     const [searchMessage, setSearchMessage] = useState<string | null>(null);
-    const [isSearchActive, setIsSearchActive] = useState(false); 
+    const [isSearchActive, setIsSearchActive] = useState(false);
     const [mostrarResultadosCompletos, setMostrarResultadosCompletos] = useState(false);
 
     // === DESAFÍO Y RANKING ===
@@ -100,10 +100,37 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // === ELIMINACIÓN ===
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
-    
+
     // =========================================================================
     // LÓGICA DE RANKING Y DESAFÍOS
     // =========================================================================
+    const feedRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        const targetElement = feedRef.current;
+
+        if (modalDesafioOpen || modalRankingOpen || isCreateDialogOpen || modalOpen) {
+            document.body.style.overflow = 'hidden';
+
+            if (targetElement) {
+                targetElement.style.overflowY = 'hidden';
+            }
+        } else {
+            document.body.style.overflow = 'auto';
+
+            if (targetElement) {
+                targetElement.style.overflowY = 'unset'; // o 'auto'
+            }
+        }
+
+        return () => {
+            document.body.style.overflow = 'auto';
+            if (targetElement) {
+                targetElement.style.overflowY = 'unset';
+            }
+        };
+    }, [modalDesafioOpen, modalRankingOpen, isCreateDialogOpen, modalOpen]);
+
 
     const fetchCurrentRanking = async () => {
         if (!token) return;
@@ -126,13 +153,13 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             setModalRankingOpen(true);
 
             try {
-              const resp = await fetch(`${BASE_URL}/Desafios/participacion/mis-puntos`, {
-                headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
-              });
-              if (resp.ok) { const obj = await resp.json(); setMisPuntos(obj?.puntos ?? 0); } 
-              else { setMisPuntos(null); }
+                const resp = await fetch(`${BASE_URL}/Desafios/participacion/mis-puntos`, {
+                    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+                });
+                if (resp.ok) { const obj = await resp.json(); setMisPuntos(obj?.puntos ?? 0); }
+                else { setMisPuntos(null); }
             } catch (err) { console.error('Error fetching points:', err); setMisPuntos(null); }
-            
+
             handleCloseDesafioModal(false); // Cerramos el modal de desafío sin marcar visto
         } catch (err) {
             console.error("Error ranking:", err);
@@ -164,17 +191,17 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
                 // Verificar si ya participó para mostrar o no el modal automáticamente
                 try {
-                  const resp = await fetch(`${BASE_URL}/Desafios/participacion/esta`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  let mostrar = true;
-                  if (resp.ok) {
-                    const obj = await resp.json();
-                    if (obj && obj.participada === true) mostrar = false;
-                  }
-                  if (mostrar) setModalDesafioOpen(true);
+                    const resp = await fetch(`${BASE_URL}/Desafios/participacion/esta`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    let mostrar = true;
+                    if (resp.ok) {
+                        const obj = await resp.json();
+                        if (obj && obj.participada === true) mostrar = false;
+                    }
+                    if (mostrar) setModalDesafioOpen(true);
                 } catch (err) {
-                  setModalDesafioOpen(true);
+                    setModalDesafioOpen(true);
                 }
             } catch (err) { console.error("Error desafío:", err); }
         };
@@ -222,11 +249,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             }
 
             if (recetasObtenidas.length < PAGE_SIZE) setHasMore(false);
-            setPage(currentPage + 1); 
+            setPage(currentPage + 1);
 
         } catch (err) {
             setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.")
-;
+                ;
             console.error("Error recetas:", err);
             setHasMore(false);
         } finally {
@@ -247,12 +274,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         };
         document.addEventListener('recetaCreada', handleRecetaCreadaEvent);
         return () => document.removeEventListener('recetaCreada', handleRecetaCreadaEvent);
-    }, [recargarRecetas, mostrarResultadosCompletos, searchTerm]); 
+    }, [recargarRecetas, mostrarResultadosCompletos, searchTerm]);
 
     // Infinite Scroll
     useEffect(() => {
         const handleScroll = () => {
-            if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 300 && 
+            if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 300 &&
                 !cargandoMas && hasMore && !isSearchActive
             ) {
                 const term = mostrarResultadosCompletos ? searchTerm : '';
@@ -294,7 +321,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     }
     const handleCloseRankingModal = () => { setModalRankingOpen(false); setCurrentRanking([]); setRankingEmptyMessage(null); }
     const handleBackToDesafio = () => { setModalRankingOpen(false); setCurrentRanking([]); setModalDesafioOpen(true); }
-    
+
     const handleCargarRecetaDesafio = () => {
         handleCloseDesafioModal(false);
         setIngredienteDesafio(desafioSemanal?.desafioActual?.ingrediente);
@@ -377,20 +404,20 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const handleVerTodoResultados = () => {
         setIsSearchActive(false);
         setMostrarResultadosCompletos(true);
-        
+
         // --- AGREGAR ESTO: Ocultar header global ---
         window.dispatchEvent(new CustomEvent('toggleGlobalHeader', { detail: false }));
-        
-        setRecetas([]); 
+
+        setRecetas([]);
         recargarRecetas(true, searchTerm);
     };
 
     const handleVolverAlFeed = () => {
         setMostrarResultadosCompletos(false);
-        
+
         // --- AGREGAR ESTO: Mostrar header global de nuevo ---
         window.dispatchEvent(new CustomEvent('toggleGlobalHeader', { detail: true }));
-        
+
         setSearchTerm('');
         setRecetasFiltradas([]);
         setUsuariosFiltrados([]);
@@ -409,12 +436,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // =========================================================================
     // HELPERS DE RENDERIZADO (RANKING/DESAFIO)
     // =========================================================================
-    
+
     const getMedalIcon = (index: number) => {
         switch (index) {
-            case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />; 
-            case 1: return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />; 
-            case 2: return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />; 
+            case 0: return <EmojiEventsIcon sx={{ color: '#FFD700' }} />;
+            case 1: return <EmojiEventsIcon sx={{ color: '#C0C0C0' }} />;
+            case 2: return <EmojiEventsIcon sx={{ color: '#CD7F32' }} />;
             default: return <SportsScoreIcon sx={{ color: '#666' }} />;
         }
     };
@@ -429,18 +456,18 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     <ListItem
                         key={item.usuarioId}
                         onClick={() => {
-                             handleCloseDesafioModal();
-                             if (item.recetaId) navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
-                             else navigate(`/perfil/${item.usuarioId}`);
+                            handleCloseDesafioModal();
+                            if (item.recetaId) navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`);
+                            else navigate(`/perfil/${item.usuarioId}`);
                         }}
                         sx={(theme) => ({
-                            p:1, mb:0.5, borderRadius: '6px', cursor: 'pointer',
-                            bgcolor: index === 0 ? alpha(theme.palette.warning.main,0.1) : index === 1 ? theme.palette.action.hover : index === 2 ? alpha('#ff7e5f',0.1) : 'white',
+                            p: 1, mb: 0.5, borderRadius: '6px', cursor: 'pointer',
+                            bgcolor: index === 0 ? alpha(theme.palette.warning.main, 0.1) : index === 1 ? theme.palette.action.hover : index === 2 ? alpha('#ff7e5f', 0.1) : 'white',
                             borderLeft: `4px solid ${index === 0 ? theme.palette.warning.main : index === 1 ? theme.palette.grey[500] : index === 2 ? '#ff7e5f' : 'transparent'}`,
                             boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
                         })}
                     >
-                        <ListItemIcon sx={{ minWidth:35 }}>{getMedalIcon(index)}</ListItemIcon>
+                        <ListItemIcon sx={{ minWidth: 35 }}>{getMedalIcon(index)}</ListItemIcon>
                         <ListItemText
                             primary={`@${item.nombreUsuario}`}
                             secondary={`${item.puntos} Puntos`}
@@ -504,11 +531,36 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     };
 
     const renderModalDesafio = () => (
-        <Modal open={modalDesafioOpen} onClose={handleCloseDesafioModal} aria-labelledby="modal-desafio-titulo" closeAfterTransition>
+        <Modal
+            open={modalDesafioOpen}
+            onClose={handleCloseDesafioModal}
+            aria-labelledby="modal-desafio-titulo"
+            closeAfterTransition
+        >
             <Box sx={{
-                position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-                width: { xs: '90%', sm: 550 }, bgcolor: 'background.paper', borderRadius: 4, boxShadow: 24,
-                p: 4, outline: 'none', maxHeight: '90vh', overflowY: 'auto', border: (theme) => `3px solid ${theme.palette.primary.main}`
+                // --- INICIO CAMBIOS PARA PANTALLA COMPLETA EN MÓVIL (xs) ---
+                position: 'absolute',
+                // Centrado en escritorio (sm+) y arriba/izquierda en móvil (xs)
+                top: { xs: 0, sm: '50%' },
+                left: { xs: 0, sm: '50%' },
+                // Traslación para centrar solo en escritorio
+                transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
+
+                // Tamaños
+                width: { xs: '100%', sm: 550 },
+                height: { xs: '100%', sm: 'auto' }, // 100% de altura en móvil
+                maxHeight: { xs: '100vh', sm: '90vh' }, // 100% de la altura de la vista en móvil
+
+                bgcolor: 'background.paper',
+                // Bordes redondeados solo en escritorio
+                borderRadius: { xs: 0, sm: 4 },
+                // --- FIN CAMBIOS ---
+
+                boxShadow: 24,
+                p: 4,
+                outline: 'none',
+                overflowY: 'auto',
+                border: (theme) => `3px solid ${theme.palette.primary.main}`
             }}>
                 <Typography id="modal-desafio-titulo" variant="h4" component="h2" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>
                     Desafío de Coctelería Semanal
@@ -518,7 +570,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     <EmojiEventsIcon sx={{ verticalAlign: 'bottom', mr: 0.5 }} /> Top 3 de la Semana Anterior
                 </Typography>
                 <Box sx={{ p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>{renderRankingAnterior()}</Box>
-                
+
                 {desafioSemanal?.desafioActual && (
                     <Box sx={{ mt: 2, textAlign: 'center' }}>
                         <Button onClick={fetchCurrentRanking} variant="contained" color="primary" size="small" sx={{ fontWeight: 'bold', textTransform: 'uppercase' }} disabled={rankingCargando}>
@@ -528,10 +580,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 )}
 
                 <Typography variant="h5" sx={{ mt: 4, pb: 1, fontWeight: 800, textAlign: "center", textTransform: "uppercase", background: "linear-gradient(90deg, #FF5722, #FF9800)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", display: "flex", alignItems: "center", justifyContent: "center", gap: 1 }}>
-                    <LocalBarIcon sx={{ color: "#FF7043", fontSize: 30 }}/> ¡A Mezclar! Desafío Actual
+                    <LocalBarIcon sx={{ color: "#FF7043", fontSize: 30 }} /> ¡A Mezclar! Desafío Actual
                 </Typography>
                 {renderDesafioActual()}
-                
+
                 <Box sx={{ mt: 4, display: 'flex', justifyContent: 'space-between', gap: 2 }}>
                     <Button onClick={handleCloseDesafioModal} variant="outlined" size="large" sx={{ flexGrow: 1, borderRadius: '8px' }} color="inherit">Ver Feed</Button>
                     <Button onClick={handleCargarRecetaDesafio} variant="contained" size="large" color="primary" sx={{ flexGrow: 1, bgcolor: '#FF5722', color: 'white', borderRadius: '8px' }} startIcon={<LocalBarIcon />}>Participar</Button>
@@ -557,10 +609,10 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 {currentRanking.length > 0 && (
                     <List sx={{ p: 0 }}>
                         {currentRanking.map((item, index) => (
-                            <ListItem key={item.usuarioId} onClick={() => { handleCloseRankingModal(); if(item.recetaId) navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`); else navigate(`/perfil/${item.usuarioId}`); }} sx={(t) => ({ p:1.5, mb:1, borderRadius: '8px', cursor: 'pointer', bgcolor: index <3 ? t.palette.action.hover : 'background.paper', borderLeft: `5px solid ${index===0?t.palette.warning.main:index===1?t.palette.info.main:index===2?t.palette.error.main:t.palette.divider}`, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' })}>
-                                <ListItemIcon sx={{ minWidth:40 }}><Typography variant="h6" sx={{ fontWeight: 'bold', color: index <3 ? 'primary.main' : 'text.primary' }}>{index +1}°</Typography></ListItemIcon>
-                                <ListItemText primary={`@${item.nombreUsuario}`} secondary={`${item.puntos} Puntos`} primaryTypographyProps={{ fontWeight: index <3 ? '900' : '600' }} />
-                                {index <3 && getMedalIcon(index)}
+                            <ListItem key={item.usuarioId} onClick={() => { handleCloseRankingModal(); if (item.recetaId) navigate(`/perfil/${item.usuarioId}/publicaciones?receta=${item.recetaId}`); else navigate(`/perfil/${item.usuarioId}`); }} sx={(t) => ({ p: 1.5, mb: 1, borderRadius: '8px', cursor: 'pointer', bgcolor: index < 3 ? t.palette.action.hover : 'background.paper', borderLeft: `5px solid ${index === 0 ? t.palette.warning.main : index === 1 ? t.palette.info.main : index === 2 ? t.palette.error.main : t.palette.divider}`, boxShadow: '0 1px 4px rgba(0,0,0,0.08)' })}>
+                                <ListItemIcon sx={{ minWidth: 40 }}><Typography variant="h6" sx={{ fontWeight: 'bold', color: index < 3 ? 'primary.main' : 'text.primary' }}>{index + 1}°</Typography></ListItemIcon>
+                                <ListItemText primary={`@${item.nombreUsuario}`} secondary={`${item.puntos} Puntos`} primaryTypographyProps={{ fontWeight: index < 3 ? '900' : '600' }} />
+                                {index < 3 && getMedalIcon(index)}
                             </ListItem>
                         ))}
                     </List>
@@ -578,8 +630,8 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
     return (
         // Contenedor Principal con overflow-x: hidden para evitar scroll horizontal
-        <div className="feed-contenedor-principal">
-            
+        <div className="feed-contenedor-principal" ref={feedRef}>
+
             {/* Botón Flotante Desafío */}
             {desafioSemanal && !isSearchActive && !mostrarResultadosCompletos && (
                 <button
@@ -609,7 +661,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             <Modal open={modalOpen} onClose={handleCloseModal}>
                 <Box sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: 300, bgcolor: 'background.paper', boxShadow: 24, p: 4, borderRadius: 2 }}>
                     <Typography variant="h6">Confirmar eliminación</Typography>
-                    <Box sx={{ mt: 2, display:'flex', justifyContent:'flex-end', gap:1 }}>
+                    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
                         <Button onClick={handleCloseModal}>Cancelar</Button>
                         <Button variant="contained" color="error" onClick={handleConfirmDelete}>Eliminar</Button>
                     </Box>
@@ -630,37 +682,37 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 </div>
             ) : (
                 // Header Fijo "Volver"
-                <Box sx={{ 
-                    position: 'fixed', 
-                    top: 0, 
-                    left: 0, 
-                    width: '100%', 
+                <Box sx={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    width: '100%',
                     zIndex: 1200, // <--- CAMBIAR ESTO (antes era 999)
-                    height: '64px', 
-                    px: 2, 
-                    display: 'flex', 
-                    alignItems: 'center', 
+                    height: '64px',
+                    px: 2,
+                    display: 'flex',
+                    alignItems: 'center',
                     justifyContent: 'space-between',
-                    bgcolor: 'background.paper', 
-                    borderBottom: '1px solid rgba(0,0,0,0.1)', 
+                    bgcolor: 'background.paper',
+                    borderBottom: '1px solid rgba(0,0,0,0.1)',
                     boxShadow: 1
                 }}>
-                    <Button 
-                        variant="text" 
-                        onClick={handleVolverAlFeed} 
-                        startIcon={<ArrowBackIcon />} 
+                    <Button
+                        variant="text"
+                        onClick={handleVolverAlFeed}
+                        startIcon={<ArrowBackIcon />}
                         sx={{ fontWeight: 'bold', color: '#FF5722' }}
                     >
                         Volver
                     </Button>
-                    <Typography 
-                        variant="subtitle1" 
-                        sx={{ 
-                            fontWeight: 'bold', 
-                            mr: 1, 
-                            overflow:'hidden', 
-                            textOverflow:'ellipsis', 
-                            whiteSpace:'nowrap',
+                    <Typography
+                        variant="subtitle1"
+                        sx={{
+                            fontWeight: 'bold',
+                            mr: 1,
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
                             color: 'text.primary' // Asegura color visible
                         }}
                     >
@@ -668,7 +720,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     </Typography>
                 </Box>
             )}
-            
+
             {/* Contenido Principal */}
             <div className="feed-contenido">
                 {mostrarResultadosCompletos && <Box sx={{ height: '70px' }} />} {/* Espaciador para header fijo */}
@@ -678,9 +730,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     <div className="resultados-completos-lista">
                         {recetas.length === 0 && !cargando && <div className="no-resultados">No se encontraron recetas.</div>}
                         {recetas.map(receta => {
-                             const finalEtiquetas = (receta.etiquetas || []).map(c => typeof c === 'object' && c && 'nombre' in c ? c.nombre : c);
-                             if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) finalEtiquetas.push('DESAFIO');
-                             return (
+                            const finalEtiquetas = (receta.etiquetas || []).map(c => typeof c === 'object' && c && 'nombre' in c ? c.nombre : c);
+                            if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) finalEtiquetas.push('DESAFIO');
+                            return (
                                 <Receta
                                     key={receta.id}
                                     receta={{ ...receta, etiquetas: finalEtiquetas as string[] }}
@@ -689,9 +741,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                     onDeleteReceta={handleOpenModal}
                                     onUsuarioClick={handleUsuarioClick}
                                 />
-                             );
+                            );
                         })}
-                        {cargandoMas && <Box sx={{ display:'flex', justifyContent:'center', p:2 }}><CircularProgress /></Box>}
+                        {cargandoMas && <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress /></Box>}
                     </div>
                 ) : (
                     // === MODO NORMAL / DROPDOWN ===
@@ -708,11 +760,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 )}
                                 {recetas.length === 0 && !mensaje && !cargando && !error && <div className="no-resultados">No hay publicaciones.</div>}
                                 {error && <div className="feed-error">{error}</div>}
-                                
+
                                 {recetas.map(receta => {
-                                     const finalEtiquetas = (receta.etiquetas || []).map(c => typeof c === 'object' && c && 'nombre' in c ? c.nombre : c);
-                                     if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) finalEtiquetas.push('DESAFIO');
-                                     return (
+                                    const finalEtiquetas = (receta.etiquetas || []).map(c => typeof c === 'object' && c && 'nombre' in c ? c.nombre : c);
+                                    if (receta.desafioId && !finalEtiquetas.includes('DESAFIO')) finalEtiquetas.push('DESAFIO');
+                                    return (
                                         <Receta
                                             key={receta.id}
                                             receta={{ ...receta, etiquetas: finalEtiquetas as string[] }}
@@ -722,9 +774,9 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                             onUsuarioClick={handleUsuarioClick}
                                             ocultarBotonSeguir={true}
                                         />
-                                     );
+                                    );
                                 })}
-                                {cargandoMas && <Box sx={{ display:'flex', justifyContent:'center', p:2 }}><CircularProgress /></Box>}
+                                {cargandoMas && <Box sx={{ display: 'flex', justifyContent: 'center', p: 2 }}><CircularProgress /></Box>}
                             </div>
                         ) : (
                             // DROPDOWN DE BÚSQUEDA
@@ -746,7 +798,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 {recetasFiltradas.map(r => (
                                     <div key={r.id} className="resultado-item" onClick={() => handleRecetaClick(r)}>
                                         <span className="usuario-nombre">{r.titulo}</span>
-                                        <span className="usuario-nombre-completo" style={{marginLeft:8}}>por @{r.autor?.nombreUsuario}</span>
+                                        <span className="usuario-nombre-completo" style={{ marginLeft: 8 }}>por @{r.autor?.nombreUsuario}</span>
                                     </div>
                                 ))}
                                 {searchMessage && <div className="no-resultados">{searchMessage}</div>}
