@@ -723,7 +723,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
             {/* Contenido Principal */}
             <div className="feed-contenido">
-                {mostrarResultadosCompletos && <Box sx={{ height: '70px' }} />} {/* Espaciador para header fijo */}
+                {mostrarResultadosCompletos && <Box sx={{ py:2 }} />}
 
                 {mostrarResultadosCompletos ? (
                     // === MODO RESULTADOS COMPLETOS ===

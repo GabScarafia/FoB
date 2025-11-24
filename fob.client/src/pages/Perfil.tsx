@@ -329,28 +329,31 @@ const Perfil: React.FC = () => {
                     <img src={perfilFotoSrc} alt="Foto de perfil" />
                 </div>
                 <Box className="perfil-info-principal">
-                    <Box className="perfil-stats">
-                        <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Publicaciones</Typography>
-                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadPublicaciones}</Typography>
-                        </span>
-                        <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidores</Typography>
-                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidores}</Typography>
-                        </span>
-                        <span>
-                            <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidos</Typography>
-                            <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidos}</Typography>
-                        </span>
-                    </Box>
+                  
                     <Box className="perfil-info">
                         <Typography variant="h6" className="perfil-nombre-usuario">@{nombreUsuario}</Typography>
                         <Typography variant="body1" className="perfil-nombre-completo" fontWeight="bold">{nombreCompletoDisplay}</Typography>
                         <Typography variant="body2" className="perfil-bio" color="text.secondary">{biografia}</Typography>
                     </Box>
                 </Box>
+              
             </Box>
-
+            <div>
+                <Box className="perfil-stats">
+                    <span>
+                        <Typography component="span" className="perfil-stats-label" color="text.secondary" sx={{ mr: 0.5 }}>Publicaciones</Typography>
+                        <Typography component="span" className="perfil-stats-numero" fontWeight="bold" >{cantidadPublicaciones}</Typography>
+                    </span>
+                    <span >
+                        <Typography component="span" className="perfil-stats-label" color="text.secondary">Seguidores</Typography>
+                        <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidores}</Typography>
+                    </span>
+                    <span>
+                        <Typography component="span" className="perfil-stats-label" color="text.secondary" sx={{ ml: 0.5 }}>Seguidos</Typography>
+                        <Typography component="span" className="perfil-stats-numero" fontWeight="bold">{cantidadSeguidos}</Typography>
+                    </span>
+                </Box>
+            </div>
             <Box className="perfil-botones">
                 {esPerfilPropio ? (
                     <>

@@ -247,6 +247,24 @@ internal sealed class RecetaRepository : IRecetaRepository
                 Nombre = x.Usuario.Nombre,
                 Apellido = x.Usuario.Apellido,
             },
+            VistaPreviaComentarios = x.Comentario.OrderByDescending(c => c.Fecha).Take(3)
+                    .Select(c => new ComentarioResponse
+                    {
+                        Id = c.Id,
+                        Texto = c.Texto,
+                        Fecha = c.Fecha,
+                        Usuario = new UsuarioResponse
+                        {
+                            Id = c.Usuario.Id,
+                            NombreUsuario = c.Usuario.NombreUsuario,
+                            Nombre = c.Usuario.Nombre,
+                            Apellido = c.Usuario.Apellido,
+                            ImagenUrl = c.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                                ? $"/api/archivos/usuario/{c.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Id}"
+                                : null,
+                        }
+                    })
+                .ToList(),
             Ingredientes = x.IngredienteReceta.Select(i => new IngredienteResponse
             {
                 Id = i.IngredienteId,
@@ -749,16 +767,24 @@ internal sealed class RecetaRepository : IRecetaRepository
                 CantidadVotos = (int)receta.Voto.Where(v => v.Tipo == InteraccionTipoEnum.Like.ToString() && v.ComentarioId == null).Sum(x => x.Valor),
                 MeGusta = userId.HasValue && receta.Voto.Any(v => v.UsuarioId == userId.Value && v.ComentarioId == null),
                 CantidadComentarios = receta.Comentario.Count,
-                VistaPreviaComentarios = receta.Comentario?.Where(c => c.Usuario != null)
-                    .OrderByDescending(c => c.Fecha)
-                    .Take(3)
+                VistaPreviaComentarios = receta.Comentario.OrderByDescending(c => c.Fecha).Take(3)
                     .Select(c => new ComentarioResponse
                     {
                         Id = c.Id,
                         Texto = c.Texto,
-                        Usuario = new UsuarioResponse { NombreUsuario = c.Usuario.NombreUsuario },
-                        Fecha = c.Fecha
-                    }).ToList() ?? new List<ComentarioResponse>()
+                        Fecha = c.Fecha,
+                        Usuario = new UsuarioResponse
+                        {
+                            Id = c.Usuario.Id,
+                            NombreUsuario = c.Usuario.NombreUsuario,
+                            Nombre = c.Usuario.Nombre,
+                            Apellido = c.Usuario.Apellido,
+                            ImagenUrl = c.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault() != null
+                                ? $"/api/archivos/usuario/{c.Usuario.UsuarioImagen.OrderByDescending(img => img.Id).FirstOrDefault().Id}"
+                                : null,
+                        }
+                    })
+                .ToList(),
             };
             return recetaResponse;
         }

@@ -130,7 +130,7 @@ export default function App() {
           // CORRECCIÓN: Eliminado overflow: "hidden" para que funcionen los position: fixed hijos
           position: "relative" 
         }}>
-          <ImagenRebotante imageSrc="src/assets/images/ronaldinho.jpg" />
+          {/* <ImagenRebotante imageSrc="src/assets/images/ronaldinho.jpg" /> */}
           <MainApp toggleTheme={toggleTheme} mode={mode} />
         </Box>
       </ThemeProvider>
