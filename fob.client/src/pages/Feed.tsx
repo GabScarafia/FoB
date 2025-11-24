@@ -593,8 +593,31 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     );
 
     const renderModalRanking = () => (
-        <Modal open={modalRankingOpen} onClose={handleCloseRankingModal} aria-labelledby="modal-ranking-titulo" closeAfterTransition sx={{ p: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Box sx={{ width: { xs: '95%', sm: 400 }, bgcolor: 'background.paper', borderRadius: '16px', boxShadow: 24, p: 4, outline: 'none', maxHeight: '90vh', overflowY: 'auto', border: (t) => `3px solid ${t.palette.warning.main}` }}>
+            <Modal
+            open={modalRankingOpen}
+            onClose={handleCloseRankingModal}
+            aria-labelledby="modal-ranking-titulo"
+            closeAfterTransition
+        >
+            <Box sx={{
+                position: 'absolute',
+                top: { xs: 0, sm: '50%' },
+                left: { xs: 0, sm: '50%' },
+                transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
+
+                width: { xs: '100%', sm: 400 },
+                height: { xs: '100%', sm: 'auto' },
+                maxHeight: { xs: '100vh', sm: '90vh' },
+
+                bgcolor: 'background.paper',
+                borderRadius: { xs: 0, sm: '16px' },
+
+                boxShadow: 24,
+                p: 4,
+                outline: 'none',
+                overflowY: 'auto',
+                border: (t) => `3px solid ${t.palette.warning.main}`
+            }}>
                 <Typography id="modal-ranking-titulo" variant="h5" sx={{ mb: 1, fontWeight: 'bold', color: 'primary.main', textAlign: 'center' }}>🏆 Ranking Actual</Typography>
                 <Typography variant="subtitle2" sx={{ mb: 1, color: 'text.secondary', textAlign: 'center', fontStyle: 'italic' }}>{desafioSemanal?.desafioActual?.nombre || "Desafío Semanal"}</Typography>
                 {misPuntos !== null && <Typography variant="body2" sx={{ mb: 2, textAlign: 'center', fontWeight: 700 }}>Tus puntos: {misPuntos}</Typography>}
