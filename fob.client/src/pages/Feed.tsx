@@ -710,7 +710,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                         justifyContent: 'center', boxShadow: '0 4px 10px rgba(255, 87, 34, 0.6)', cursor: 'pointer'
                     }}
                 >
-                    <SportsScoreIcon style={{ fontSize: 30 }} />
+                    <LocalBarIcon style={{ fontSize: 30 }} />
                 </button>
             )}
 
