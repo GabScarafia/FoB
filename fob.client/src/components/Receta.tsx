@@ -455,15 +455,17 @@ const Receta: React.FC<PropsReceta> = ({ receta, onDrawerToggle, currentUserId, 
             </div>
 
             {/* 3. NAVEGACIÓN CARRUSEL (PUNTITOS) */}
-            <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
-                <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary"> <ArrowBackIcon /> </IconButton>
-                <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
-                    {carruselItems.map((_, idx) => (
-                        <Box key={idx} component="span" sx={{ fontSize: 18, color: idx === indiceImagen ? 'primary.main' : 'text.disabled' }}>●</Box>
-                    ))}
+            {carruselItems.length > 1 && (
+                <div className="carrusel-navegacion" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, margin: '12px 0' }}>
+                    <IconButton onClick={handlePrevImagen} disabled={indiceImagen === 0} color="primary"> <ArrowBackIcon /> </IconButton>
+                    <div className="carrusel-puntos" style={{ display: 'flex', gap: 6 }}>
+                        {carruselItems.map((_, idx) => (
+                            <Box key={idx} component="span" sx={{ fontSize: 18, color: idx === indiceImagen ? 'primary.main' : 'text.disabled' }}>●</Box>
+                        ))}
+                    </div>
+                    <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary"> <ArrowForwardIcon /> </IconButton>
                 </div>
-                <IconButton onClick={handleNextImagen} disabled={indiceImagen === carruselItems.length - 1} color="primary"> <ArrowForwardIcon /> </IconButton>
-            </div>
+            )}
 
             {/* 4. INFO DEL PASO (SI APLICA) */}
             {itemActual && !itemActual.isMainImage && itemActual.pasoInfo && (
