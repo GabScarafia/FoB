@@ -101,6 +101,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const [modalOpen, setModalOpen] = useState(false);
     const [recetaAEliminarId, setRecetaAEliminarId] = useState<number | null>(null);
 
+    // === PULL TO REFRESH STATES ===
+    const [pullStartY, setPullStartY] = useState(0);
+    const [pullMoveY, setPullMoveY] = useState(0);
+    const [isRefreshing, setIsRefreshing] = useState(false);
+    const PULL_THRESHOLD = 80; // Umbral de píxeles para activar la recarga
+
     // =========================================================================
     // LÓGICA DE RANKING Y DESAFÍOS
     // =========================================================================
@@ -180,16 +186,12 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                 });
                 if (!response.ok) return;
 
-                // Log raw response for debugging: ensure API returns nombre, ingrediente, descripcion
                 const rawText = await response.text();
-                //console.log('DEBUG: /Desafios/Actual raw response text ->', rawText);
                 let parsed: any = null;
                 try { parsed = JSON.parse(rawText); } catch (e) { parsed = rawText; console.error('DEBUG: parsing /Desafios/Actual failed', e); }
-                //console.log('DEBUG: /Desafios/Actual parsed ->', parsed);
                 const data: DesafioSemanalDto = parsed as DesafioSemanalDto;
                 setDesafioSemanal(data);
 
-                // Verificar si ya participó para mostrar o no el modal automáticamente
                 try {
                     const resp = await fetch(`${BASE_URL}/Desafios/participacion/esta`, {
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -216,7 +218,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         if (!token) { setCargando(false); return; }
 
         if (isInitialLoad) {
-            setCargando(true);
+            // Si NO estamos refrescando con Pull-to-Refresh, mostramos el loading normal
+            // Si isRefreshing es true, no queremos que se borre la lista (parpadeo)
+            if (!isRefreshing) {
+                setCargando(true);
+            }
             setPage(1);
             setHasMore(true);
             setMensaje(null);
@@ -252,15 +258,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             setPage(currentPage + 1);
 
         } catch (err) {
-            setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.")
-                ;
+            setError("Error al cargar las recetas. Por favor, intente de nuevo más tarde.");
             console.error("Error recetas:", err);
             setHasMore(false);
         } finally {
             setCargando(false);
             setCargandoMas(false);
         }
-    }, [token, page]);
+    }, [token, page, isRefreshing]); // Añadido isRefreshing a dependencias
 
     // Carga inicial
     useEffect(() => { recargarRecetas(true); }, []);
@@ -280,7 +285,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     useEffect(() => {
         const handleScroll = () => {
             if (window.innerHeight + document.documentElement.scrollTop >= document.documentElement.offsetHeight - 300 &&
-                !cargandoMas && hasMore && !isSearchActive
+                !cargandoMas && hasMore && !isSearchActive && !isRefreshing
             ) {
                 const term = mostrarResultadosCompletos ? searchTerm : '';
                 recargarRecetas(false, term);
@@ -288,7 +293,59 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         };
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [cargandoMas, hasMore, isSearchActive, recargarRecetas, mostrarResultadosCompletos, searchTerm]);
+    }, [cargandoMas, hasMore, isSearchActive, isRefreshing, recargarRecetas, mostrarResultadosCompletos, searchTerm]);
+
+    // =========================================================================
+    // PULL TO REFRESH HANDLERS
+    // =========================================================================
+
+    const handleTouchStart = (e: React.TouchEvent) => {
+        // Solo activamos si estamos en el tope de la página
+        if (window.scrollY === 0) {
+            setPullStartY(e.touches[0].clientY);
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent) => {
+        // Si no estamos recargando y empezamos el toque desde arriba
+        if (!isRefreshing && pullStartY > 0 && window.scrollY === 0) {
+            const touchY = e.touches[0].clientY;
+            const diff = touchY - pullStartY;
+
+            // Solo si arrastra hacia abajo
+            if (diff > 0) {
+                // Resistencia elástica
+                setPullMoveY(diff * 0.4);
+            }
+        }
+    };
+
+    const handleTouchEnd = async () => {
+        if (!isRefreshing && pullMoveY > PULL_THRESHOLD) {
+            // Activar recarga
+            setIsRefreshing(true);
+            setPullMoveY(PULL_THRESHOLD); // Mantener spinner visible
+
+            try {
+                // Forzamos la recarga inicial
+                const term = mostrarResultadosCompletos ? searchTerm : '';
+                await recargarRecetas(true, term);
+            } catch (error) {
+                console.error("Error al refrescar", error);
+            } finally {
+                // Ocultar suavemente
+                setTimeout(() => {
+                    setIsRefreshing(false);
+                    setPullMoveY(0);
+                    setPullStartY(0);
+                }, 500);
+            }
+        } else {
+            // Cancelar gesto
+            setPullMoveY(0);
+            setPullStartY(0);
+        }
+    };
 
     // =========================================================================
     // ACCIONES DE RECETA (DELETE, ETC)
@@ -317,7 +374,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const handleOpenDesafioModal = () => { if (desafioSemanal) setModalDesafioOpen(true); }
     const handleCloseDesafioModal = async (markSeen = true) => {
         setModalDesafioOpen(false);
-        // Aquí podrías llamar a una API para marcar como visto si fuera necesario
     }
     const handleCloseRankingModal = () => { setModalRankingOpen(false); setCurrentRanking([]); setRankingEmptyMessage(null); }
     const handleBackToDesafio = () => { setModalRankingOpen(false); setCurrentRanking([]); setModalDesafioOpen(true); }
@@ -384,7 +440,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         } catch (error) { console.error(error); }
     };
 
-    // Navegación desde búsqueda
     const handleUsuarioClick = (userId: number) => {
         setIsSearchActive(false); setSearchTerm(''); setUsuariosFiltrados([]); setRecetasFiltradas([]);
         navigate(`/perfil/${userId}`);
@@ -395,7 +450,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         navigate(`/perfil/${receta.autor.id}/publicaciones?receta=${receta.id}`);
     };
 
-    // UI Búsqueda
     const handleSearchFocus = () => { setIsSearchActive(true); };
     const handleSearchBackClick = () => {
         setIsSearchActive(false); setSearchTerm(''); setSearchMessage(null);
@@ -404,20 +458,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     const handleVerTodoResultados = () => {
         setIsSearchActive(false);
         setMostrarResultadosCompletos(true);
-
-        // --- AGREGAR ESTO: Ocultar header global ---
         window.dispatchEvent(new CustomEvent('toggleGlobalHeader', { detail: false }));
-
         setRecetas([]);
         recargarRecetas(true, searchTerm);
     };
 
     const handleVolverAlFeed = () => {
         setMostrarResultadosCompletos(false);
-
-        // --- AGREGAR ESTO: Mostrar header global de nuevo ---
         window.dispatchEvent(new CustomEvent('toggleGlobalHeader', { detail: true }));
-
         setSearchTerm('');
         setRecetasFiltradas([]);
         setUsuariosFiltrados([]);
@@ -425,8 +473,6 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
         recargarRecetas(true, '');
     };
 
-    // --- AGREGAR ESTE USEEFFECT DE SEGURIDAD ---
-    // Si el usuario sale del feed o recarga, nos aseguramos que el header vuelva
     useEffect(() => {
         return () => {
             window.dispatchEvent(new CustomEvent('toggleGlobalHeader', { detail: true }));
@@ -538,24 +584,15 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
             closeAfterTransition
         >
             <Box sx={{
-                // --- INICIO CAMBIOS PARA PANTALLA COMPLETA EN MÓVIL (xs) ---
                 position: 'absolute',
-                // Centrado en escritorio (sm+) y arriba/izquierda en móvil (xs)
                 top: { xs: 0, sm: '50%' },
                 left: { xs: 0, sm: '50%' },
-                // Traslación para centrar solo en escritorio
                 transform: { xs: 'none', sm: 'translate(-50%, -50%)' },
-
-                // Tamaños
                 width: { xs: '100%', sm: 550 },
-                height: { xs: '100%', sm: 'auto' }, // 100% de altura en móvil
-                maxHeight: { xs: '100vh', sm: '90vh' }, // 100% de la altura de la vista en móvil
-
+                height: { xs: '100%', sm: 'auto' },
+                maxHeight: { xs: '100vh', sm: '90vh' },
                 bgcolor: 'background.paper',
-                // Bordes redondeados solo en escritorio
                 borderRadius: { xs: 0, sm: 4 },
-                // --- FIN CAMBIOS ---
-
                 boxShadow: 24,
                 p: 4,
                 outline: 'none',
@@ -652,8 +689,14 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
     // =========================================================================
 
     return (
-        // Contenedor Principal con overflow-x: hidden para evitar scroll horizontal
-        <div className="feed-contenedor-principal" ref={feedRef}>
+        // Contenedor Principal con eventos táctiles para Pull-to-Refresh
+        <div 
+            className="feed-contenedor-principal" 
+            ref={feedRef}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+        >
 
             {/* Botón Flotante Desafío */}
             {desafioSemanal && !isSearchActive && !mostrarResultadosCompletos && (
@@ -710,7 +753,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                     top: 0,
                     left: 0,
                     width: '100%',
-                    zIndex: 1200, // <--- CAMBIAR ESTO (antes era 999)
+                    zIndex: 1200,
                     height: '64px',
                     px: 2,
                     display: 'flex',
@@ -736,7 +779,7 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
                             whiteSpace: 'nowrap',
-                            color: 'text.primary' // Asegura color visible
+                            color: 'text.primary'
                         }}
                     >
                         "{searchTerm}"
@@ -746,7 +789,30 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
 
             {/* Contenido Principal */}
             <div className="feed-contenido">
-                {mostrarResultadosCompletos && <Box sx={{ py:2 }} />}
+                {mostrarResultadosCompletos && <Box sx={{ py: 2 }} />}
+
+                {/* === COMPONENTE VISUAL PULL TO REFRESH === */}
+                <Box
+                    sx={{
+                        height: pullMoveY,
+                        overflow: 'hidden',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        transition: isRefreshing ? 'height 0.2s ease' : 'none',
+                        opacity: pullMoveY > 0 ? 1 : 0
+                    }}
+                >
+                    <CircularProgress
+                        size={30}
+                        variant={isRefreshing ? "indeterminate" : "determinate"}
+                        value={isRefreshing ? undefined : Math.min((pullMoveY / PULL_THRESHOLD) * 100, 100)}
+                        sx={{
+                            color: '#FF5722',
+                            transform: isRefreshing ? 'none' : `rotate(${pullMoveY * 2}deg)`
+                        }}
+                    />
+                </Box>
 
                 {mostrarResultadosCompletos ? (
                     // === MODO RESULTADOS COMPLETOS ===
@@ -783,6 +849,11 @@ const Feed: React.FC<FeedProps> = ({ onDrawerToggle }) => {
                                 )}
                                 {recetas.length === 0 && !mensaje && !cargando && !error && <div className="no-resultados">No hay publicaciones.</div>}
                                 {error && <div className="feed-error">{error}</div>}
+
+                                {/* Loader inicial solo si NO es refresco por pull */}
+                                {cargando && !isRefreshing && recetas.length === 0 && (
+                                     <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>
+                                )}
 
                                 {recetas.map(receta => {
                                     const finalEtiquetas = (receta.etiquetas || []).map(c => typeof c === 'object' && c && 'nombre' in c ? c.nombre : c);
