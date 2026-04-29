@@ -5,27 +5,15 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     min-height: 100vh;
     width: 100%;
-    background-color: #1a2a6c;
+    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
     font-family: Arial, sans-serif;
     color: white;
     padding: 0;
     box-sizing: border-box;
     position: relative;
-}
-
-/* Fondo degradado que abarca toda la pantalla */
-.contenedor-registrarse::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(to right, #1f46b2, #1a2a6c, #002242);
-    z-index: 0;
 }
 
 /* Capa azul superior que contendrá el logo y el texto de "Registrarse" */
@@ -49,7 +37,7 @@
     left: 50%;
     transform: translateX(-50%);
     width: 120%;
-    height: 110px;
+    height: 130px;
     background-color: white;
     border-bottom-left-radius: 50% 100px;
     border-bottom-right-radius: 50% 100px;
@@ -72,16 +60,21 @@
 /* Sección del formulario */
 .formulario-registrarse-caja {
     position: relative;
-    
-    padding: 30px;
-    border-radius: 10px;
-    width: 90%;
-    max-width: 600px;
+    box-sizing: border-box;
+    padding: 40px 30px;
+    border-radius: 2rem;
+    width: calc(100% - 40px);
+    max-width: 450px;
     
     text-align: center;
     z-index: 4;
-    margin-top: -80px;
+    margin-top: auto;
+    margin-bottom: auto;
     color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 .formulario-registrarse-caja h2 {
@@ -133,7 +126,7 @@
 /* --- Media Query para pantallas de tabletas y escritorios (a partir de 768px de ancho) --- */
 @media (min-width: 768px) {
     .contenedor-registrarse {
-        justify-content: center;
+        justify-content: flex-start;
         align-items: center;
         background: none;
         position: relative;
@@ -154,12 +147,37 @@
     .formulario-registrarse-caja {
         max-width: 450px;
         padding: 40px;
-        border-radius: 10px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-        background-color: #1a2a6c;
-        margin-top: 1rem;
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        margin-top: 5rem;
+        margin-bottom: 2rem;
     }
 
+}
+
+/* Estilos para la tarjeta de éxito */
+.contenido-exito-tarjeta {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+.contenido-exito-tarjeta h3 {
+    font-size: 2.2rem;
+    color: #ffffff;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.contenido-exito-tarjeta p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 1rem;
 }
 
 @media (max-width: 767px) {
