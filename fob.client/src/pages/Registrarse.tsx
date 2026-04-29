@@ -91,22 +91,21 @@ const Registrarse: React.FC = () => {
                 </div>
             </div>
 
-            <div className="formulario-registrarse-caja">
-                {registroExitoso ? (
-                    <div className="contenido-exito-tarjeta">
-                        <h3>¡Registro Exitoso!</h3>
-                        <p>Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.</p>
-                        <Boton
-                            onClick={handleContinuarAlLogin}
-                            className="boton-principal"
-                        >
-                            Continuar
-                        </Boton>
-                    </div>
-                ) : (
-                    <>
-                        <h2>REGISTRATE</h2>
-                        <form onSubmit={manejarEnvioRegistro}>
+            {registroExitoso ? (
+                <div className="contenido-exito-tarjeta">
+                    <h3>¡Registro Exitoso!</h3>
+                    <p>Tu cuenta ha sido creada correctamente. Ya puedes iniciar sesión.</p>
+                    <Boton
+                        onClick={handleContinuarAlLogin}
+                        className="boton-principal"
+                    >
+                        Continuar
+                    </Boton>
+                </div>
+            ) : (
+                <div className="formulario-registrarse-caja">
+                    <h2>REGISTRATE</h2>
+                    <form onSubmit={manejarEnvioRegistro}>
                             <CampoEntrada etiqueta="Nombre" tipo="text" id="nombre" valor={nombre} manejarCambio={(e) => setNombre(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
                             <CampoEntrada etiqueta="Apellido" tipo="text" id="apellido" valor={apellido} manejarCambio={(e) => setApellido(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
                             <CampoEntrada etiqueta="Nombre de usuario" tipo="text" id="nombre-usuario" valor={nombreUsuario} manejarCambio={(e) => setNombreUsuario(e.target.value)} requerido={true} mostrarAsteriscoRequerido={true} />
@@ -131,9 +130,8 @@ const Registrarse: React.FC = () => {
                         <Link to="/iniciar-sesion" style={{ textDecoration: 'none', width: '100%' }}>
                             <Boton className="boton-atras-a-inicio-sesion">ATRÁS</Boton>
                         </Link>
-                    </>
-                )}
-            </div>
+                </div>
+            )}
 
             <TerminosYCondicionesModal isOpen={isModalOpen} onClose={cerrarModalTerminos} />
         </div>
